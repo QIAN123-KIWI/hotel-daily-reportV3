@@ -830,22 +830,24 @@
             const file = event.target.files[0];
             if (!file) return;
             
-            // 从文件名提取日期 (支持格式: 2025-12-08.xlsx, 2025-12-08_xxx.xlsx, 12-08.xlsx 等)
+            // 从文件名提取日期 (支持多种格式)
             const fileName = file.name.replace(/\.(xlsx|xls|csv)$/i, '');
             let dateFromFileName = null;
             
-            // 尝试匹配 YYYY-MM-DD 格式
-            const fullDateMatch = fileName.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+            // 尝试匹配 YYYY-MM-DD 或 YYYY.MM.DD 或 YYYY/MM/DD 格式
+            const fullDateMatch = fileName.match(/(\d{4})[-./](\d{1,2})[-./](\d{1,2})/);
             if (fullDateMatch) {
                 dateFromFileName = `${fullDateMatch[1]}-${fullDateMatch[2].padStart(2,'0')}-${fullDateMatch[3].padStart(2,'0')}`;
             } else {
-                // 尝试匹配 MM-DD 格式，使用当前年份
-                const shortDateMatch = fileName.match(/(\d{1,2})-(\d{1,2})/);
+                // 尝试匹配 MM-DD 或 MM.DD 格式，使用当前年份
+                const shortDateMatch = fileName.match(/(\d{1,2})[-./](\d{1,2})/);
                 if (shortDateMatch) {
                     const year = new Date().getFullYear();
                     dateFromFileName = `${year}-${shortDateMatch[1].padStart(2,'0')}-${shortDateMatch[2].padStart(2,'0')}`;
                 }
             }
+            
+            console.log('文件名:', fileName, '提取日期:', dateFromFileName);
             
             const reader = new FileReader();
             reader.onload = function(e) {
