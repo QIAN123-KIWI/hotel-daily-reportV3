@@ -980,6 +980,16 @@
             document.getElementById('kpi-revpar').innerText = fmt(revpar);
             document.getElementById('kpi-revpar-ytd').innerText = data.revparYtd ? fmt(data.revparYtd) : '--';
 
+            // 更新 STATE.currentData 的汇总数据（确保保存时数据完整）
+            if (STATE.currentData && STATE.currentData.date === data.date) {
+                STATE.currentData.totals = {
+                    room: { act: room.act, bud: room.bud },
+                    fb: { act: fb.act, bud: fb.bud },
+                    other: { act: other.act, bud: other.bud },
+                    hotel: { act: grand.act, bud: grand.bud }
+                };
+            }
+
             // 部门表格
             renderDeptTable(room, fb, other, grand);
             
