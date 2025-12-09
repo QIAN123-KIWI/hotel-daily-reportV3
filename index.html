@@ -628,28 +628,50 @@
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 保存中...';
             
             try {
+                // 创建带超时的请求
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
+                
                 const response = await fetch(STATE.webhookUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(STATE.currentData)
+                    body: JSON.stringify(STATE.currentData),
+                    signal: controller.signal
                 });
+                
+                clearTimeout(timeoutId);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}`);
                 }
                 
-                const result = await response.json();
+                let result;
+                const text = await response.text();
+                try {
+                    result = JSON.parse(text);
+                } catch (e) {
+                    // 如果返回的不是 JSON，但请求成功了，也算成功
+                    result = { success: true };
+                }
                 
-                if (result.success) {
-                    showToast(`✓ ${result.date || STATE.currentData.date} 数据已保存`, 'success');
-                    // 2秒后刷新
-                    setTimeout(refreshFromGitHub, 2000);
+                if (result.success || response.ok) {
+                    showToast(`✓ ${STATE.currentData.date} 数据已保存`, 'success');
+                    // 3秒后刷新（给 GitHub 更多时间同步）
+                    setTimeout(refreshFromGitHub, 3000);
                 } else {
                     throw new Error(result.message || '保存失败');
                 }
             } catch (err) {
                 console.error('保存失败:', err);
-                showToast('保存失败: ' + err.message, 'error');
+                if (err.name === 'AbortError') {
+                    showToast('保存超时，请检查网络后重试', 'error');
+                } else if (err.message === 'Failed to fetch') {
+                    // 可能是网络问题，但数据可能已经保存成功
+                    showToast('网络请求异常，请刷新页面检查数据是否已保存', 'warning');
+                    setTimeout(refreshFromGitHub, 2000);
+                } else {
+                    showToast('保存失败: ' + err.message, 'error');
+                }
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> 保存到云端';
@@ -808,16 +830,40 @@
             const file = event.target.files[0];
             if (!file) return;
             
+            // 从文件名提取日期 (支持格式: 2025-12-08.xlsx, 2025-12-08_xxx.xlsx, 12-08.xlsx 等)
+            const fileName = file.name.replace(/\.(xlsx|xls|csv)$/i, '');
+            let dateFromFileName = null;
+            
+            // 尝试匹配 YYYY-MM-DD 格式
+            const fullDateMatch = fileName.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+            if (fullDateMatch) {
+                dateFromFileName = `${fullDateMatch[1]}-${fullDateMatch[2].padStart(2,'0')}-${fullDateMatch[3].padStart(2,'0')}`;
+            } else {
+                // 尝试匹配 MM-DD 格式，使用当前年份
+                const shortDateMatch = fileName.match(/(\d{1,2})-(\d{1,2})/);
+                if (shortDateMatch) {
+                    const year = new Date().getFullYear();
+                    dateFromFileName = `${year}-${shortDateMatch[1].padStart(2,'0')}-${shortDateMatch[2].padStart(2,'0')}`;
+                }
+            }
+            
             const reader = new FileReader();
             reader.onload = function(e) {
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
                 const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
                 const parsed = parseExcelData(rows);
+                
+                // 如果从文件名提取到日期，优先使用文件名日期
+                if (dateFromFileName) {
+                    parsed.date = dateFromFileName;
+                    parsed.weekday = ['周日','周一','周二','周三','周四','周五','周六'][new Date(dateFromFileName).getDay()];
+                }
+                
                 STATE.currentData = parsed;
                 renderDashboard(parsed);
                 document.getElementById('save-btn').disabled = false;
-                showToast('Excel 解析成功，点击「保存到云端」持久化', 'success');
+                showToast(`Excel 解析成功 (${parsed.date})，点击「保存到云端」持久化`, 'success');
             };
             reader.readAsArrayBuffer(file);
             event.target.value = '';
