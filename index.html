@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>酒店经营日报 | NEXUS</title>
+    <title>酒店经营日报 | NEXUS (代理版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
@@ -66,7 +66,7 @@
         <div class="sidebar-content flex flex-col flex-1">
             <div class="flex items-center gap-2 mb-4">
                 <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"><i class="fa-solid fa-chart-line text-white text-sm"></i></div>
-                <div><span class="font-semibold text-white text-sm">NEXUS</span><span class="text-[9px] text-zinc-500 block">v2.5 直连版</span></div>
+                <div><span class="font-semibold text-white text-sm">NEXUS</span><span class="text-[9px] text-zinc-500 block">v2.5 Proxy版</span></div>
             </div>
             <label class="block mb-4">
                 <div class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 rounded cursor-pointer text-center text-xs font-medium"><i class="fa-solid fa-upload mr-1"></i>上传报表</div>
@@ -81,7 +81,7 @@
             <div class="flex items-center gap-3">
                 <span id="current-date" class="text-lg font-semibold">--</span>
                 <span id="data-status" class="tag tag-red">无数据</span>
-                <span class="tag tag-blue">📡 直连模式</span>
+                <span class="tag tag-blue">🌐 代理模式</span>
             </div>
             <div class="flex items-center gap-2">
                 <button onclick="refreshData()" class="btn-secondary px-3" title="刷新"><i class="fa-solid fa-sync"></i></button>
@@ -122,7 +122,7 @@
 <div id="settings-modal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center">
     <div class="bg-zinc-900 rounded-xl p-5 w-full max-w-lg border border-zinc-700">
         <div class="flex justify-between mb-4"><h3 class="font-semibold"><i class="fa-solid fa-gear text-blue-400 mr-2"></i>设置</h3><button onclick="closeModal('settings-modal')" class="text-zinc-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button></div>
-        <div class="mb-4 p-3 bg-green-900/30 border border-green-700/50 rounded text-xs text-green-300"><i class="fa-solid fa-check-circle mr-1"></i>直连模式 - 使用GitHub Pages相对路径，无需代理</div>
+        <div class="mb-4 p-3 bg-blue-900/30 border border-blue-700/50 rounded text-xs text-blue-300"><i class="fa-solid fa-shield-alt mr-1"></i>代理模式 - 使用 ghproxy.net 加速访问</div>
         <div class="mb-4"><label class="text-[10px] text-zinc-500">Webhook URL</label><input type="text" id="settings-webhook" class="w-full mt-1 bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-xs"></div>
         <div class="mb-4"><label class="text-[10px] text-zinc-500">AI提示词</label><textarea id="settings-ai-prompt" rows="8" class="w-full mt-1 bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-xs"></textarea></div>
         <div class="flex justify-end gap-2"><button onclick="closeModal('settings-modal')" class="btn-secondary">取消</button><button onclick="saveSettings()" class="btn-primary">保存</button></div>
@@ -147,6 +147,9 @@ function getChineseName(n){if(!n)return'未知';if(/[\u4e00-\u9fa5]/.test(n)){co
 
 const DEFAULT_PROMPT = `你是酒店经营分析师。分析数据生成HTML报告。日期:{date}，完成率:{total_pct}%，客房:{room_pct}%，餐饮:{fb_pct}%，其他:{other_pct}%，出租率:{occupancy}%，ADR:¥{adr}，RevPAR:¥{revpar}。用HTML输出含section-title、highlight-good/bad、risk-item等class。`;
 
+// 🔥🔥🔥 核心修改：定义 ghproxy 代理前缀 + 你的 GitHub 仓库地址 🔥🔥🔥
+const REMOTE_BASE = 'https://ghproxy.net/https://raw.githubusercontent.com/QIAN123-KIWI/hotel-daily-reportV3/main/data';
+
 const STATE = {
     currentData: null, historyIndex: [], historyData: {}, charts: {},
     webhookUrl: localStorage.getItem('nexus_webhook_url') || 'https://n8n-fzlhzvbn.ap-northeast-1.clawcloudrun.com/webhook/hotel-save',
@@ -167,11 +170,12 @@ function openSettingsModal() { document.getElementById('settings-webhook').value
 function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 function saveSettings() { STATE.webhookUrl = document.getElementById('settings-webhook').value.trim(); STATE.aiPrompt = document.getElementById('settings-ai-prompt').value.trim() || DEFAULT_PROMPT; localStorage.setItem('nexus_webhook_url', STATE.webhookUrl); localStorage.setItem('nexus_ai_prompt', STATE.aiPrompt); closeModal('settings-modal'); showToast('设置已保存', 'success'); }
 
-// ========== 核心：使用相对路径直接访问数据 ==========
+// ========== 核心：使用 GHPROXY 代理访问数据 ==========
 async function refreshData() {
-    showToast('正在加载数据...', 'info');
+    showToast('正在加载数据(代理模式)...', 'info');
     try {
-        const res = await fetch('./data/index.json?t=' + Date.now());
+        // 修改1：使用远程代理地址
+        const res = await fetch(REMOTE_BASE + '/index.json?t=' + Date.now());
         if (!res.ok) throw new Error('HTTP ' + res.status);
         STATE.historyIndex = await res.json();
         showToast('已加载 ' + STATE.historyIndex.length + ' 条记录', 'success');
@@ -183,7 +187,7 @@ async function refreshData() {
         await loadTrendData();
     } catch (e) {
         console.error('加载失败:', e);
-        showToast('加载失败: ' + e.message, 'error');
+        showToast('代理连接失败，请检查网络', 'error');
     }
 }
 
@@ -198,7 +202,8 @@ async function loadDayData(date) {
     }
     try {
         const [y, m] = date.split('-');
-        const res = await fetch('./data/' + y + '/' + m + '/' + date + '.json?t=' + Date.now());
+        // 修改2：使用远程代理地址
+        const res = await fetch(REMOTE_BASE + '/' + y + '/' + m + '/' + date + '.json?t=' + Date.now());
         if (!res.ok) throw new Error();
         const d = await res.json();
         STATE.historyData[date] = d;
@@ -223,7 +228,8 @@ async function loadTrendData() {
         if (STATE.historyData[i.date]) data.push(STATE.historyData[i.date]);
         else try {
             const [y,m] = i.date.split('-');
-            const res = await fetch('./data/' + y + '/' + m + '/' + i.date + '.json');
+            // 修改3：使用远程代理地址
+            const res = await fetch(REMOTE_BASE + '/' + y + '/' + m + '/' + i.date + '.json');
             if (res.ok) { const d = await res.json(); STATE.historyData[i.date] = d; data.push(d); }
         } catch {}
     }
@@ -371,7 +377,8 @@ function renderTrendChart(data) {
 function renderOpsTrendChart(data) {
     const el=document.getElementById('ops-trend-chart');
     if(STATE.charts.opsTrend)STATE.charts.opsTrend.dispose();
-    if(!data.length||!data.some(d=>d.revpar||d.adr||d.occupancy)){el.innerHTML='<div class="flex items-center justify-center h-full text-zinc-600 text-xs">暂无数据</div>';return;}
+    if(!data.length||!data.some(d=>d.revpar||d.adr||d.occupancy)){el.innerHTML='<div class="flex items-center justify-center h-full text-zinc-600 text-xs">暂无数据</div>';return;
+}
     const chart=echarts.init(el,'dark');
     chart.setOption({backgroundColor:'transparent',tooltip:{trigger:'axis'},legend:{data:['RevPAR','ADR','入住率'],bottom:0,textStyle:{color:'#71717a',fontSize:10}},grid:{left:5,right:35,top:10,bottom:35,containLabel:true},xAxis:{type:'category',data:data.map(d=>d.date.slice(5)),axisLabel:{fontSize:9,color:'#71717a',rotate:30}},yAxis:[{type:'value',position:'left',axisLabel:{fontSize:9,formatter:v=>'¥'+v},splitLine:{lineStyle:{color:'#27272a'}}},{type:'value',position:'right',min:0,max:100,axisLabel:{fontSize:9,formatter:v=>v+'%'},splitLine:{show:false}}],series:[{name:'RevPAR',type:'line',yAxisIndex:0,data:data.map(d=>Math.floor(d.revpar||0)),smooth:true,symbol:'circle',symbolSize:4,lineStyle:{color:'#a855f7',width:2},itemStyle:{color:'#a855f7'}},{name:'ADR',type:'line',yAxisIndex:0,data:data.map(d=>Math.floor(d.adr||0)),smooth:true,symbol:'circle',symbolSize:4,lineStyle:{color:'#f59e0b',width:2},itemStyle:{color:'#f59e0b'}},{name:'入住率',type:'line',yAxisIndex:1,data:data.map(d=>{const o=d.occupancy||0;return o<=1?(o*100).toFixed(1):o.toFixed(1);}),smooth:true,symbol:'circle',symbolSize:4,lineStyle:{color:'#22c55e',width:2},itemStyle:{color:'#22c55e'},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(34,197,94,0.2)'},{offset:1,color:'rgba(34,197,94,0)'}]}}}]});
     STATE.charts.opsTrend=chart;
@@ -422,7 +429,7 @@ function switchDeepTab(tab) {
 }
 
 window.addEventListener('resize',()=>Object.values(STATE.charts).forEach(c=>c?.resize()));
-document.addEventListener('DOMContentLoaded',()=>{console.log('🚀 NEXUS v2.5 直连版启动');refreshData();});
+document.addEventListener('DOMContentLoaded',()=>{console.log('🚀 NEXUS v2.5 Proxy版启动');refreshData();});
 </script>
 </body>
 </html>
