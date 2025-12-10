@@ -9,70 +9,313 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: #09090b; color: #fafafa; font-family: 'Noto Sans SC', sans-serif; font-size: 12px; }
         
-        .card { background: #18181b; border: 1px solid #27272a; border-radius: 8px; }
-        .kpi-card { padding: 10px 12px; border-left: 3px solid; }
-        .kpi-card.blue { border-color: #3b82f6; }
-        .kpi-card.green { border-color: #22c55e; }
-        .kpi-card.amber { border-color: #f59e0b; }
-        .kpi-card.purple { border-color: #a855f7; }
-        .kpi-value { font-size: 1.1rem; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+        :root {
+            --bg-primary: #0a0a0c;
+            --bg-secondary: #111114;
+            --bg-card: #16161a;
+            --border-color: #232329;
+            --text-primary: #f4f4f5;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --accent-blue: #3b82f6;
+            --accent-green: #22c55e;
+            --accent-amber: #f59e0b;
+            --accent-purple: #a855f7;
+            --accent-red: #ef4444;
+        }
         
-        .tag { padding: 1px 4px; border-radius: 3px; font-size: 9px; font-weight: 600; }
-        .tag-green { background: rgba(34,197,94,0.15); color: #22c55e; }
-        .tag-red { background: rgba(239,68,68,0.15); color: #ef4444; }
+        body { 
+            background: var(--bg-primary); 
+            color: var(--text-primary); 
+            font-family: 'Plus Jakarta Sans', 'Noto Sans SC', sans-serif; 
+            font-size: 13px; 
+        }
         
-        table { width: 100%; border-collapse: collapse; font-size: 10px; }
-        th, td { padding: 5px 3px; text-align: left; border-bottom: 1px solid #27272a; }
-        th { color: #71717a; font-size: 9px; }
+        .card { 
+            background: var(--bg-card); 
+            border: 1px solid var(--border-color); 
+            border-radius: 12px; 
+            transition: all 0.2s;
+        }
+        .card:hover {
+            border-color: #333;
+        }
         
-        .sidebar { width: 180px; transition: width 0.2s; }
-        .sidebar.collapsed { width: 40px; }
+        .kpi-card { 
+            padding: 14px 16px; 
+            position: relative;
+            overflow: hidden;
+        }
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+        }
+        .kpi-card.blue::before { background: linear-gradient(180deg, #3b82f6, #1d4ed8); }
+        .kpi-card.green::before { background: linear-gradient(180deg, #22c55e, #16a34a); }
+        .kpi-card.amber::before { background: linear-gradient(180deg, #f59e0b, #d97706); }
+        .kpi-card.purple::before { background: linear-gradient(180deg, #a855f7, #7c3aed); }
+        
+        .kpi-value { 
+            font-size: 1.25rem; 
+            font-weight: 600; 
+            font-family: 'JetBrains Mono', monospace; 
+            letter-spacing: -0.02em;
+        }
+        
+        .tag { 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            font-size: 10px; 
+            font-weight: 600; 
+        }
+        .tag-green { background: rgba(34,197,94,0.12); color: #4ade80; }
+        .tag-red { background: rgba(239,68,68,0.12); color: #f87171; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th, td { padding: 8px 6px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { color: var(--text-muted); font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+        
+        .sidebar { width: 200px; transition: width 0.2s; }
+        .sidebar.collapsed { width: 48px; }
         .sidebar.collapsed .sidebar-content { display: none; }
         .sidebar.collapsed .sidebar-toggle i { transform: rotate(180deg); }
         
-        .history-item { padding: 6px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; }
-        .history-item:hover { background: #27272a; }
-        .history-item.active { background: #27272a; border-left: 2px solid #3b82f6; }
+        .history-item { 
+            padding: 8px 10px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 12px; 
+            transition: all 0.15s;
+        }
+        .history-item:hover { background: rgba(255,255,255,0.05); }
+        .history-item.active { 
+            background: rgba(59,130,246,0.1); 
+            border-left: 2px solid var(--accent-blue); 
+        }
         .month-content { max-height: 0; overflow: hidden; transition: max-height 0.2s; }
-        .month-content.expanded { max-height: 300px; }
+        .month-content.expanded { max-height: 400px; }
         
-        #toast-container { position: fixed; top: 12px; right: 12px; z-index: 9999; }
-        .toast { padding: 6px 12px; border-radius: 4px; font-size: 11px; margin-bottom: 4px; animation: slideIn 0.2s; }
-        .toast-success { background: #166534; }
-        .toast-error { background: #991b1b; }
-        .toast-info { background: #1e40af; }
+        #toast-container { position: fixed; top: 16px; right: 16px; z-index: 9999; }
+        .toast { 
+            padding: 10px 16px; 
+            border-radius: 8px; 
+            font-size: 12px; 
+            margin-bottom: 8px; 
+            animation: slideIn 0.25s ease-out;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .toast-success { background: linear-gradient(135deg, #166534, #15803d); }
+        .toast-error { background: linear-gradient(135deg, #991b1b, #b91c1c); }
+        .toast-info { background: linear-gradient(135deg, #1e40af, #2563eb); }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } }
         
-        .modal-backdrop { background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); }
+        .modal-backdrop { background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); }
         
         /* AI 分析样式 */
-        #ai-analysis { font-size: 11px; line-height: 1.6; }
-        #ai-analysis .section-title { color: #60a5fa; font-size: 11px; font-weight: 600; margin: 10px 0 6px 0; display: flex; align-items: center; gap: 6px; }
+        #ai-analysis { font-size: 12px; line-height: 1.7; }
+        #ai-analysis .section-title { 
+            color: var(--accent-blue); 
+            font-size: 12px; 
+            font-weight: 600; 
+            margin: 14px 0 8px 0; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border-color);
+        }
         #ai-analysis .section-title:first-child { margin-top: 0; }
-        #ai-analysis p { color: #d4d4d8; margin: 4px 0; }
-        #ai-analysis strong { color: #f4f4f5; }
+        #ai-analysis p { color: var(--text-secondary); margin: 6px 0; }
+        #ai-analysis strong { color: var(--text-primary); }
         #ai-analysis .highlight-good { color: #4ade80; }
         #ai-analysis .highlight-bad { color: #f87171; }
-        #ai-analysis .data-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #27272a; }
+        #ai-analysis .highlight-warn { color: #fbbf24; }
+        #ai-analysis .data-row { 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 6px 0; 
+            border-bottom: 1px solid rgba(255,255,255,0.05); 
+        }
         #ai-analysis .data-row:last-child { border-bottom: none; }
-        #ai-analysis .sub-item { padding-left: 12px; font-size: 10px; color: #a1a1aa; }
+        #ai-analysis .sub-item { 
+            padding-left: 16px; 
+            font-size: 11px; 
+            color: var(--text-muted);
+            border-left: 2px solid var(--border-color);
+            margin: 4px 0 4px 8px;
+        }
+        #ai-analysis .progress-bar {
+            height: 6px;
+            background: var(--border-color);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+        #ai-analysis .progress-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+        #ai-analysis .risk-item {
+            background: rgba(239,68,68,0.08);
+            border-left: 3px solid var(--accent-red);
+            padding: 8px 12px;
+            margin: 6px 0;
+            border-radius: 0 6px 6px 0;
+        }
+        #ai-analysis .suggestion-item {
+            background: rgba(34,197,94,0.08);
+            border-left: 3px solid var(--accent-green);
+            padding: 8px 12px;
+            margin: 6px 0;
+            border-radius: 0 6px 6px 0;
+        }
         
-        .ai-loading .spinner { width: 14px; height: 14px; border: 2px solid #3b82f6; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        .ai-loading .spinner { 
+            width: 16px; 
+            height: 16px; 
+            border: 2px solid var(--accent-blue); 
+            border-top-color: transparent; 
+            border-radius: 50%; 
+            animation: spin 0.8s linear infinite; 
+        }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        .deep-summary { background: #1f1f23; border-radius: 6px; padding: 12px; margin-top: 12px; font-size: 11px; }
+        .deep-summary { 
+            background: var(--bg-secondary); 
+            border-radius: 8px; 
+            padding: 16px; 
+            margin-top: 16px; 
+            font-size: 12px; 
+        }
         .deep-summary .good { color: #4ade80; }
         .deep-summary .bad { color: #f87171; }
 
-        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: #52525b; }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 12px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+        }
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-secondary:hover {
+            background: var(--border-color);
+            color: var(--text-primary);
+        }
+        
+        /* 提示词编辑面板 */
+        .prompt-panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-top: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        .prompt-panel.collapsed {
+            max-height: 40px;
+        }
+        .prompt-panel.expanded {
+            max-height: 400px;
+        }
+        .prompt-header {
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            background: var(--bg-card);
+        }
+        .prompt-header:hover {
+            background: var(--border-color);
+        }
+        .prompt-body {
+            padding: 12px;
+            display: none;
+        }
+        .prompt-panel.expanded .prompt-body {
+            display: block;
+        }
+        .prompt-textarea {
+            width: 100%;
+            height: 200px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-secondary);
+            resize: none;
+            line-height: 1.5;
+        }
+        .prompt-textarea:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+        
+        /* 分析状态指示器 */
+        .analysis-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--text-muted);
+        }
+        .status-dot.active {
+            background: var(--accent-green);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
     </style>
 </head>
 <body class="min-h-screen">
@@ -80,106 +323,173 @@
 
     <div class="flex min-h-screen">
         <!-- 侧边栏 -->
-        <aside id="sidebar" class="sidebar border-r border-zinc-800 p-2 flex flex-col bg-[#0c0c0e]">
-            <button onclick="toggleSidebar()" class="sidebar-toggle w-full flex items-center justify-center py-1.5 mb-2 text-zinc-500 hover:text-white text-xs">
-                <i class="fa-solid fa-chevron-left transition-transform"></i>
+        <aside id="sidebar" class="sidebar border-r border-zinc-800/50 p-3 flex flex-col bg-[#0c0c0e]">
+            <button onclick="toggleSidebar()" class="sidebar-toggle w-full flex items-center justify-center py-2 mb-3 text-zinc-500 hover:text-white text-xs rounded-lg hover:bg-zinc-800/50 transition-colors">
+                <i class="fa-solid fa-chevron-left transition-transform duration-200"></i>
             </button>
             <div class="sidebar-content flex flex-col flex-1">
-                <div class="flex items-center gap-2 mb-3 px-1">
-                    <div class="w-6 h-6 rounded bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                        <i class="fa-solid fa-chart-line text-white text-[10px]"></i>
+                <div class="flex items-center gap-3 mb-4 px-1">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                        <i class="fa-solid fa-chart-line text-white text-sm"></i>
                     </div>
-                    <span class="font-semibold text-white text-xs">NEXUS</span>
+                    <div>
+                        <span class="font-semibold text-white text-sm block">NEXUS</span>
+                        <span class="text-[10px] text-zinc-500">经营分析系统</span>
+                    </div>
                 </div>
-                <label class="block mb-3">
-                    <div class="w-full py-1.5 bg-blue-600 hover:bg-blue-500 rounded cursor-pointer text-center text-[10px] font-medium">
-                        <i class="fa-solid fa-upload mr-1"></i>上传报表
+                <label class="block mb-4">
+                    <div class="w-full py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 rounded-lg cursor-pointer text-center text-xs font-medium transition-all hover:shadow-lg hover:shadow-blue-500/20">
+                        <i class="fa-solid fa-upload mr-2"></i>上传报表
                     </div>
                     <input type="file" accept=".xlsx,.xls,.csv" onchange="handleFileUpload(event)" class="hidden">
                 </label>
-                <div class="flex items-center justify-between mb-1 px-1">
-                    <span class="text-[9px] text-zinc-500 uppercase">历史</span>
-                    <span class="text-[9px] text-zinc-600" id="history-count">0</span>
+                <div class="flex items-center justify-between mb-2 px-1">
+                    <span class="text-[10px] text-zinc-500 uppercase tracking-wider">历史记录</span>
+                    <span class="text-[10px] text-zinc-600 bg-zinc-800/50 px-2 py-0.5 rounded" id="history-count">0</span>
                 </div>
                 <div id="history-list" class="flex-1 overflow-y-auto"></div>
             </div>
         </aside>
 
         <!-- 主内容 -->
-        <main class="flex-1 p-2.5 overflow-y-auto">
+        <main class="flex-1 p-4 overflow-y-auto">
             <!-- 顶部 -->
-            <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-2">
-                    <span id="current-date" class="text-base font-semibold text-white">--</span>
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <span id="current-date" class="text-lg font-semibold text-white">--</span>
                     <span id="data-status" class="tag tag-red">无数据</span>
                 </div>
-                <div class="flex items-center gap-1.5">
-                    <button onclick="refreshFromGitHub()" class="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-[10px] text-zinc-400"><i class="fa-solid fa-sync"></i></button>
-                    <button id="save-btn" onclick="saveToGitHub()" disabled class="px-2.5 py-1 bg-green-600 hover:bg-green-500 disabled:opacity-40 rounded text-[10px] font-medium"><i class="fa-solid fa-cloud-arrow-up mr-1"></i>保存</button>
-                    <button onclick="openSettingsModal()" class="w-6 h-6 bg-zinc-800 hover:bg-zinc-700 rounded flex items-center justify-center text-zinc-400 text-[10px]"><i class="fa-solid fa-gear"></i></button>
+                <div class="flex items-center gap-2">
+                    <button onclick="refreshFromGitHub()" class="btn-secondary px-3 py-1.5">
+                        <i class="fa-solid fa-sync"></i>
+                    </button>
+                    <button id="save-btn" onclick="saveToGitHub()" disabled class="btn-primary px-4 py-1.5">
+                        <i class="fa-solid fa-cloud-arrow-up mr-1.5"></i>保存到云端
+                    </button>
+                    <button onclick="openSettingsModal()" class="btn-secondary px-3 py-1.5">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
                 </div>
             </div>
 
             <!-- KPI -->
-            <div class="grid grid-cols-4 gap-2 mb-2">
+            <div class="grid grid-cols-4 gap-3 mb-4">
                 <div class="card kpi-card blue">
-                    <p class="text-[9px] text-zinc-500">总营收 Total Revenue</p>
+                    <p class="text-[10px] text-zinc-500 mb-1">总营收 Total Revenue</p>
                     <p id="kpi-revenue" class="kpi-value text-white">--</p>
-                    <p class="text-[9px] text-zinc-500">预算 <span id="kpi-revenue-bud">--</span> <span id="kpi-revenue-tag" class="tag">--</span></p>
+                    <p class="text-[10px] text-zinc-500 mt-1">预算 <span id="kpi-revenue-bud" class="font-mono">--</span> <span id="kpi-revenue-tag" class="tag">--</span></p>
                 </div>
                 <div class="card kpi-card green">
-                    <p class="text-[9px] text-zinc-500">出租率 Occupancy</p>
+                    <p class="text-[10px] text-zinc-500 mb-1">出租率 Occupancy</p>
                     <p id="kpi-occ" class="kpi-value text-white">--</p>
-                    <p class="text-[9px] text-zinc-500">售房 <span id="kpi-sold">--</span>/260</p>
+                    <p class="text-[10px] text-zinc-500 mt-1">售房 <span id="kpi-sold" class="font-mono">--</span>/260</p>
                 </div>
                 <div class="card kpi-card amber">
-                    <p class="text-[9px] text-zinc-500">ADR 平均房价</p>
+                    <p class="text-[10px] text-zinc-500 mb-1">ADR 平均房价</p>
                     <p id="kpi-adr" class="kpi-value text-white">--</p>
-                    <p class="text-[9px] text-zinc-500">预算 <span id="kpi-adr-bud">--</span></p>
+                    <p class="text-[10px] text-zinc-500 mt-1">预算 <span id="kpi-adr-bud" class="font-mono">--</span></p>
                 </div>
                 <div class="card kpi-card purple">
-                    <p class="text-[9px] text-zinc-500">RevPAR 每房收益</p>
+                    <p class="text-[10px] text-zinc-500 mb-1">RevPAR 每房收益</p>
                     <p id="kpi-revpar" class="kpi-value text-white">--</p>
-                    <p class="text-[9px] text-zinc-500">预算 <span id="kpi-revpar-bud">--</span></p>
+                    <p class="text-[10px] text-zinc-500 mt-1">预算 <span id="kpi-revpar-bud" class="font-mono">--</span></p>
                 </div>
             </div>
 
-            <!-- 主区域 -->
-            <div class="grid grid-cols-12 gap-2 mb-2">
-                <!-- 左侧 -->
-                <div class="col-span-5 flex flex-col gap-2">
-                    <div class="card p-2">
-                        <div class="flex items-center justify-between mb-1">
-                            <span class="text-[10px] font-medium text-zinc-300"><i class="fa-solid fa-layer-group text-blue-400 mr-1"></i>部门概览</span>
-                            <button onclick="openDeepDive()" class="text-[9px] text-blue-400 hover:text-blue-300 flex items-center gap-1">
+            <!-- 主区域：调整比例 7:5 -->
+            <div class="grid grid-cols-12 gap-4 mb-4">
+                <!-- 左侧：数据展示区域（扩大） -->
+                <div class="col-span-7 flex flex-col gap-4">
+                    <div class="card p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-sm font-medium text-zinc-300">
+                                <i class="fa-solid fa-layer-group text-blue-400 mr-2"></i>部门概览
+                            </span>
+                            <button onclick="openDeepDive()" class="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 transition-colors">
                                 <i class="fa-solid fa-table-list"></i>查看详细数据
                             </button>
                         </div>
                         <table>
-                            <thead><tr><th>部门</th><th>实际</th><th>预算</th><th>差额</th><th>完成</th></tr></thead>
-                            <tbody id="dept-table-body"><tr><td colspan="5" class="text-center text-zinc-600 py-2">--</td></tr></tbody>
+                            <thead><tr><th>部门</th><th>实际收入</th><th>预算金额</th><th>差额</th><th>完成率</th></tr></thead>
+                            <tbody id="dept-table-body"><tr><td colspan="5" class="text-center text-zinc-600 py-4">--</td></tr></tbody>
                         </table>
                     </div>
-                    <div class="card p-2">
-                        <span class="text-[10px] font-medium text-zinc-300"><i class="fa-solid fa-chart-bar text-blue-400 mr-1"></i>营收对比</span>
-                        <div id="main-chart" style="height:120px;"></div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="card p-4">
+                            <span class="text-sm font-medium text-zinc-300">
+                                <i class="fa-solid fa-chart-bar text-blue-400 mr-2"></i>营收对比
+                            </span>
+                            <div id="main-chart" style="height:160px;"></div>
+                        </div>
+                        <div class="card p-4">
+                            <span class="text-sm font-medium text-zinc-300">
+                                <i class="fa-solid fa-chart-pie text-amber-400 mr-2"></i>收入构成
+                            </span>
+                            <div id="pie-chart" style="height:160px;"></div>
+                        </div>
                     </div>
-                    <div class="card p-2">
-                        <span class="text-[10px] font-medium text-zinc-300"><i class="fa-solid fa-chart-line text-amber-400 mr-1"></i>历史趋势</span>
-                        <div id="trend-chart" style="height:110px;"></div>
+                    <!-- 历史趋势：分成两个图 -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="card p-4">
+                            <span class="text-sm font-medium text-zinc-300">
+                                <i class="fa-solid fa-chart-line text-green-400 mr-2"></i>营收趋势（近30天）
+                            </span>
+                            <div id="trend-chart" style="height:140px;"></div>
+                        </div>
+                        <div class="card p-4">
+                            <span class="text-sm font-medium text-zinc-300">
+                                <i class="fa-solid fa-hotel text-purple-400 mr-2"></i>运营指标趋势
+                            </span>
+                            <div id="ops-trend-chart" style="height:140px;"></div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- 右侧：AI分析 -->
-                <div class="col-span-7">
-                    <div class="card p-3 h-full">
-                        <div class="flex items-center justify-between mb-2 pb-2 border-b border-zinc-800">
-                            <span class="text-[11px] font-medium text-white"><i class="fa-solid fa-robot text-purple-400 mr-1"></i>AI 经营分析</span>
-                            <span id="ai-update-time" class="text-[9px] text-zinc-600">--</span>
+                <!-- 右侧：AI分析（缩小） -->
+                <div class="col-span-5">
+                    <div class="card p-4 h-full flex flex-col">
+                        <div class="flex items-center justify-between mb-3 pb-3 border-b border-zinc-800">
+                            <div class="flex items-center gap-2">
+                                <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                                    <i class="fa-solid fa-robot text-white text-xs"></i>
+                                </div>
+                                <div>
+                                    <span class="text-sm font-medium text-white block">AI 经营分析</span>
+                                    <div class="analysis-status">
+                                        <span class="status-dot" id="ai-status-dot"></span>
+                                        <span id="ai-update-time">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button onclick="generateAIAnalysis()" class="btn-secondary px-3 py-1.5 text-xs" title="重新分析">
+                                <i class="fa-solid fa-rotate"></i>
+                            </button>
                         </div>
-                        <div id="ai-analysis" class="overflow-y-auto pr-1" style="max-height: 380px;">
-                            <div class="flex items-center justify-center py-8 text-zinc-600 text-xs">
-                                <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>上传数据后自动分析
+                        <div id="ai-analysis" class="flex-1 overflow-y-auto pr-1" style="max-height: 520px;">
+                            <div class="flex flex-col items-center justify-center py-12 text-zinc-600">
+                                <i class="fa-solid fa-wand-magic-sparkles text-2xl mb-3"></i>
+                                <span class="text-xs">上传数据后自动生成智能分析</span>
+                            </div>
+                        </div>
+                        
+                        <!-- 提示词编辑面板 -->
+                        <div id="prompt-panel" class="prompt-panel collapsed">
+                            <div class="prompt-header" onclick="togglePromptPanel()">
+                                <span class="text-xs text-zinc-400 flex items-center gap-2">
+                                    <i class="fa-solid fa-sliders"></i>自定义分析提示词
+                                </span>
+                                <i class="fa-solid fa-chevron-down text-zinc-500 text-xs transition-transform" id="prompt-chevron"></i>
+                            </div>
+                            <div class="prompt-body">
+                                <textarea id="inline-prompt" class="prompt-textarea" placeholder="在此编辑AI分析提示词..."></textarea>
+                                <div class="flex justify-between items-center mt-2">
+                                    <button onclick="resetInlinePrompt()" class="text-xs text-zinc-500 hover:text-zinc-300">
+                                        <i class="fa-solid fa-rotate-left mr-1"></i>恢复默认
+                                    </button>
+                                    <button onclick="applyPromptAndAnalyze()" class="btn-primary px-3 py-1.5 text-xs">
+                                        <i class="fa-solid fa-play mr-1"></i>应用并重新分析
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -190,30 +500,36 @@
 
     <!-- 设置模态框 -->
     <div id="settings-modal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center">
-        <div class="bg-zinc-900 rounded-lg p-4 w-full max-w-xl border border-zinc-700">
-            <div class="flex items-center justify-between mb-3">
-                <h3 class="text-sm font-semibold text-white"><i class="fa-solid fa-gear text-blue-400 mr-2"></i>设置</h3>
-                <button onclick="closeModal('settings-modal')" class="text-zinc-500 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
+        <div class="bg-zinc-900 rounded-xl p-5 w-full max-w-2xl border border-zinc-700 shadow-2xl">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base font-semibold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-gear text-blue-400"></i>系统设置
+                </h3>
+                <button onclick="closeModal('settings-modal')" class="text-zinc-500 hover:text-white text-lg transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
-            <div class="grid grid-cols-2 gap-2 mb-3">
+            <div class="grid grid-cols-2 gap-3 mb-4">
                 <div>
-                    <label class="text-[9px] text-zinc-500 uppercase">Webhook URL</label>
-                    <input type="text" id="settings-webhook" class="w-full mt-1 bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-[10px] font-mono text-zinc-300">
+                    <label class="text-[10px] text-zinc-500 uppercase tracking-wider">Webhook URL</label>
+                    <input type="text" id="settings-webhook" class="w-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs font-mono text-zinc-300 focus:outline-none focus:border-blue-500">
                 </div>
                 <div>
-                    <label class="text-[9px] text-zinc-500 uppercase">GitHub 仓库 (owner/repo)</label>
-                    <input type="text" id="settings-github-repo" class="w-full mt-1 bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-[10px] font-mono text-zinc-300">
+                    <label class="text-[10px] text-zinc-500 uppercase tracking-wider">GitHub 仓库 (owner/repo)</label>
+                    <input type="text" id="settings-github-repo" class="w-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs font-mono text-zinc-300 focus:outline-none focus:border-blue-500">
                 </div>
             </div>
-            <div class="mb-3">
-                <label class="text-[9px] text-zinc-500 uppercase">AI 分析提示词</label>
-                <textarea id="settings-ai-prompt" rows="14" class="w-full mt-1 bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-[10px] font-mono text-zinc-300 leading-relaxed"></textarea>
+            <div class="mb-4">
+                <label class="text-[10px] text-zinc-500 uppercase tracking-wider">AI 分析提示词</label>
+                <textarea id="settings-ai-prompt" rows="16" class="w-full mt-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs font-mono text-zinc-300 leading-relaxed focus:outline-none focus:border-blue-500"></textarea>
             </div>
             <div class="flex justify-between">
-                <button onclick="resetPrompt()" class="px-2 py-1 text-zinc-400 hover:text-white text-[10px]"><i class="fa-solid fa-rotate-left mr-1"></i>恢复默认</button>
+                <button onclick="resetPrompt()" class="btn-secondary px-3 py-2">
+                    <i class="fa-solid fa-rotate-left mr-1"></i>恢复默认提示词
+                </button>
                 <div class="flex gap-2">
-                    <button onclick="closeModal('settings-modal')" class="px-2 py-1 text-zinc-400 text-[10px]">取消</button>
-                    <button onclick="saveSettings()" class="px-3 py-1 bg-blue-600 text-white rounded text-[10px] font-medium">保存</button>
+                    <button onclick="closeModal('settings-modal')" class="btn-secondary px-4 py-2">取消</button>
+                    <button onclick="saveSettings()" class="btn-primary px-4 py-2">保存设置</button>
                 </div>
             </div>
         </div>
@@ -221,33 +537,41 @@
 
     <!-- 深度分析 -->
     <div id="deep-modal" class="fixed inset-0 z-50 hidden modal-backdrop flex flex-col">
-        <div class="h-10 px-3 border-b border-zinc-800 flex items-center justify-between bg-[#0c0c0e]">
-            <div class="flex items-center gap-2">
-                <button onclick="closeModal('deep-modal')" class="text-zinc-400 hover:text-white text-xs"><i class="fa-solid fa-arrow-left mr-2"></i>返回</button>
-                <span class="text-xs font-medium text-white">深度分析 - 收入明细</span>
+        <div class="h-12 px-4 border-b border-zinc-800 flex items-center justify-between bg-[#0c0c0e]">
+            <div class="flex items-center gap-3">
+                <button onclick="closeModal('deep-modal')" class="text-zinc-400 hover:text-white text-sm flex items-center gap-2 transition-colors">
+                    <i class="fa-solid fa-arrow-left"></i>返回
+                </button>
+                <span class="text-sm font-medium text-white">深度分析 - 收入明细</span>
             </div>
-            <div class="flex gap-1">
-                <button id="deep-tab-room" onclick="switchDeepTab('room')" class="px-3 py-1 rounded text-[10px] bg-zinc-700 text-white">客房收入</button>
-                <button id="deep-tab-fb" onclick="switchDeepTab('fb')" class="px-3 py-1 rounded text-[10px] text-zinc-400">餐饮收入</button>
-                <button id="deep-tab-other" onclick="switchDeepTab('other')" class="px-3 py-1 rounded text-[10px] text-zinc-400">其他收入</button>
+            <div class="flex gap-2">
+                <button id="deep-tab-room" onclick="switchDeepTab('room')" class="px-4 py-1.5 rounded-lg text-xs bg-zinc-700 text-white transition-colors">客房收入</button>
+                <button id="deep-tab-fb" onclick="switchDeepTab('fb')" class="px-4 py-1.5 rounded-lg text-xs text-zinc-400 hover:text-white transition-colors">餐饮收入</button>
+                <button id="deep-tab-other" onclick="switchDeepTab('other')" class="px-4 py-1.5 rounded-lg text-xs text-zinc-400 hover:text-white transition-colors">其他收入</button>
             </div>
         </div>
-        <div class="flex-1 overflow-y-auto p-3 bg-[#09090b]">
-            <div class="max-w-5xl mx-auto">
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="card p-3">
-                        <h4 class="text-xs font-medium text-zinc-300 mb-2"><i class="fa-solid fa-table text-blue-400 mr-1"></i>收入明细表</h4>
-                        <div class="overflow-auto max-h-72"><table><thead id="deep-table-head"></thead><tbody id="deep-table-body"></tbody></table></div>
+        <div class="flex-1 overflow-y-auto p-4 bg-[#09090b]">
+            <div class="max-w-6xl mx-auto">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="card p-4">
+                        <h4 class="text-sm font-medium text-zinc-300 mb-3">
+                            <i class="fa-solid fa-table text-blue-400 mr-2"></i>收入明细表
+                        </h4>
+                        <div class="overflow-auto max-h-80">
+                            <table><thead id="deep-table-head"></thead><tbody id="deep-table-body"></tbody></table>
+                        </div>
                     </div>
-                    <div class="card p-3">
-                        <h4 class="text-xs font-medium text-zinc-300 mb-2"><i class="fa-solid fa-chart-bar text-blue-400 mr-1"></i>收入排行前10名</h4>
-                        <div id="deep-chart" style="height:220px;"></div>
+                    <div class="card p-4">
+                        <h4 class="text-sm font-medium text-zinc-300 mb-3">
+                            <i class="fa-solid fa-chart-bar text-blue-400 mr-2"></i>收入排行前10名
+                        </h4>
+                        <div id="deep-chart" style="height:260px;"></div>
                     </div>
                 </div>
                 <div class="deep-summary" id="deep-summary">
-                    <div class="flex items-center gap-2 mb-2">
+                    <div class="flex items-center gap-2 mb-3">
                         <i class="fa-solid fa-lightbulb text-amber-400"></i>
-                        <span class="text-xs font-medium text-white">数据分析摘要</span>
+                        <span class="text-sm font-medium text-white">数据分析摘要</span>
                     </div>
                     <div id="deep-summary-content" class="text-zinc-400">--</div>
                 </div>
@@ -256,41 +580,69 @@
     </div>
 
     <script>
-        // 提示词 - 直接告诉AI已计算好的数据，不让它自己算
-        const DEFAULT_AI_PROMPT = `你是酒店经营分析师。以下是已经计算好的经营数据，请直接使用这些数据进行分析，不要自己重新计算。
+        // 增强版提示词
+        const DEFAULT_AI_PROMPT = `你是专业的酒店经营分析师。请根据以下经营数据生成详细的分析报告。
 
-【今日经营概况 - 以下数据已计算好，请直接使用】
-日期：{date}
+【今日经营概况】
+日期：{date}（本月第{day}天，时间进度{time_progress}%）
 今日盈亏：{profit_status}{profit_amount}万元
-- 客房收入差额：{room_diff}（{room_status}）
-- 餐饮收入差额：{fb_diff}（{fb_status}）  
-- 其他收入差额：{other_diff}（{other_status}）
+整体完成率：{total_pct}%
 
-入住率：{occupancy}%（预算{occ_bud}%，{occ_status}）
-售房：{roomsSold}间（预算{rooms_bud}间）
-ADR平均房价：¥{adr}
-RevPAR：¥{revpar}
+【收入完成情况】
+- 客房收入：实际{room_act}万，预算{room_bud}万，完成率{room_pct}%，差额{room_diff}（{room_status}）
+- 餐饮收入：实际{fb_act}万，预算{fb_bud}万，完成率{fb_pct}%，差额{fb_diff}（{fb_status}）  
+- 其他收入：实际{other_act}万，预算{other_bud}万，完成率{other_pct}%，差额{other_diff}（{other_status}）
+
+【运营指标】
+- 入住率：{occupancy}%（预算{occ_bud}%，{occ_status}）
+- 售房：{roomsSold}间（预算{rooms_bud}间）
+- ADR平均房价：¥{adr}
+- RevPAR：¥{revpar}
 
 【各项收入明细】
 {details}
 
-【分析要求】
-请用HTML格式输出分析报告，禁止使用##、###、**等Markdown格式。
+【分析要求 - 请严格按以下结构输出】
 
-1. 今日盈亏部分：直接使用上面提供的盈亏数据，分析每个板块差额的原因
-2. 客房分析：根据明细数据，指出哪些渠道/房型表现好（完成率>100%），哪些差（<80%）
-3. 餐饮分析：根据明细数据，指出哪些餐厅表现好，哪些差
-4. 风险预警：指出需要重点关注的问题
-5. 月度预测：本月第{day}天，时间进度{time_progress}%
+1. 预算执行总览（用我提供的完成率数据：整体{total_pct}%，客房{room_pct}%，餐饮{fb_pct}%，其他{other_pct}%）
+2. 客房分析：哪些渠道/房型表现好（>100%），哪些差（<80%），分析原因并给出建议
+3. 餐饮分析：哪些餐厅表现好，哪些差，分析原因并给出建议
+4. 其他收入分析
+5. 风险预警：指出需要重点关注的问题
+6. 月度进展预测：基于当前进度预测月底完成情况
 
-输出格式：
-<div class="section-title">💰 今日盈亏</div>
-<p><strong>{直接用我给的盈亏数据}</strong></p>
-<div class="data-row"><span>客房</span><span class="{highlight-good或highlight-bad}">{直接用我给的差额}</span></div>
-<p class="sub-item">→ {分析原因，引用具体明细项目}</p>
-...后续板块同理
+【输出格式要求】
+使用HTML格式，禁止使用Markdown。参考以下结构：
 
-重要：所有数字必须使用我提供的数据，不要自己计算！`;
+<div class="section-title">📊 预算执行总览</div>
+<p><strong>整体完成率：{total_pct}%</strong></p>
+<div class="progress-bar"><div class="progress-fill" style="width:{total_pct_bar}%;background:{total_color}"></div></div>
+<div class="data-row"><span>客房收入</span><span class="{room_class}">完成{room_pct}%</span></div>
+<div class="data-row"><span>餐饮收入</span><span class="{fb_class}">完成{fb_pct}%</span></div>
+<div class="data-row"><span>其他收入</span><span class="{other_class}">完成{other_pct}%</span></div>
+
+<div class="section-title">🏨 客房分析</div>
+<p><strong>整体表现：</strong>描述</p>
+<p class="highlight-good">✓ 表现优秀：列出表现好的项目及原因</p>
+<p class="highlight-bad">✗ 需要改进：列出表现差的项目</p>
+<div class="suggestion-item">💡 建议：具体改进建议</div>
+
+<div class="section-title">🍽️ 餐饮分析</div>
+（同上格式）
+
+<div class="section-title">⚠️ 风险预警</div>
+<div class="risk-item">🔴 风险点1：具体风险描述</div>
+<div class="risk-item">🟡 风险点2：具体风险描述</div>
+
+<div class="section-title">📈 月度进展</div>
+<p>本月第{day}天，时间进度{time_progress}%</p>
+<p>当前累计收入预测月底完成率：XX%</p>
+<p class="highlight-warn">预测分析：...</p>
+
+重要提醒：
+1. 所有完成率数据必须使用我提供的数据，不要自己计算！
+2. 整体完成率是{total_pct}%，不是其他数字
+3. 分析要具体到项目名称`;
 
         const STATE = {
             currentData: null, historyIndex: [], historyData: {}, charts: {}, totalRooms: 260,
@@ -308,11 +660,26 @@ RevPAR：¥{revpar}
             localStorage.setItem('nexus_sidebar_collapsed', STATE.sidebarCollapsed);
             setTimeout(() => Object.values(STATE.charts).forEach(c => c?.resize()), 250);
         }
-        function showToast(m, t = 'info') { const c = document.getElementById('toast-container'), e = document.createElement('div'); e.className = `toast toast-${t}`; e.innerHTML = m; c.appendChild(e); setTimeout(() => { e.style.opacity = '0'; setTimeout(() => e.remove(), 200); }, 2500); }
-        function openSettingsModal() { document.getElementById('settings-webhook').value = STATE.webhookUrl; document.getElementById('settings-github-repo').value = `${STATE.github.owner}/${STATE.github.repo}`; document.getElementById('settings-ai-prompt').value = STATE.aiPrompt; document.getElementById('settings-modal').classList.remove('hidden'); }
+        
+        function showToast(m, t = 'info') { 
+            const c = document.getElementById('toast-container'), e = document.createElement('div'); 
+            e.className = `toast toast-${t}`; 
+            e.innerHTML = `<i class="fa-solid ${t === 'success' ? 'fa-check-circle' : t === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i><span>${m}</span>`; 
+            c.appendChild(e); 
+            setTimeout(() => { e.style.opacity = '0'; setTimeout(() => e.remove(), 200); }, 3000); 
+        }
+        
+        function openSettingsModal() { 
+            document.getElementById('settings-webhook').value = STATE.webhookUrl; 
+            document.getElementById('settings-github-repo').value = `${STATE.github.owner}/${STATE.github.repo}`; 
+            document.getElementById('settings-ai-prompt').value = STATE.aiPrompt; 
+            document.getElementById('settings-modal').classList.remove('hidden'); 
+        }
+        
         function openDeepDive() { document.getElementById('deep-modal').classList.remove('hidden'); switchDeepTab('room'); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
         function resetPrompt() { document.getElementById('settings-ai-prompt').value = DEFAULT_AI_PROMPT; }
+        
         function saveSettings() {
             STATE.webhookUrl = document.getElementById('settings-webhook').value.trim();
             const r = document.getElementById('settings-github-repo').value.trim().split('/');
@@ -320,17 +687,51 @@ RevPAR：¥{revpar}
             STATE.aiPrompt = document.getElementById('settings-ai-prompt').value.trim() || DEFAULT_AI_PROMPT;
             localStorage.setItem('nexus_webhook_url', STATE.webhookUrl);
             localStorage.setItem('nexus_ai_prompt', STATE.aiPrompt);
-            closeModal('settings-modal'); showToast('✓ 已保存', 'success'); refreshFromGitHub();
+            document.getElementById('inline-prompt').value = STATE.aiPrompt;
+            closeModal('settings-modal'); 
+            showToast('设置已保存', 'success'); 
+            refreshFromGitHub();
+        }
+        
+        // 提示词面板
+        function togglePromptPanel() {
+            const panel = document.getElementById('prompt-panel');
+            const chevron = document.getElementById('prompt-chevron');
+            panel.classList.toggle('collapsed');
+            panel.classList.toggle('expanded');
+            chevron.style.transform = panel.classList.contains('expanded') ? 'rotate(180deg)' : '';
+            
+            if (panel.classList.contains('expanded')) {
+                document.getElementById('inline-prompt').value = STATE.aiPrompt;
+            }
+        }
+        
+        function resetInlinePrompt() {
+            document.getElementById('inline-prompt').value = DEFAULT_AI_PROMPT;
+        }
+        
+        function applyPromptAndAnalyze() {
+            STATE.aiPrompt = document.getElementById('inline-prompt').value.trim() || DEFAULT_AI_PROMPT;
+            localStorage.setItem('nexus_ai_prompt', STATE.aiPrompt);
+            showToast('提示词已更新', 'success');
+            generateAIAnalysis();
         }
 
         // 云端
         async function saveToGitHub() {
-            if (!STATE.currentData) return showToast('请先上传', 'error');
-            const btn = document.getElementById('save-btn'); btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-            try { await fetch(STATE.webhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(STATE.currentData) }); showToast('✓ 已保存', 'success'); setTimeout(refreshFromGitHub, 2000); }
-            catch { showToast('保存失败', 'error'); }
-            finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-1"></i>保存'; }
+            if (!STATE.currentData) return showToast('请先上传数据', 'error');
+            const btn = document.getElementById('save-btn'); 
+            btn.disabled = true; 
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>保存中...';
+            try { 
+                await fetch(STATE.webhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(STATE.currentData) }); 
+                showToast('数据已保存到云端', 'success'); 
+                setTimeout(refreshFromGitHub, 2000); 
+            }
+            catch { showToast('保存失败，请检查网络', 'error'); }
+            finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-1.5"></i>保存到云端'; }
         }
+        
         async function refreshFromGitHub() {
             try { 
                 const res = await fetch(`https://raw.githubusercontent.com/${STATE.github.owner}/${STATE.github.repo}/${STATE.github.branch}/${STATE.github.dataPath}/index.json?t=${Date.now()}`); 
@@ -344,48 +745,119 @@ RevPAR：¥{revpar}
                 await loadTrendData(); 
             } catch (e) { console.error(e); }
         }
+        
         async function loadDayData(date) {
-            if (STATE.historyData[date]) { STATE.currentData = STATE.historyData[date]; renderDashboard(STATE.currentData); return; }
-            try { const [y, m] = date.split('-'); const res = await fetch(`https://raw.githubusercontent.com/${STATE.github.owner}/${STATE.github.repo}/${STATE.github.branch}/${STATE.github.dataPath}/${y}/${m}/${date}.json?t=${Date.now()}`); if (!res.ok) throw new Error(); const d = await res.json(); STATE.historyData[date] = d; STATE.currentData = d; renderDashboard(d); document.querySelectorAll('.history-item').forEach(el => el.classList.toggle('active', el.dataset.date === date)); document.getElementById('save-btn').disabled = false; } catch {}
+            if (STATE.historyData[date]) { 
+                STATE.currentData = STATE.historyData[date]; 
+                renderDashboard(STATE.currentData); 
+                return; 
+            }
+            try { 
+                const [y, m] = date.split('-'); 
+                const res = await fetch(`https://raw.githubusercontent.com/${STATE.github.owner}/${STATE.github.repo}/${STATE.github.branch}/${STATE.github.dataPath}/${y}/${m}/${date}.json?t=${Date.now()}`); 
+                if (!res.ok) throw new Error(); 
+                const d = await res.json(); 
+                STATE.historyData[date] = d; 
+                STATE.currentData = d; 
+                renderDashboard(d); 
+                document.querySelectorAll('.history-item').forEach(el => el.classList.toggle('active', el.dataset.date === date)); 
+                document.getElementById('save-btn').disabled = false; 
+            } catch {}
         }
+        
         async function loadTrendData() {
             const s = [...STATE.historyIndex].sort((a, b) => a.date.localeCompare(b.date)).slice(-30), td = [];
             for (const i of s) { 
                 if (STATE.historyData[i.date]) td.push(STATE.historyData[i.date]); 
-                else try { const [y, m] = i.date.split('-'); const res = await fetch(`https://raw.githubusercontent.com/${STATE.github.owner}/${STATE.github.repo}/${STATE.github.branch}/${STATE.github.dataPath}/${y}/${m}/${i.date}.json`); if (res.ok) { const d = await res.json(); STATE.historyData[i.date] = d; td.push(d); } } catch {} 
+                else try { 
+                    const [y, m] = i.date.split('-'); 
+                    const res = await fetch(`https://raw.githubusercontent.com/${STATE.github.owner}/${STATE.github.repo}/${STATE.github.branch}/${STATE.github.dataPath}/${y}/${m}/${i.date}.json`); 
+                    if (res.ok) { const d = await res.json(); STATE.historyData[i.date] = d; td.push(d); } 
+                } catch {} 
             }
             renderTrendChart(td);
+            renderOpsTrendChart(td);
         }
 
         // 历史列表
         function renderHistoryList() {
-            const c = document.getElementById('history-list'); document.getElementById('history-count').innerText = STATE.historyIndex.length;
-            if (!STATE.historyIndex.length) { c.innerHTML = '<div class="text-center py-4 text-zinc-600 text-[10px]">暂无数据</div>'; return; }
-            const g = {}; STATE.historyIndex.forEach(i => { const k = i.date.slice(0, 7); if (!g[k]) g[k] = []; g[k].push(i); });
-            let h = ''; Object.entries(g).sort((a, b) => b[0].localeCompare(a[0])).forEach(([m, items], idx) => {
+            const c = document.getElementById('history-list'); 
+            document.getElementById('history-count').innerText = STATE.historyIndex.length;
+            if (!STATE.historyIndex.length) { 
+                c.innerHTML = '<div class="text-center py-8 text-zinc-600 text-xs">暂无历史数据</div>'; 
+                return; 
+            }
+            const g = {}; 
+            STATE.historyIndex.forEach(i => { const k = i.date.slice(0, 7); if (!g[k]) g[k] = []; g[k].push(i); });
+            let h = ''; 
+            Object.entries(g).sort((a, b) => b[0].localeCompare(a[0])).forEach(([m, items], idx) => {
                 items.sort((a, b) => b.date.localeCompare(a.date));
-                h += `<div class="mb-1"><div onclick="toggleMonth(this)" class="flex justify-between p-1 rounded cursor-pointer hover:bg-zinc-800 text-[10px] text-zinc-400"><span><i class="fa-solid fa-chevron-right mr-1 transition-transform ${idx === 0 ? 'rotate-90' : ''}" style="font-size:7px"></i>${m}</span><span class="text-zinc-600">${items.length}</span></div><div class="month-content ${idx === 0 ? 'expanded' : ''}">${items.map(i => `<div class="history-item flex justify-between" data-date="${i.date}" onclick="loadDayData('${i.date}')"><span class="text-zinc-300">${i.date.slice(8)}日</span><span class="${(i.variance || 0) >= 0 ? 'text-green-400' : 'text-red-400'} font-mono text-[10px]">${(i.variance || 0) >= 0 ? '+' : ''}${((i.variance || 0) * 100).toFixed(1)}%</span></div>`).join('')}</div></div>`;
-            }); c.innerHTML = h;
+                h += `<div class="mb-2">
+                    <div onclick="toggleMonth(this)" class="flex justify-between p-2 rounded-lg cursor-pointer hover:bg-zinc-800/50 text-xs text-zinc-400 transition-colors">
+                        <span><i class="fa-solid fa-chevron-right mr-2 transition-transform ${idx === 0 ? 'rotate-90' : ''}" style="font-size:8px"></i>${m}</span>
+                        <span class="text-zinc-600 bg-zinc-800/50 px-1.5 rounded">${items.length}</span>
+                    </div>
+                    <div class="month-content ${idx === 0 ? 'expanded' : ''}">
+                        ${items.map(i => `<div class="history-item flex justify-between" data-date="${i.date}" onclick="loadDayData('${i.date}')">
+                            <span class="text-zinc-300">${i.date.slice(8)}日</span>
+                            <span class="${(i.variance || 0) >= 0 ? 'text-green-400' : 'text-red-400'} font-mono text-xs">${(i.variance || 0) >= 0 ? '+' : ''}${((i.variance || 0) * 100).toFixed(1)}%</span>
+                        </div>`).join('')}
+                    </div>
+                </div>`;
+            }); 
+            c.innerHTML = h;
         }
-        function toggleMonth(h) { h.nextElementSibling.classList.toggle('expanded'); h.querySelector('i').classList.toggle('rotate-90'); }
+        
+        function toggleMonth(h) { 
+            h.nextElementSibling.classList.toggle('expanded'); 
+            h.querySelector('i').classList.toggle('rotate-90'); 
+        }
 
         // Excel 解析
         function handleFileUpload(e) {
             const f = e.target.files[0]; if (!f) return;
-            const fn = f.name.replace(/\.(xlsx|xls|csv)$/i, ''); let dateFromFn = null;
-            const m1 = fn.match(/(\d{4})[-._](\d{1,2})[-._](\d{1,2})/); if (m1) dateFromFn = `${m1[1]}-${m1[2].padStart(2,'0')}-${m1[3].padStart(2,'0')}`;
-            else { const m2 = fn.match(/(\d{1,2})[-._](\d{1,2})/); if (m2) dateFromFn = `${new Date().getFullYear()}-${m2[1].padStart(2,'0')}-${m2[2].padStart(2,'0')}`; }
+            const fn = f.name.replace(/\.(xlsx|xls|csv)$/i, ''); 
+            let dateFromFn = null;
+            const m1 = fn.match(/(\d{4})[-._](\d{1,2})[-._](\d{1,2})/); 
+            if (m1) dateFromFn = `${m1[1]}-${m1[2].padStart(2,'0')}-${m1[3].padStart(2,'0')}`;
+            else { 
+                const m2 = fn.match(/(\d{1,2})[-._](\d{1,2})/); 
+                if (m2) dateFromFn = `${new Date().getFullYear()}-${m2[1].padStart(2,'0')}-${m2[2].padStart(2,'0')}`; 
+            }
             const reader = new FileReader();
             reader.onload = ev => {
-                const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' }), rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }), parsed = parseExcelData(rows);
-                if (dateFromFn) { parsed.date = dateFromFn; parsed.weekday = ['周日','周一','周二','周三','周四','周五','周六'][new Date(dateFromFn).getDay()]; }
-                STATE.currentData = parsed; renderDashboard(parsed); document.getElementById('save-btn').disabled = false; showToast(`✓ ${parsed.date}`, 'success'); generateAIAnalysis();
+                const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' }), 
+                      rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }), 
+                      parsed = parseExcelData(rows);
+                if (dateFromFn) { 
+                    parsed.date = dateFromFn; 
+                    parsed.weekday = ['周日','周一','周二','周三','周四','周五','周六'][new Date(dateFromFn).getDay()]; 
+                }
+                STATE.currentData = parsed; 
+                renderDashboard(parsed); 
+                document.getElementById('save-btn').disabled = false; 
+                showToast(`已加载 ${parsed.date} 数据`, 'success'); 
+                generateAIAnalysis();
             };
-            reader.readAsArrayBuffer(f); e.target.value = '';
+            reader.readAsArrayBuffer(f); 
+            e.target.value = '';
         }
 
         function parseExcelData(rows) {
-            let d = { date: new Date().toISOString().split('T')[0], weekday: '', rows: [], roomsSold: 0, roomsBud: 0, occupancy: 0, occBud: 0, adr: 0, adrBud: 0, revpar: 0, revparBud: 0, totals: {} };
+            let d = { 
+                date: new Date().toISOString().split('T')[0], 
+                weekday: '', 
+                rows: [], 
+                roomsSold: 0, 
+                roomsBud: 0, 
+                occupancy: 0, 
+                occBud: 0, 
+                adr: 0, 
+                adrBud: 0, 
+                revpar: 0, 
+                revparBud: 0, 
+                totals: {} 
+            };
             const num = v => v ? parseFloat(String(v).replace(/[¥,%]/g, '')) || 0 : 0;
             
             rows.forEach(r => {
@@ -394,7 +866,11 @@ RevPAR：¥{revpar}
                 
                 if (n.includes('Date') || n.includes('日期')) { 
                     const m = r.join(' ').match(/(\d{1,2})\/(\w+)\/(\d{4})/); 
-                    if (m) { const mm = {Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'}; d.date = `${m[3]}-${mm[m[2]]||m[2]}-${m[1].padStart(2,'0')}`; d.weekday = ['周日','周一','周二','周三','周四','周五','周六'][new Date(d.date).getDay()]; } 
+                    if (m) { 
+                        const mm = {Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'}; 
+                        d.date = `${m[3]}-${mm[m[2]]||m[2]}-${m[1].padStart(2,'0')}`; 
+                        d.weekday = ['周日','周一','周二','周三','周四','周五','周六'][new Date(d.date).getDay()]; 
+                    } 
                 }
                 
                 if (n.includes('Total room Revenue') || n.includes('总房收入')) d.totals.room = { act: num(r[6]), bud: num(r[7]) };
@@ -430,7 +906,6 @@ RevPAR：¥{revpar}
                 other.bud = grand.bud - room.bud - fb.bud; 
             }
             
-            // 保存计算好的 totals
             if (STATE.currentData?.date === d.date) {
                 STATE.currentData.totals = { room, fb, other, hotel: grand };
             }
@@ -448,110 +923,373 @@ RevPAR：¥{revpar}
             vt.innerText = (v >= 0 ? '+' : '') + (v * 100).toFixed(1) + '%'; 
             vt.className = `tag ${v >= 0 ? 'tag-green' : 'tag-red'}`;
 
-            const occPct = (d.occupancy || 0) * 100;
-            document.getElementById('kpi-occ').innerText = occPct.toFixed(1) + '%'; 
+            document.getElementById('kpi-occ').innerText = ((d.occupancy || 0) * 100).toFixed(1) + '%';
             document.getElementById('kpi-sold').innerText = d.roomsSold;
+            document.getElementById('kpi-adr').innerText = '¥' + Math.floor(d.adr || 0);
+            document.getElementById('kpi-adr-bud').innerText = '¥' + Math.floor(d.adrBud || 0);
+            document.getElementById('kpi-revpar').innerText = '¥' + Math.floor(d.revpar || 0);
+            document.getElementById('kpi-revpar-bud').innerText = '¥' + Math.floor(d.revparBud || 0);
 
-            document.getElementById('kpi-adr').innerText = fmt(d.adr);
-            document.getElementById('kpi-adr-bud').innerText = d.adrBud ? fmt(d.adrBud) : '--';
-
-            document.getElementById('kpi-revpar').innerText = fmt(d.revpar);
-            document.getElementById('kpi-revpar-bud').innerText = d.revparBud ? fmt(d.revparBud) : '--';
-
-            renderDeptTable(room, fb, other, grand);
-            renderMainChart(room, fb, other);
+            const depts = [
+                { name: '客房收入', act: room.act, bud: room.bud, icon: '🏨' },
+                { name: '餐饮收入', act: fb.act, bud: fb.bud, icon: '🍽️' },
+                { name: '其他收入', act: other.act, bud: other.bud, icon: '📦' },
+                { name: '酒店合计', act: grand.act, bud: grand.bud, icon: '🏢' }
+            ];
             
-            if (d.aiAnalysis) { 
-                document.getElementById('ai-analysis').innerHTML = d.aiAnalysis; 
-                document.getElementById('ai-update-time').innerText = new Date().toLocaleString('zh-CN'); 
-            }
+            document.getElementById('dept-table-body').innerHTML = depts.map(dep => {
+                const diff = dep.act - dep.bud;
+                const pct = dep.bud > 0 ? (dep.act / dep.bud * 100) : 100;
+                return `<tr class="${dep.name === '酒店合计' ? 'bg-zinc-800/30 font-medium' : ''}">
+                    <td class="text-zinc-300">${dep.icon} ${dep.name}</td>
+                    <td class="font-mono text-white">¥${Math.floor(dep.act).toLocaleString()}</td>
+                    <td class="text-zinc-500 font-mono">¥${Math.floor(dep.bud).toLocaleString()}</td>
+                    <td class="${diff >= 0 ? 'text-green-400' : 'text-red-400'} font-mono">${diff >= 0 ? '+' : ''}${(diff/10000).toFixed(1)}万</td>
+                    <td class="${pct >= 100 ? 'text-green-400' : pct >= 90 ? 'text-amber-400' : 'text-red-400'} font-medium">${pct.toFixed(1)}%</td>
+                </tr>`;
+            }).join('');
+
+            renderMainChart(depts.slice(0, 3));
+            renderPieChart(depts.slice(0, 3));
         }
 
-        function renderDeptTable(room, fb, other, grand) {
-            const row = (n, a, b) => { 
-                const diff = a - b, p = b > 0 ? (a / b * 100) : 100; 
-                return `<tr><td class="text-zinc-300">${n}</td><td class="font-mono">¥${(a/10000).toFixed(1)}万</td><td class="text-zinc-500 font-mono">¥${(b/10000).toFixed(1)}万</td><td class="${diff >= 0 ? 'text-green-400' : 'text-red-400'} font-mono">${diff >= 0 ? '+' : ''}${(diff/10000).toFixed(1)}万</td><td class="${p >= 100 ? 'text-green-400' : p >= 80 ? 'text-amber-400' : 'text-red-400'}">${p.toFixed(0)}%</td></tr>`; 
-            };
-            document.getElementById('dept-table-body').innerHTML = row('客房 Room', room.act, room.bud) + row('餐饮 F&B', fb.act, fb.bud) + row('其他 Other', other.act, other.bud) + `<tr class="bg-zinc-800/50 font-medium">${row('合计 Total', grand.act, grand.bud).replace(/<\/?tr>/g, '')}</tr>`;
-        }
-
-        function renderMainChart(room, fb, other) {
-            const el = document.getElementById('main-chart'); 
+        function renderMainChart(depts) {
+            const el = document.getElementById('main-chart');
             if (STATE.charts.main) STATE.charts.main.dispose();
-            const chart = echarts.init(el, 'dark'), fmtK = v => (v / 10000).toFixed(0) + '万';
-            chart.setOption({ backgroundColor: 'transparent', grid: { left: 5, right: 5, top: 15, bottom: 15, containLabel: true }, xAxis: { type: 'category', data: ['客房', '餐饮', '其他'], axisLabel: { fontSize: 9 } }, yAxis: { type: 'value', axisLabel: { fontSize: 8, formatter: fmtK }, splitLine: { lineStyle: { color: '#27272a', type: 'dashed' } } }, series: [{ name: '实际', type: 'bar', data: [room.act, fb.act, other.act], itemStyle: { color: '#3b82f6', borderRadius: [2, 2, 0, 0] }, barWidth: 18, label: { show: true, position: 'top', fontSize: 8, color: '#3b82f6', formatter: p => fmtK(p.value) } }, { name: '预算', type: 'bar', data: [room.bud, fb.bud, other.bud], itemStyle: { color: '#3f3f46', borderRadius: [2, 2, 0, 0] }, barWidth: 18 }] });
+            const chart = echarts.init(el, 'dark');
+            chart.setOption({
+                backgroundColor: 'transparent',
+                tooltip: { trigger: 'axis' },
+                legend: { 
+                    data: ['实际', '预算'], 
+                    bottom: 0, 
+                    textStyle: { color: '#71717a', fontSize: 10 } 
+                },
+                grid: { left: 10, right: 10, top: 10, bottom: 40, containLabel: true },
+                xAxis: { 
+                    type: 'category', 
+                    data: depts.map(d => d.name), 
+                    axisLabel: { fontSize: 10, color: '#a1a1aa' },
+                    axisLine: { lineStyle: { color: '#27272a' } }
+                },
+                yAxis: { 
+                    type: 'value', 
+                    axisLabel: { fontSize: 9, formatter: v => (v/10000) + 'w' },
+                    splitLine: { lineStyle: { color: '#27272a', type: 'dashed' } }
+                },
+                series: [
+                    { 
+                        name: '实际', 
+                        type: 'bar', 
+                        data: depts.map(d => d.act), 
+                        itemStyle: { 
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: '#3b82f6' },
+                                { offset: 1, color: '#1d4ed8' }
+                            ]),
+                            borderRadius: [4, 4, 0, 0] 
+                        },
+                        barWidth: 20
+                    },
+                    { 
+                        name: '预算', 
+                        type: 'bar', 
+                        data: depts.map(d => d.bud), 
+                        itemStyle: { color: '#3f3f46', borderRadius: [4, 4, 0, 0] },
+                        barWidth: 20
+                    }
+                ]
+            });
             STATE.charts.main = chart;
         }
 
-        function renderTrendChart(td) {
-            const el = document.getElementById('trend-chart'); 
-            if (STATE.charts.trend) STATE.charts.trend.dispose();
-            if (!td.length) { el.innerHTML = '<div class="flex items-center justify-center h-full text-zinc-600 text-[10px]">暂无历史数据</div>'; return; }
-            
-            const chartData = td.map(d => {
-                let adr = d.adr || 0, revpar = d.revpar || 0, occ = (d.occupancy || 0) * 100;
-                if (!adr && d.totals?.room && d.roomsSold) adr = d.totals.room.act / d.roomsSold;
-                if (!revpar && d.totals?.room) revpar = d.totals.room.act / 260;
-                if (!occ && d.roomsSold) occ = (d.roomsSold / 260) * 100;
-                return { date: d.date, adr: Math.floor(adr), revpar: Math.floor(revpar), occ: occ.toFixed(1) };
+        function renderPieChart(depts) {
+            const el = document.getElementById('pie-chart');
+            if (STATE.charts.pie) STATE.charts.pie.dispose();
+            const chart = echarts.init(el, 'dark');
+            chart.setOption({
+                backgroundColor: 'transparent',
+                tooltip: { 
+                    trigger: 'item',
+                    formatter: '{b}: ¥{c} ({d}%)'
+                },
+                series: [{
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    center: ['50%', '50%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: {
+                        borderRadius: 6,
+                        borderColor: '#16161a',
+                        borderWidth: 2
+                    },
+                    label: {
+                        show: true,
+                        position: 'outside',
+                        fontSize: 10,
+                        color: '#a1a1aa',
+                        formatter: '{b}\n{d}%'
+                    },
+                    labelLine: {
+                        length: 10,
+                        length2: 5
+                    },
+                    data: [
+                        { value: depts[0].act, name: '客房', itemStyle: { color: '#3b82f6' } },
+                        { value: depts[1].act, name: '餐饮', itemStyle: { color: '#22c55e' } },
+                        { value: depts[2].act, name: '其他', itemStyle: { color: '#f59e0b' } }
+                    ]
+                }]
             });
+            STATE.charts.pie = chart;
+        }
+
+        // 营收趋势图
+        function renderTrendChart(data) {
+            const el = document.getElementById('trend-chart');
+            if (STATE.charts.trend) STATE.charts.trend.dispose();
+            if (!data.length) return;
             
             const chart = echarts.init(el, 'dark');
-            chart.setOption({ backgroundColor: 'transparent', tooltip: { trigger: 'axis', textStyle: { fontSize: 10 } }, legend: { data: ['ADR', 'RevPAR', '入住率'], bottom: 0, textStyle: { color: '#71717a', fontSize: 8 }, itemWidth: 10, itemHeight: 6 }, grid: { left: 35, right: 30, top: 10, bottom: 28 }, xAxis: { type: 'category', data: chartData.map(d => d.date.slice(5)), axisLabel: { fontSize: 8 }, boundaryGap: false }, yAxis: [{ type: 'value', axisLabel: { fontSize: 8, formatter: v => '¥' + v }, splitLine: { lineStyle: { color: '#27272a', type: 'dashed' } }, min: v => Math.floor(v.min * 0.9) }, { type: 'value', min: 0, max: 100, axisLabel: { formatter: '{value}%', fontSize: 8 } }], series: [{ name: 'ADR', type: 'line', data: chartData.map(d => d.adr), smooth: true, lineStyle: { color: '#f59e0b', width: 2 }, itemStyle: { color: '#f59e0b' }, symbol: 'circle', symbolSize: 5 }, { name: 'RevPAR', type: 'line', data: chartData.map(d => d.revpar), smooth: true, lineStyle: { color: '#a855f7', width: 2 }, itemStyle: { color: '#a855f7' }, symbol: 'circle', symbolSize: 5 }, { name: '入住率', type: 'bar', yAxisIndex: 1, data: chartData.map(d => d.occ), itemStyle: { color: 'rgba(34, 197, 94, 0.4)', borderRadius: [2, 2, 0, 0] }, barWidth: 10 }] });
+            chart.setOption({
+                backgroundColor: 'transparent',
+                tooltip: { 
+                    trigger: 'axis',
+                    formatter: function(params) {
+                        let tip = params[0].name + '<br/>';
+                        params.forEach(p => {
+                            tip += `${p.marker} ${p.seriesName}: ¥${(p.value/10000).toFixed(1)}万<br/>`;
+                        });
+                        return tip;
+                    }
+                },
+                legend: { 
+                    data: ['实际营收', '预算'], 
+                    bottom: 0, 
+                    textStyle: { color: '#71717a', fontSize: 10 } 
+                },
+                grid: { left: 10, right: 10, top: 10, bottom: 40, containLabel: true },
+                xAxis: { 
+                    type: 'category', 
+                    data: data.map(d => d.date.slice(5)),
+                    axisLabel: { fontSize: 9, color: '#71717a', rotate: 30 },
+                    axisLine: { lineStyle: { color: '#27272a' } }
+                },
+                yAxis: { 
+                    type: 'value',
+                    axisLabel: { fontSize: 9, formatter: v => (v/10000) + 'w' },
+                    splitLine: { lineStyle: { color: '#27272a', type: 'dashed' } }
+                },
+                series: [
+                    { 
+                        name: '实际营收', 
+                        type: 'line', 
+                        data: data.map(d => d.totals?.hotel?.act || 0),
+                        smooth: true,
+                        symbol: 'circle',
+                        symbolSize: 4,
+                        lineStyle: { color: '#3b82f6', width: 2 },
+                        itemStyle: { color: '#3b82f6' },
+                        areaStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: 'rgba(59, 130, 246, 0.3)' },
+                                { offset: 1, color: 'rgba(59, 130, 246, 0)' }
+                            ])
+                        }
+                    },
+                    { 
+                        name: '预算', 
+                        type: 'line', 
+                        data: data.map(d => d.totals?.hotel?.bud || 0),
+                        smooth: true,
+                        symbol: 'none',
+                        lineStyle: { color: '#71717a', width: 1, type: 'dashed' }
+                    }
+                ]
+            });
             STATE.charts.trend = chart;
         }
 
-        // AI 分析 - 直接传递已计算好的数据
+        // 运营指标趋势图（RevPAR、ADR、入住率）
+        function renderOpsTrendChart(data) {
+            const el = document.getElementById('ops-trend-chart');
+            if (STATE.charts.opsTrend) STATE.charts.opsTrend.dispose();
+            if (!data.length) return;
+            
+            const chart = echarts.init(el, 'dark');
+            chart.setOption({
+                backgroundColor: 'transparent',
+                tooltip: { 
+                    trigger: 'axis',
+                    formatter: function(params) {
+                        let tip = params[0].name + '<br/>';
+                        params.forEach(p => {
+                            if (p.seriesName === '入住率') {
+                                tip += `${p.marker} ${p.seriesName}: ${p.value}%<br/>`;
+                            } else {
+                                tip += `${p.marker} ${p.seriesName}: ¥${p.value}<br/>`;
+                            }
+                        });
+                        return tip;
+                    }
+                },
+                legend: { 
+                    data: ['RevPAR', 'ADR', '入住率'], 
+                    bottom: 0, 
+                    textStyle: { color: '#71717a', fontSize: 10 } 
+                },
+                grid: { left: 10, right: 40, top: 10, bottom: 40, containLabel: true },
+                xAxis: { 
+                    type: 'category', 
+                    data: data.map(d => d.date.slice(5)),
+                    axisLabel: { fontSize: 9, color: '#71717a', rotate: 30 },
+                    axisLine: { lineStyle: { color: '#27272a' } }
+                },
+                yAxis: [
+                    { 
+                        type: 'value',
+                        name: '房价',
+                        position: 'left',
+                        axisLabel: { fontSize: 9, formatter: v => '¥' + v },
+                        splitLine: { lineStyle: { color: '#27272a', type: 'dashed' } }
+                    },
+                    {
+                        type: 'value',
+                        name: '入住率',
+                        position: 'right',
+                        min: 0,
+                        max: 100,
+                        axisLabel: { fontSize: 9, formatter: v => v + '%' },
+                        splitLine: { show: false }
+                    }
+                ],
+                series: [
+                    { 
+                        name: 'RevPAR', 
+                        type: 'line', 
+                        yAxisIndex: 0,
+                        data: data.map(d => Math.floor(d.revpar || 0)),
+                        smooth: true,
+                        symbol: 'circle',
+                        symbolSize: 4,
+                        lineStyle: { color: '#a855f7', width: 2 },
+                        itemStyle: { color: '#a855f7' }
+                    },
+                    { 
+                        name: 'ADR', 
+                        type: 'line', 
+                        yAxisIndex: 0,
+                        data: data.map(d => Math.floor(d.adr || 0)),
+                        smooth: true,
+                        symbol: 'circle',
+                        symbolSize: 4,
+                        lineStyle: { color: '#f59e0b', width: 2 },
+                        itemStyle: { color: '#f59e0b' }
+                    },
+                    { 
+                        name: '入住率', 
+                        type: 'line', 
+                        yAxisIndex: 1,
+                        data: data.map(d => ((d.occupancy || 0) * 100).toFixed(1)),
+                        smooth: true,
+                        symbol: 'circle',
+                        symbolSize: 4,
+                        lineStyle: { color: '#22c55e', width: 2 },
+                        itemStyle: { color: '#22c55e' },
+                        areaStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                                { offset: 0, color: 'rgba(34, 197, 94, 0.2)' },
+                                { offset: 1, color: 'rgba(34, 197, 94, 0)' }
+                            ])
+                        }
+                    }
+                ]
+            });
+            STATE.charts.opsTrend = chart;
+        }
+
+        // AI 分析 - 修复数据匹配问题
         async function generateAIAnalysis() {
             if (!STATE.currentData) return;
             const container = document.getElementById('ai-analysis');
-            container.innerHTML = '<div class="ai-loading flex items-center justify-center py-8"><div class="spinner mr-2"></div><span class="text-zinc-500 text-[10px]">正在生成分析...</span></div>';
-
+            const statusDot = document.getElementById('ai-status-dot');
+            
+            container.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-12">
+                    <div class="ai-loading"><div class="spinner"></div></div>
+                    <p class="text-zinc-500 text-xs mt-3">AI 正在分析数据...</p>
+                </div>
+            `;
+            statusDot.classList.add('active');
+            
             try {
                 const d = STATE.currentData;
+                const dayNum = parseInt(d.date.split('-')[2]);
+                const daysInMonth = new Date(d.date.split('-')[0], d.date.split('-')[1], 0).getDate();
+                const timeProgress = ((dayNum / daysInMonth) * 100).toFixed(1);
+                
                 const room = d.totals?.room || { act: 0, bud: 0 };
                 const fb = d.totals?.fb || { act: 0, bud: 0 };
                 const other = d.totals?.other || { act: 0, bud: 0 };
                 const hotel = d.totals?.hotel || { act: 0, bud: 0 };
                 
-                // 计算所有差额（已计算好，直接传给AI）
-                const hotelDiff = hotel.act - hotel.bud;
                 const roomDiff = room.act - room.bud;
                 const fbDiff = fb.act - fb.bud;
                 const otherDiff = other.act - other.bud;
+                const hotelDiff = hotel.act - hotel.bud;
                 
-                const [year, month, day] = d.date.split('-');
-                const dayNum = parseInt(day);
-                const daysInMonth = new Date(year, month, 0).getDate();
-                const timeProgress = ((dayNum / daysInMonth) * 100).toFixed(0);
-                
-                // 构建明细 - 按类型分组
-                const roomDetails = d.rows.filter(r => r.type === 'Room').map(r => {
-                    const pct = r.budget > 0 ? ((r.actual/r.budget)*100).toFixed(0) : '--';
-                    return `${r.name.split(' ')[0]}: ¥${r.actual.toLocaleString()}, 完成${pct}%`;
-                }).join('\n');
-                
-                const fbDetails = d.rows.filter(r => r.type === 'F&B' || r.type === 'Banquet').map(r => {
-                    const pct = r.budget > 0 ? ((r.actual/r.budget)*100).toFixed(0) : '--';
-                    return `${r.name.split(' ')[0]}: ¥${r.actual.toLocaleString()}, 完成${pct}%`;
-                }).join('\n');
+                // 计算完成率 - 修复数据匹配问题
+                const roomPct = room.bud > 0 ? (room.act / room.bud * 100).toFixed(1) : '100';
+                const fbPct = fb.bud > 0 ? (fb.act / fb.bud * 100).toFixed(1) : '100';
+                const otherPct = other.bud > 0 ? (other.act / other.bud * 100).toFixed(1) : '100';
+                const totalPct = hotel.bud > 0 ? (hotel.act / hotel.bud * 100).toFixed(1) : '100';
                 
                 const fmtDiff = v => (v >= 0 ? '+' : '') + (v / 10000).toFixed(1) + '万';
+                
+                const roomRows = d.rows.filter(r => r.type === 'Room').sort((a, b) => b.actual - a.actual);
+                const fbRows = d.rows.filter(r => r.type === 'F&B' || r.type === 'Banquet').sort((a, b) => b.actual - a.actual);
+                
+                const roomDetails = roomRows.map(r => {
+                    const pct = r.budget > 0 ? (r.actual / r.budget * 100).toFixed(0) : 100;
+                    return `${r.name}: 实际¥${r.actual.toLocaleString()} / 预算¥${r.budget.toLocaleString()} (完成${pct}%)`;
+                }).join('\n');
+                
+                const fbDetails = fbRows.map(r => {
+                    const pct = r.budget > 0 ? (r.actual / r.budget * 100).toFixed(0) : 100;
+                    return `${r.name}: 实际¥${r.actual.toLocaleString()} / 预算¥${r.budget.toLocaleString()} (完成${pct}%)`;
+                }).join('\n');
+                
                 const occPct = ((d.occupancy || 0) * 100).toFixed(1);
                 const occBudPct = ((d.occBud || 0) * 100).toFixed(1);
                 
+                // 替换所有占位符
                 const prompt = STATE.aiPrompt
                     .replace(/{date}/g, d.date)
                     .replace(/{day}/g, dayNum)
                     .replace(/{time_progress}/g, timeProgress)
                     .replace(/{profit_status}/g, hotelDiff >= 0 ? '盈余' : '亏损')
                     .replace(/{profit_amount}/g, Math.abs(hotelDiff / 10000).toFixed(1))
+                    .replace(/{total_pct}/g, totalPct)
+                    .replace(/{total_pct_bar}/g, Math.min(parseFloat(totalPct), 150))
+                    .replace(/{total_color}/g, parseFloat(totalPct) >= 100 ? '#22c55e' : parseFloat(totalPct) >= 90 ? '#f59e0b' : '#ef4444')
+                    .replace(/{room_act}/g, (room.act / 10000).toFixed(1))
+                    .replace(/{room_bud}/g, (room.bud / 10000).toFixed(1))
+                    .replace(/{room_pct}/g, roomPct)
                     .replace(/{room_diff}/g, fmtDiff(roomDiff))
                     .replace(/{room_status}/g, roomDiff >= 0 ? '超额' : '缺口')
+                    .replace(/{room_class}/g, roomDiff >= 0 ? 'highlight-good' : 'highlight-bad')
+                    .replace(/{fb_act}/g, (fb.act / 10000).toFixed(1))
+                    .replace(/{fb_bud}/g, (fb.bud / 10000).toFixed(1))
+                    .replace(/{fb_pct}/g, fbPct)
                     .replace(/{fb_diff}/g, fmtDiff(fbDiff))
                     .replace(/{fb_status}/g, fbDiff >= 0 ? '超额' : '缺口')
+                    .replace(/{fb_class}/g, fbDiff >= 0 ? 'highlight-good' : 'highlight-bad')
+                    .replace(/{other_act}/g, (other.act / 10000).toFixed(1))
+                    .replace(/{other_bud}/g, (other.bud / 10000).toFixed(1))
+                    .replace(/{other_pct}/g, otherPct)
                     .replace(/{other_diff}/g, fmtDiff(otherDiff))
                     .replace(/{other_status}/g, otherDiff >= 0 ? '超额' : '缺口')
+                    .replace(/{other_class}/g, otherDiff >= 0 ? 'highlight-good' : 'highlight-bad')
                     .replace(/{occupancy}/g, occPct)
                     .replace(/{occ_bud}/g, occBudPct)
                     .replace(/{occ_status}/g, parseFloat(occPct) >= parseFloat(occBudPct) ? '达标' : '未达标')
@@ -564,8 +1302,14 @@ RevPAR：¥{revpar}
                 const res = await fetch(STATE.qianwen.endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${STATE.qianwen.apiKey}` },
-                    body: JSON.stringify({ model: STATE.qianwen.model, messages: [{ role: 'user', content: prompt }], temperature: 0.5, max_tokens: 1200 })
+                    body: JSON.stringify({ 
+                        model: STATE.qianwen.model, 
+                        messages: [{ role: 'user', content: prompt }], 
+                        temperature: 0.5, 
+                        max_tokens: 2000 
+                    })
                 });
+                
                 if (!res.ok) throw new Error();
                 const result = await res.json();
                 let aiContent = result.choices[0].message.content;
@@ -573,8 +1317,10 @@ RevPAR：¥{revpar}
                 container.innerHTML = aiContent;
                 document.getElementById('ai-update-time').innerText = new Date().toLocaleString('zh-CN');
                 STATE.currentData.aiAnalysis = aiContent;
+                statusDot.classList.remove('active');
             } catch (e) {
                 console.error(e);
+                statusDot.classList.remove('active');
                 renderBasicAnalysis();
             }
         }
@@ -593,63 +1339,131 @@ RevPAR：¥{revpar}
             const otherDiff = other.act - other.bud;
             const fmtD = v => (v >= 0 ? '+' : '') + (v / 10000).toFixed(1) + '万';
             
+            const roomPct = room.bud > 0 ? (room.act / room.bud * 100).toFixed(1) : 100;
+            const fbPct = fb.bud > 0 ? (fb.act / fb.bud * 100).toFixed(1) : 100;
+            const otherPct = other.bud > 0 ? (other.act / other.bud * 100).toFixed(1) : 100;
+            const hotelPct = hotel.bud > 0 ? (hotel.act / hotel.bud * 100).toFixed(1) : 100;
+            
             const goodItems = d.rows.filter(r => r.budget > 1000 && r.actual / r.budget >= 1).slice(0, 5);
             const badItems = d.rows.filter(r => r.budget > 1000 && r.actual / r.budget < 0.8).slice(0, 5);
             
             c.innerHTML = `
-                <div class="section-title">💰 今日盈亏</div>
-                <p><strong>今日${hotelDiff >= 0 ? '盈余' : '亏损'}${Math.abs(hotelDiff / 10000).toFixed(1)}万元</strong></p>
-                <div class="data-row"><span>客房收入</span><span class="${roomDiff >= 0 ? 'highlight-good' : 'highlight-bad'}">${fmtD(roomDiff)}</span></div>
-                <p class="sub-item">→ 入住率${((d.occupancy||0)*100).toFixed(1)}%（预算${((d.occBud||0)*100).toFixed(1)}%），售房${d.roomsSold}间</p>
-                <div class="data-row"><span>餐饮收入</span><span class="${fbDiff >= 0 ? 'highlight-good' : 'highlight-bad'}">${fmtD(fbDiff)}</span></div>
-                <p class="sub-item">→ 完成预算的${(fb.bud > 0 ? (fb.act/fb.bud*100).toFixed(0) : 100)}%</p>
-                <div class="data-row"><span>其他收入</span><span class="${otherDiff >= 0 ? 'highlight-good' : 'highlight-bad'}">${fmtD(otherDiff)}</span></div>
+                <div class="section-title">📊 预算执行总览</div>
+                <p><strong>整体完成率：${hotelPct}%</strong></p>
+                <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(hotelPct, 150)}%;background:${hotelPct >= 100 ? '#22c55e' : hotelPct >= 90 ? '#f59e0b' : '#ef4444'}"></div></div>
+                <div class="data-row"><span>客房收入</span><span class="${roomDiff >= 0 ? 'highlight-good' : 'highlight-bad'}">完成${roomPct}%（${fmtD(roomDiff)}）</span></div>
+                <div class="data-row"><span>餐饮收入</span><span class="${fbDiff >= 0 ? 'highlight-good' : 'highlight-bad'}">完成${fbPct}%（${fmtD(fbDiff)}）</span></div>
+                <div class="data-row"><span>其他收入</span><span class="${otherDiff >= 0 ? 'highlight-good' : 'highlight-bad'}">完成${otherPct}%（${fmtD(otherDiff)}）</span></div>
                 
-                <div class="section-title">🏨 客房分析</div>
-                <p><strong>房价水平：</strong>ADR ¥${Math.floor(d.adr)}，RevPAR ¥${Math.floor(d.revpar)}</p>
+                <div class="section-title">🏨 运营指标</div>
+                <p><strong>入住率：</strong>${((d.occupancy||0)*100).toFixed(1)}%（预算${((d.occBud||0)*100).toFixed(1)}%）</p>
+                <p><strong>售房：</strong>${d.roomsSold}间（预算${Math.floor(d.roomsBud || 0)}间）</p>
+                <p><strong>房价水平：</strong>平均房价 ¥${Math.floor(d.adr)}，每房收益 ¥${Math.floor(d.revpar)}</p>
                 
                 ${goodItems.length > 0 ? `<div class="section-title">✅ 表现优秀</div><p class="highlight-good">${goodItems.map(r => r.name.split(' ')[0] + '(' + (r.actual/r.budget*100).toFixed(0) + '%)').join('、')}</p>` : ''}
                 ${badItems.length > 0 ? `<div class="section-title">⚠️ 需要关注</div><p class="highlight-bad">${badItems.map(r => r.name.split(' ')[0] + '(' + (r.actual/r.budget*100).toFixed(0) + '%)').join('、')}</p>` : ''}
+                
+                <div class="risk-item">
+                    <strong>提示：</strong>AI分析服务暂时不可用，已显示基础数据分析。
+                </div>
             `;
-            document.getElementById('ai-update-time').innerText = new Date().toLocaleString('zh-CN');
+            document.getElementById('ai-update-time').innerText = new Date().toLocaleString('zh-CN') + ' (基础分析)';
         }
 
-        // 深度分析
+        // 深度分析 - 修复中文显示
         function switchDeepTab(tab) {
-            ['room', 'fb', 'other'].forEach(t => { const b = document.getElementById(`deep-tab-${t}`); b.classList.toggle('bg-zinc-700', t === tab); b.classList.toggle('text-white', t === tab); b.classList.toggle('text-zinc-400', t !== tab); });
+            ['room', 'fb', 'other'].forEach(t => { 
+                const b = document.getElementById(`deep-tab-${t}`); 
+                b.classList.toggle('bg-zinc-700', t === tab); 
+                b.classList.toggle('text-white', t === tab); 
+                b.classList.toggle('text-zinc-400', t !== tab); 
+            });
             if (!STATE.currentData) return;
             
             const typeMap = { room: ['Room'], fb: ['F&B', 'Banquet'], other: ['Other'] };
             const nameMap = { room: '客房收入', fb: '餐饮收入', other: '其他收入' };
             const rows = STATE.currentData.rows.filter(r => typeMap[tab].includes(r.type)).sort((a, b) => b.actual - a.actual);
             
+            // 表头全中文
             document.getElementById('deep-table-head').innerHTML = `<tr><th>项目名称</th><th>实际收入</th><th>预算金额</th><th>差额</th><th>完成率</th></tr>`;
             document.getElementById('deep-table-body').innerHTML = rows.map(r => { 
                 const diff = r.actual - r.budget, p = r.budget > 0 ? (r.actual / r.budget * 100) : 100; 
-                return `<tr><td class="text-zinc-300">${r.name}</td><td class="font-mono text-white">¥${r.actual.toLocaleString()}</td><td class="text-zinc-500 font-mono">¥${r.budget.toLocaleString()}</td><td class="${diff >= 0 ? 'text-green-400' : 'text-red-400'} font-mono">${diff >= 0 ? '+' : ''}${Math.floor(diff).toLocaleString()}</td><td class="${p >= 100 ? 'text-green-400' : p >= 80 ? 'text-amber-400' : 'text-red-400'} font-medium">${p.toFixed(0)}%</td></tr>`; 
+                return `<tr>
+                    <td class="text-zinc-300">${r.name}</td>
+                    <td class="font-mono text-white">¥${r.actual.toLocaleString()}</td>
+                    <td class="text-zinc-500 font-mono">¥${r.budget.toLocaleString()}</td>
+                    <td class="${diff >= 0 ? 'text-green-400' : 'text-red-400'} font-mono">${diff >= 0 ? '+' : ''}${Math.floor(diff).toLocaleString()}</td>
+                    <td class="${p >= 100 ? 'text-green-400' : p >= 80 ? 'text-amber-400' : 'text-red-400'} font-medium">${p.toFixed(0)}%</td>
+                </tr>`; 
             }).join('');
             
-            const el = document.getElementById('deep-chart'); if (STATE.charts.deep) STATE.charts.deep.dispose();
+            const el = document.getElementById('deep-chart'); 
+            if (STATE.charts.deep) STATE.charts.deep.dispose();
             const chart = echarts.init(el, 'dark'), top = rows.slice(0, 10);
-            chart.setOption({ backgroundColor: 'transparent', tooltip: { trigger: 'axis' }, legend: { data: ['实际收入', '预算金额'], bottom: 0, textStyle: { color: '#71717a', fontSize: 9 } }, grid: { left: 10, right: 10, top: 10, bottom: 50, containLabel: true }, xAxis: { type: 'category', data: top.map(r => r.name.split(' ')[0].slice(0, 8)), axisLabel: { rotate: 30, fontSize: 8, color: '#a1a1aa' } }, yAxis: { type: 'value', axisLabel: { fontSize: 8 }, splitLine: { lineStyle: { color: '#27272a', type: 'dashed' } } }, series: [{ name: '实际收入', type: 'bar', data: top.map(r => r.actual), itemStyle: { color: '#3b82f6', borderRadius: [2, 2, 0, 0] }, barWidth: 12 }, { name: '预算金额', type: 'bar', data: top.map(r => r.budget), itemStyle: { color: '#3f3f46', borderRadius: [2, 2, 0, 0] }, barWidth: 12 }] });
+            chart.setOption({ 
+                backgroundColor: 'transparent', 
+                tooltip: { trigger: 'axis' }, 
+                legend: { data: ['实际收入', '预算金额'], bottom: 0, textStyle: { color: '#71717a', fontSize: 10 } }, 
+                grid: { left: 10, right: 10, top: 10, bottom: 50, containLabel: true }, 
+                xAxis: { type: 'category', data: top.map(r => r.name.split(' ')[0].slice(0, 8)), axisLabel: { rotate: 30, fontSize: 9, color: '#a1a1aa' } }, 
+                yAxis: { type: 'value', axisLabel: { fontSize: 9 }, splitLine: { lineStyle: { color: '#27272a', type: 'dashed' } } }, 
+                series: [
+                    { name: '实际收入', type: 'bar', data: top.map(r => r.actual), itemStyle: { color: '#3b82f6', borderRadius: [4, 4, 0, 0] }, barWidth: 14 }, 
+                    { name: '预算金额', type: 'bar', data: top.map(r => r.budget), itemStyle: { color: '#3f3f46', borderRadius: [4, 4, 0, 0] }, barWidth: 14 }
+                ] 
+            });
             STATE.charts.deep = chart;
             
+            // 分析表现好和差的项目
             const good = rows.filter(r => r.budget > 1000 && r.actual / r.budget >= 1);
             const bad = rows.filter(r => r.budget > 1000 && r.actual / r.budget < 0.8);
             const totalAct = rows.reduce((s, r) => s + r.actual, 0);
             const totalBud = rows.reduce((s, r) => s + r.budget, 0);
-            const totalPct = totalBud > 0 ? (totalAct / totalBud * 100).toFixed(0) : 100;
+            const totalPct = totalBud > 0 ? (totalAct / totalBud * 100).toFixed(1) : 100;
             const totalDiff = totalAct - totalBud;
             
+            // 摘要全部用中文
             document.getElementById('deep-summary-content').innerHTML = `
-                <p><strong>${nameMap[tab]}整体情况：</strong>完成率 <span class="${totalPct >= 100 ? 'good' : 'bad'}">${totalPct}%</span>，实际¥${(totalAct/10000).toFixed(1)}万，预算¥${(totalBud/10000).toFixed(1)}万，${totalDiff >= 0 ? '超额' : '缺口'}<span class="${totalDiff >= 0 ? 'good' : 'bad'}">${Math.abs(totalDiff/10000).toFixed(1)}万</span></p>
-                ${good.length > 0 ? `<p class="mt-2"><span class="good">✓ 表现优秀（${good.length}个）：</span>${good.slice(0,5).map(r => r.name.split(' ')[0] + '（' + (r.actual/r.budget*100).toFixed(0) + '%）').join('、')}</p>` : '<p class="mt-2 text-zinc-500">暂无达标项目</p>'}
-                ${bad.length > 0 ? `<p class="mt-2"><span class="bad">✗ 需要关注（${bad.length}个）：</span>${bad.slice(0,5).map(r => r.name.split(' ')[0] + '（' + (r.actual/r.budget*100).toFixed(0) + '%）').join('、')}</p>` : ''}
+                <p style="margin-bottom:12px;">
+                    <strong>${nameMap[tab]}整体情况：</strong>
+                    完成率 <span class="${parseFloat(totalPct) >= 100 ? 'good' : 'bad'}" style="font-size:16px;font-weight:bold;">${totalPct}%</span>
+                </p>
+                <p>
+                    实际收入：<strong>¥${(totalAct/10000).toFixed(1)}万</strong>　|　
+                    预算金额：<strong>¥${(totalBud/10000).toFixed(1)}万</strong>　|　
+                    ${totalDiff >= 0 ? '超额' : '缺口'}：<span class="${totalDiff >= 0 ? 'good' : 'bad'}"><strong>${Math.abs(totalDiff/10000).toFixed(1)}万</strong></span>
+                </p>
+                
+                ${good.length > 0 ? `
+                <div style="margin-top:16px;padding:12px;background:rgba(34,197,94,0.1);border-radius:8px;">
+                    <p style="margin-bottom:8px;"><span class="good" style="font-weight:bold;">✓ 表现优秀（${good.length}个项目）</span></p>
+                    <p style="font-size:11px;line-height:1.8;">${good.slice(0,8).map(r => {
+                        const pct = (r.actual/r.budget*100).toFixed(0);
+                        return `<span style="display:inline-block;background:#1a1a1f;padding:2px 8px;border-radius:4px;margin:2px 4px 2px 0;">
+                            ${r.name.split(' ')[0]} <span class="good">${pct}%</span>
+                        </span>`;
+                    }).join('')}</p>
+                </div>` : '<p style="margin-top:12px;color:#71717a;">暂无超额完成的项目</p>'}
+                
+                ${bad.length > 0 ? `
+                <div style="margin-top:12px;padding:12px;background:rgba(239,68,68,0.1);border-radius:8px;">
+                    <p style="margin-bottom:8px;"><span class="bad" style="font-weight:bold;">✗ 需要关注（${bad.length}个项目未达标，完成率低于80%）</span></p>
+                    <p style="font-size:11px;line-height:1.8;">${bad.slice(0,8).map(r => {
+                        const pct = (r.actual/r.budget*100).toFixed(0);
+                        return `<span style="display:inline-block;background:#1a1a1f;padding:2px 8px;border-radius:4px;margin:2px 4px 2px 0;">
+                            ${r.name.split(' ')[0]} <span class="bad">${pct}%</span>
+                        </span>`;
+                    }).join('')}</p>
+                </div>` : ''}
             `;
         }
 
         window.addEventListener('resize', () => Object.values(STATE.charts).forEach(c => c?.resize()));
-        document.addEventListener('DOMContentLoaded', () => { if (STATE.sidebarCollapsed) document.getElementById('sidebar').classList.add('collapsed'); refreshFromGitHub(); });
+        document.addEventListener('DOMContentLoaded', () => { 
+            if (STATE.sidebarCollapsed) document.getElementById('sidebar').classList.add('collapsed'); 
+            document.getElementById('inline-prompt').value = STATE.aiPrompt;
+            refreshFromGitHub(); 
+        });
     </script>
 </body>
 </html>
