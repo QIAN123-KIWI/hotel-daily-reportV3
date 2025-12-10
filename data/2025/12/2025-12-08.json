@@ -1,11 +1,11 @@
 {
   "date": "2025-12-08",
   "weekday": "周一",
-  "uploadedAt": "2025-12-10T00:13:54.219Z",
+  "uploadedAt": "2025-12-10T06:35:56.434Z",
   "roomsSold": 133,
-  "adrYtd": 1801.9260452091771,
-  "revparYtd": 1801.9260452091771,
-  "occYtd": 0.7367183985605038,
+  "adrYtd": 0,
+  "revparYtd": 0,
+  "occYtd": 0,
   "totals": {
     "room": {
       "act": 325069.41,
@@ -26,446 +26,203 @@
   },
   "rows": [
     {
-      "name": "Best Available Rate 散客门市价收入",
-      "type": "Room",
-      "actual": 0,
-      "budget": 26050,
-      "rooms": 0,
-      "ytdAct": 8821242.61,
-      "ytdBud": 9309336.17038515
-    },
-    {
       "name": "Consortia 国外预订门市价收入",
       "type": "Room",
       "actual": 37131.5,
-      "budget": 47490.32258064516,
-      "rooms": 18,
-      "ytdAct": 18359360.459999997,
-      "ytdBud": 14899227.72515632
+      "budget": 47490.32258064516
     },
     {
       "name": "Corporate Negotiated 公司合作客源收入",
       "type": "Room",
       "actual": 17005.45,
-      "budget": 13741.935483870968,
-      "rooms": 12,
-      "ytdAct": 4700831.720000001,
-      "ytdBud": 6244715.483870966
+      "budget": 13741.935483870968
     },
     {
       "name": "Local Negotiated 本地合作客源收入",
       "type": "Room",
       "actual": 13394.45,
-      "budget": 59354.83870967742,
-      "rooms": 9,
-      "ytdAct": 10252238.07,
-      "ytdBud": 12323652.483263118
-    },
-    {
-      "name": "Government 政府客源收入",
-      "type": "Other",
-      "actual": 0,
-      "budget": 0,
-      "rooms": 0,
-      "ytdAct": 4300,
-      "ytdBud": 0
+      "budget": 59354.83870967742
     },
     {
       "name": "Individual Tour/Wholesale 个人游/大规模",
       "type": "Room",
       "actual": 24540.78,
-      "budget": 9725.806451612903,
-      "rooms": 12,
-      "ytdAct": 11115704.72,
-      "ytdBud": 3280314.77933138
+      "budget": 9725.806451612903
     },
     {
       "name": "Corporate Marketing Programs 企业营销",
       "type": "Room",
       "actual": 40727.74,
-      "budget": 36064.51612903226,
-      "rooms": 15,
-      "ytdAct": 18695815.67,
-      "ytdBud": 12895571.922152787
+      "budget": 36064.51612903226
     },
     {
       "name": "Other Discounts 其他折扣客源收入",
       "type": "Room",
       "actual": 154987.47,
-      "budget": 165451.61290322582,
-      "rooms": 64,
-      "ytdAct": 55320636.67,
-      "ytdBud": 50440912.90322581
-    },
-    {
-      "name": "Convention/Association 大型展览会客源收入",
-      "type": "Other",
-      "actual": 0,
-      "budget": 0,
-      "rooms": 0,
-      "ytdAct": -38786.46,
-      "ytdBud": 1125000
-    },
-    {
-      "name": "SMRF 特殊团体客源收入",
-      "type": "Other",
-      "actual": 0,
-      "budget": 3974.1935483870966,
-      "rooms": 0,
-      "ytdAct": 1250828.68,
-      "ytdBud": 1263766.0803090124
-    },
-    {
-      "name": "Company Meetings/Incentives公司会议客源",
-      "type": "Other",
-      "actual": 0,
-      "budget": 44032.25806451613,
-      "rooms": 0,
-      "ytdAct": 8342856.7700000005,
-      "ytdBud": 12315858.064516127
-    },
-    {
-      "name": "Group Tour 团队旅游客源收入",
-      "type": "Room",
-      "actual": 0,
-      "budget": 4215.4838709677415,
-      "rooms": 0,
-      "ytdAct": 1921365.55,
-      "ytdBud": 2017281.9745190456
+      "budget": 165451.61290322582
     },
     {
       "name": "Permanent 常住客收入",
       "type": "Room",
       "actual": 4116.62,
-      "budget": 8903.225806451614,
-      "rooms": 3,
-      "ytdAct": 2525420.93,
-      "ytdBud": 3441765.806451613
+      "budget": 8903.225806451614
     },
     {
       "name": "Net Room Revenue 净房费收入",
-      "type": "Other",
+      "type": "Room",
       "actual": 291904.01,
-      "budget": 419004.19354838715,
-      "rooms": 0,
-      "ytdAct": 141271815.39000005,
-      "ytdBud": 129557403.39318134
+      "budget": 419004.19354838715
     },
     {
       "name": "Room Surcharge 服务费",
       "type": "Room",
       "actual": 29163.67,
-      "budget": 41900.41935483871,
-      "rooms": 0,
-      "ytdAct": 14349534.729999999,
-      "ytdBud": 12955740.339318136
+      "budget": 41900.41935483871
     },
     {
       "name": "Other rooms revenue其它房费收入",
-      "type": "Other",
+      "type": "Room",
       "actual": 4001.73,
-      "budget": 14665.146774193572,
-      "rooms": 0,
-      "ytdAct": 4001227.93,
-      "ytdBud": 4582852.515502502
-    },
-    {
-      "name": "No Show Revenue",
-      "type": "Other",
-      "actual": 0,
-      "budget": 0,
-      "rooms": 0,
-      "ytdAct": 604685.89,
-      "ytdBud": 0
+      "budget": 14665.146774193572
     },
     {
       "name": "No.of Available Rooms 可出租房数",
       "type": "Other",
       "actual": 260,
-      "budget": 260,
-      "rooms": 0,
-      "ytdAct": 88920,
-      "ytdBud": 88920
+      "budget": 260
     },
     {
       "name": "No.of Occupied Rooms 已出租房数",
       "type": "Other",
       "actual": 133,
-      "budget": 190.51612903225808,
-      "rooms": 0,
-      "ytdAct": 65509,
-      "ytdBud": 60455.12903225807
+      "budget": 190.51612903225808
     },
     {
       "name": "No.of Complimentary Rooms 免费房数",
       "type": "Other",
       "actual": 4,
-      "budget": 0,
-      "rooms": 0,
-      "ytdAct": 986,
-      "ytdBud": 0
+      "budget": 0
     },
     {
       "name": "Vacant Rooms 未出租房数",
       "type": "Other",
       "actual": 114,
-      "budget": 69.48387096774192,
-      "rooms": 0,
-      "ytdAct": 15015,
-      "ytdBud": 28464.870967741932
+      "budget": 69.48387096774192
     },
     {
       "name": "No.of Out of Order Rooms 维修房数",
       "type": "Other",
       "actual": 5,
-      "budget": 0,
-      "rooms": 0,
-      "ytdAct": 6593,
-      "ytdBud": 0
+      "budget": 0
     },
     {
       "name": "No.of House Use Rooms 自用房数",
       "type": "Other",
       "actual": 4,
-      "budget": 0,
-      "rooms": 0,
-      "ytdAct": 817,
-      "ytdBud": 0
+      "budget": 0
     },
     {
       "name": "Paid Occupancy % 客房住房率",
       "type": "Other",
       "actual": 0.5115384615384615,
-      "budget": 0.7327543424317619,
-      "rooms": 0,
-      "ytdAct": 0.7367183985605038,
-      "ytdBud": 0.6798822428279135
+      "budget": 0.7327543424317619
     },
     {
       "name": "Paid Average Room Rate 平均房价",
       "type": "Room",
       "actual": 2444.130902255639,
-      "budget": 2496.217837792076,
-      "rooms": 0,
-      "ytdAct": 2445.881694728969,
-      "ytdBud": 2433.1433676952947
+      "budget": 2496.217837792076
     },
     {
       "name": "Rev Par 可出租平均房价",
       "type": "Other",
       "actual": 1250.2669615384614,
-      "budget": 1829.114460297767,
-      "rooms": 0,
-      "ytdAct": 1801.9260452091771,
-      "ytdBud": 1654.2509699505397
+      "budget": 1829.114460297767
     },
     {
       "name": "No.of Guest 房客人数",
-      "type": "Other",
+      "type": "Room",
       "actual": 262,
-      "budget": 0,
-      "rooms": 0,
-      "ytdAct": 119082,
-      "ytdBud": 0
-    },
-    {
-      "name": "Ling Long",
-      "type": "Other",
-      "actual": 0,
-      "budget": 4474.836129032258,
-      "rooms": 0,
-      "ytdAct": 1485615.48,
-      "ytdBud": 1508048.1090322582
+      "budget": 0
     },
     {
       "name": "Wai King Kok  蔚景阁",
       "type": "F&B",
       "actual": 13468.619999999999,
-      "budget": 39223.11967741935,
-      "rooms": 0,
-      "ytdAct": 9567206.190000001,
-      "ytdBud": 11547218.147419354
+      "budget": 39223.11967741935
     },
     {
       "name": "Peacock Alley 羿庭",
       "type": "F&B",
       "actual": 6513.01,
-      "budget": 16178.260322580643,
-      "rooms": 0,
-      "ytdAct": 2791979.94,
-      "ytdBud": 3218503.562580646
+      "budget": 16178.260322580643
     },
     {
       "name": "Grand Brasserie 百味园",
       "type": "F&B",
       "actual": 38861.47999999999,
-      "budget": 68345.87984464515,
-      "rooms": 0,
-      "ytdAct": 20535447.27,
-      "ytdBud": 19296037.306835156
+      "budget": 68345.87984464515
     },
     {
       "name": "Long Bar  廊吧",
       "type": "F&B",
       "actual": 16177.46,
-      "budget": 37072.51806451613,
-      "rooms": 0,
-      "ytdAct": 9561977.96,
-      "ytdBud": 9962995.814516127
+      "budget": 37072.51806451613
     },
     {
       "name": "Salon de Ville 浦江汇",
       "type": "F&B",
       "actual": 1652.84,
-      "budget": 10981.081935483871,
-      "rooms": 0,
-      "ytdAct": 2225117.8899999997,
-      "ytdBud": 2855102.2154838713
+      "budget": 10981.081935483871
     },
     {
       "name": "Room Service 客房服务",
       "type": "F&B",
       "actual": 2041.7800000000002,
-      "budget": 9306.083225806453,
-      "rooms": 0,
-      "ytdAct": 2305712.73,
-      "ytdBud": 2470590.6134224515
+      "budget": 9306.083225806453
     },
     {
       "name": "Mini Bar 迷你吧",
       "type": "F&B",
       "actual": 673.6,
-      "budget": 1251.6129032258063,
-      "rooms": 0,
-      "ytdAct": 482475.93,
-      "ytdBud": 365203.9032258064
+      "budget": 1251.6129032258063
     },
     {
       "name": "Banquet Food&Bev 宴会食品酒水收入",
-      "type": "Banquet",
+      "type": "F&B",
       "actual": -0.23,
-      "budget": 104389.03258064514,
-      "rooms": 0,
-      "ytdAct": 24662643.5,
-      "ytdBud": 27903202.30064516
-    },
-    {
-      "name": "Rooms Rental 会议室租金",
-      "type": "Banquet",
-      "actual": 0,
-      "budget": 39781.93548387097,
-      "rooms": 0,
-      "ytdAct": 7051637.06,
-      "ytdBud": 7785298.483870968
-    },
-    {
-      "name": "Banquet Other Revenue 宴会杂项收入",
-      "type": "Banquet",
-      "actual": 0,
-      "budget": 2312.9032258064517,
-      "rooms": 0,
-      "ytdAct": 873903.17,
-      "ytdBud": 638014.2258064516
-    },
-    {
-      "name": "Banquet Service Charge 宴会服务费",
-      "type": "Banquet",
-      "actual": 0,
-      "budget": 7709.677419354839,
-      "rooms": 0,
-      "ytdAct": 2467402.05,
-      "ytdBud": 2787033.419354838
-    },
-    {
-      "name": "Florist 鲜花",
-      "type": "Other",
-      "actual": 0,
-      "budget": 0,
-      "rooms": 0,
-      "ytdAct": 943.4,
-      "ytdBud": 0
+      "budget": 104389.03258064514
     },
     {
       "name": "Guest Laundry/Valet 客人洗衣",
-      "type": "Other",
+      "type": "Room",
       "actual": 2766.5099999999998,
-      "budget": 2286.1935483870966,
-      "rooms": 0,
-      "ytdAct": 1060021.6199999999,
-      "ytdBud": 830250.5483870967
-    },
-    {
-      "name": "Telephone 电话",
-      "type": "Other",
-      "actual": 0,
-      "budget": 3.8103225806451615,
-      "rooms": 0,
-      "ytdAct": 2026,
-      "ytdBud": 1209.1025806451612
+      "budget": 2286.1935483870966
     },
     {
       "name": "Library 思塾",
       "type": "Other",
       "actual": 5,
-      "budget": 190.51612903225808,
-      "rooms": 0,
-      "ytdAct": 79929.12,
-      "ytdBud": 65222.87903225807
+      "budget": 190.51612903225808
     },
     {
       "name": "Transportation 运输部",
       "type": "Other",
       "actual": 1238.53,
-      "budget": 2857.7419354838707,
-      "rooms": 0,
-      "ytdAct": 887567.69,
-      "ytdBud": 868752.9354838709
-    },
-    {
-      "name": "Parking 停车场",
-      "type": "Other",
-      "actual": 0,
-      "budget": 2019.8283870967741,
-      "rooms": 0,
-      "ytdAct": 716284.38,
-      "ytdBud": 704920.1070967743
+      "budget": 2857.7419354838707
     },
     {
       "name": "SPA 水疗中心",
       "type": "Other",
       "actual": 12400.96,
-      "budget": 17026.71967741936,
-      "rooms": 0,
-      "ytdAct": 5509333.16,
-      "ytdBud": 5552198.067419356
-    },
-    {
-      "name": "Health Club 健身房",
-      "type": "Other",
-      "actual": 0,
-      "budget": 342.9290322580645,
-      "rooms": 0,
-      "ytdAct": 162863.28,
-      "ytdBud": 161911.0322580645
-    },
-    {
-      "name": "T9tea Boutique Retail Shop T9tea精品零售店",
-      "type": "Other",
-      "actual": 0,
-      "budget": 0,
-      "rooms": 0,
-      "ytdAct": 25593.440000000002,
-      "ytdBud": 0
+      "budget": 17026.71967741936
     },
     {
       "name": "Sundry 其他收入",
       "type": "Other",
       "actual": -3664.03,
-      "budget": -4679.032258064516,
-      "rooms": 0,
-      "ytdAct": -841280.3200000001,
-      "ytdBud": -233717.25806451612
+      "budget": -4679.032258064516
     }
   ],
-  "aiAnalysis": null
+  "aiAnalysis": "<div class=\"section-title\">📊 预算执行总览</div>\n<p><strong>整体完成率：49.9%</strong></p>\n<div class=\"progress-bar\"><div class=\"progress-fill\" style=\"width:49.9%;background:#ef4444\"></div></div>\n<div class=\"data-row\"><span>客房</span><span class=\"highlight-bad\">68.4%</span></div>\n<div class=\"data-row\"><span>餐饮</span><span class=\"highlight-bad\">23.3%</span></div>\n<div class=\"data-row\"><span>其他</span><span class=\"highlight-bad\">63.6%</span></div>\n\n<div class=\"section-title\">🏨 客房分析</div>\n<p class=\"highlight-good\">✓ 表现优秀：</p>\n<ul>\n  <li>企业营销：113%</li>\n  <li>个人游：252%</li>\n  <li>公司合作客源收入：124%</li>\n  <li>客人洗衣：121%</li>\n</ul>\n<p class=\"highlight-bad\">✗ 需要改进：</p>\n<ul>\n  <li>净房费收入：70%</li>\n  <li>国外预订门市价收入：78%</li>\n  <li>服务费：70%</li>\n  <li>本地合作客源收入：23%</li>\n  <li>常住客收入：46%</li>\n  <li>其它房费收入：27%</li>\n</ul>\n<div class=\"suggestion-item\">💡 建议：\n<ul>\n  <li>增加对本地市场的推广力度，提高本地合作客源的入住率。</li>\n  <li>优化价格策略，特别是对于国外预订客户，考虑推出更多优惠活动以吸引国际旅客。</li>\n  <li>加强与企业的合作关系，利用表现优秀的渠道进一步扩大市场影响力。</li>\n  <li>提升服务质量，尤其是针对常住客的服务体验，增强客户粘性。</li>\n</ul>\n</div>\n\n<div class=\"section-title\">🍽️ 餐饮分析</div>\n<p class=\"highlight-good\">✓ 表现优秀：无</p>\n<p class=\"highlight-bad\">✗ 需要改进：</p>\n<ul>\n  <li>百味园：57%</li>\n  <li>廊吧：44%</li>\n  <li>蔚景阁：34%</li>\n  <li>羿庭：40%</li>\n  <li>客房服务：22%</li>\n  <li>浦江汇：15%</li>\n  <li>迷你吧：54%</li>\n  <li>宴会食品酒水收入：-0.23%</li>\n</ul>\n<div class=\"suggestion-item\">💡 建议：\n<ul>\n  <li>重新评估各餐厅及酒吧的菜单定价和促销策略，吸引更多顾客消费。</li>\n  <li>加强线上营销活动，如通过社交媒体平台推广特色菜品和服务。</li>\n  <li>探索新的业务模式或合作伙伴关系，比如与当地旅游机构合作推出联合套餐等。</li>\n  <li>改善客房服务流程，确保快速响应客户需求并提供高质量的服务。</li>\n</ul>\n</div>\n\n<div class=\"section-title\">⚠️ 风险预警</div>\n<div class=\"risk-item\">🔴 当前经营状况显示酒店面临较大财务压力，特别是客房与餐饮两大核心业务均未达到预期目标。建议立即采取措施调整运营策略，并密切关注现金流情况以避免资金链断裂的风险。</div>\n\n<div class=\"section-title\">📈 月度进展</div>\n<p>本月第8天，时间进度25.8%。鉴于当前较低的整体完成率（49.9%），接下来的日子里需要更加努力地推动各项业务发展，争取在月底前实现既定目标。</p>"
 }
