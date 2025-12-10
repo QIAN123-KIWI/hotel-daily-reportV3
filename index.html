@@ -4,1746 +4,425 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>酒店经营日报 | NEXUS</title>
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
-
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        
-        :root {
-            --bg-primary: #0a0a0c;
-            --bg-secondary: #111114;
-            --bg-card: #16161a;
-            --border-color: #232329;
-            --text-primary: #f4f4f5;
-            --text-secondary: #a1a1aa;
-            --text-muted: #71717a;
-            --accent-blue: #3b82f6;
-            --accent-green: #22c55e;
-            --accent-amber: #f59e0b;
-            --accent-purple: #a855f7;
-            --accent-red: #ef4444;
-        }
-        
-        body { 
-            background: var(--bg-primary); 
-            color: var(--text-primary); 
-            font-family: 'Noto Sans SC', sans-serif; 
-            font-size: 13px; 
-        }
-        
-        .card { 
-            background: var(--bg-card); 
-            border: 1px solid var(--border-color); 
-            border-radius: 10px; 
-        }
-        
-        /* KPI卡片 - 缩小 */
-        .kpi-card { 
-            padding: 10px 12px; 
-            position: relative;
-            overflow: hidden;
-        }
-        .kpi-card::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 3px;
-        }
-        .kpi-card.blue::before { background: linear-gradient(180deg, #3b82f6, #1d4ed8); }
-        .kpi-card.green::before { background: linear-gradient(180deg, #22c55e, #16a34a); }
-        .kpi-card.amber::before { background: linear-gradient(180deg, #f59e0b, #d97706); }
-        .kpi-card.purple::before { background: linear-gradient(180deg, #a855f7, #7c3aed); }
-        
-        .kpi-value { 
-            font-size: 1.1rem; 
-            font-weight: 600; 
-            font-family: 'JetBrains Mono', monospace; 
-        }
-        
-        .kpi-budget {
-            margin-top: 6px;
-            padding-top: 6px;
-            border-top: 1px solid var(--border-color);
-        }
-        .kpi-budget-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 10px;
-        }
-        .kpi-pct {
-            font-size: 12px;
-            font-weight: 600;
-            font-family: 'JetBrains Mono', monospace;
-        }
-        
-        .tag { 
-            padding: 2px 6px; 
-            border-radius: 4px; 
-            font-size: 10px; 
-            font-weight: 600; 
-        }
-        .tag-green { background: rgba(34,197,94,0.12); color: #4ade80; }
-        .tag-red { background: rgba(239,68,68,0.12); color: #f87171; }
-        
+        :root { --bg-primary: #0a0a0c; --bg-card: #16161a; --border-color: #232329; --text-primary: #f4f4f5; --text-secondary: #a1a1aa; --text-muted: #71717a; }
+        body { background: var(--bg-primary); color: var(--text-primary); font-family: system-ui, sans-serif; font-size: 13px; }
+        .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; }
+        .kpi-card { padding: 12px; position: relative; }
+        .kpi-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+        .kpi-card.blue::before { background: #3b82f6; }
+        .kpi-card.green::before { background: #22c55e; }
+        .kpi-card.amber::before { background: #f59e0b; }
+        .kpi-card.purple::before { background: #a855f7; }
+        .kpi-value { font-size: 1.2rem; font-weight: 600; font-family: monospace; }
+        .tag { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+        .tag-green { background: rgba(34,197,94,0.15); color: #4ade80; }
+        .tag-red { background: rgba(239,68,68,0.15); color: #f87171; }
+        .tag-blue { background: rgba(59,130,246,0.15); color: #60a5fa; }
         table { width: 100%; border-collapse: collapse; font-size: 11px; }
-        th, td { padding: 6px 4px; text-align: left; border-bottom: 1px solid var(--border-color); }
-        th { color: var(--text-muted); font-size: 9px; font-weight: 500; text-transform: uppercase; }
-        
-        .sidebar { width: 180px; transition: width 0.2s; }
-        .sidebar.collapsed { width: 44px; }
+        th, td { padding: 8px 6px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { color: var(--text-muted); font-size: 9px; text-transform: uppercase; }
+        .sidebar { width: 200px; }
+        .sidebar.collapsed { width: 50px; }
         .sidebar.collapsed .sidebar-content { display: none; }
-        .sidebar.collapsed .sidebar-toggle i { transform: rotate(180deg); }
-        
-        .history-item { 
-            padding: 6px 8px; 
-            border-radius: 5px; 
-            cursor: pointer; 
-            font-size: 11px; 
-        }
+        .history-item { padding: 8px; border-radius: 6px; cursor: pointer; font-size: 11px; }
         .history-item:hover { background: rgba(255,255,255,0.05); }
-        .history-item.active { 
-            background: rgba(59,130,246,0.1); 
-            border-left: 2px solid var(--accent-blue); 
-        }
-        .month-content { max-height: 0; overflow: hidden; transition: max-height 0.2s; }
-        .month-content.expanded { max-height: 400px; }
-        
-        #toast-container { position: fixed; top: 12px; right: 12px; z-index: 9999; }
-        .toast { 
-            padding: 8px 14px; 
-            border-radius: 6px; 
-            font-size: 11px; 
-            margin-bottom: 6px; 
-            animation: slideIn 0.25s ease-out;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .toast-success { background: linear-gradient(135deg, #166534, #15803d); }
-        .toast-error { background: linear-gradient(135deg, #991b1b, #b91c1c); }
-        .toast-info { background: linear-gradient(135deg, #1e40af, #2563eb); }
+        .history-item.active { background: rgba(59,130,246,0.15); border-left: 2px solid #3b82f6; }
+        .month-content { max-height: 0; overflow: hidden; transition: max-height 0.3s; }
+        .month-content.expanded { max-height: 500px; }
+        #toast-container { position: fixed; top: 16px; right: 16px; z-index: 9999; }
+        .toast { padding: 10px 16px; border-radius: 8px; font-size: 12px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; animation: slideIn 0.3s; }
+        .toast-success { background: #166534; }
+        .toast-error { background: #991b1b; }
+        .toast-info { background: #1e40af; }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } }
-        
+        .btn-primary { background: #3b82f6; color: white; padding: 8px 16px; border-radius: 6px; font-size: 11px; border: none; cursor: pointer; }
+        .btn-primary:disabled { opacity: 0.5; }
+        .btn-secondary { background: var(--bg-card); color: var(--text-secondary); padding: 8px 16px; border-radius: 6px; font-size: 11px; border: 1px solid var(--border-color); cursor: pointer; }
+        .btn-secondary:hover { background: var(--border-color); }
         .modal-backdrop { background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); }
-        
-        /* AI 分析样式 */
         #ai-analysis { font-size: 11px; line-height: 1.6; }
-        #ai-analysis .section-title { 
-            color: var(--accent-blue); 
-            font-size: 11px; 
-            font-weight: 600; 
-            margin: 12px 0 6px 0; 
-            display: flex; 
-            align-items: center; 
-            gap: 6px;
-            padding-bottom: 4px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        #ai-analysis .section-title:first-child { margin-top: 0; }
-        #ai-analysis p { color: var(--text-secondary); margin: 4px 0; }
-        #ai-analysis strong { color: var(--text-primary); }
+        #ai-analysis .section-title { color: #3b82f6; font-weight: 600; margin: 12px 0 6px; padding-bottom: 4px; border-bottom: 1px solid var(--border-color); }
         #ai-analysis .highlight-good { color: #4ade80; }
         #ai-analysis .highlight-bad { color: #f87171; }
-        #ai-analysis .highlight-warn { color: #fbbf24; }
-        #ai-analysis .data-row { 
-            display: flex; 
-            justify-content: space-between; 
-            padding: 4px 0; 
-            border-bottom: 1px solid rgba(255,255,255,0.05); 
-        }
-        #ai-analysis .progress-bar {
-            height: 5px;
-            background: var(--border-color);
-            border-radius: 3px;
-            overflow: hidden;
-            margin-top: 3px;
-        }
-        #ai-analysis .progress-fill {
-            height: 100%;
-            border-radius: 3px;
-        }
-        #ai-analysis .risk-item {
-            background: rgba(239,68,68,0.08);
-            border-left: 3px solid var(--accent-red);
-            padding: 6px 10px;
-            margin: 4px 0;
-            border-radius: 0 5px 5px 0;
-            font-size: 10px;
-        }
-        #ai-analysis .suggestion-item {
-            background: rgba(34,197,94,0.08);
-            border-left: 3px solid var(--accent-green);
-            padding: 6px 10px;
-            margin: 4px 0;
-            border-radius: 0 5px 5px 0;
-            font-size: 10px;
-        }
-        
-        .ai-loading .spinner { 
-            width: 14px; 
-            height: 14px; 
-            border: 2px solid var(--accent-blue); 
-            border-top-color: transparent; 
-            border-radius: 50%; 
-            animation: spin 0.8s linear infinite; 
-        }
+        #ai-analysis .risk-item { background: rgba(239,68,68,0.1); border-left: 3px solid #ef4444; padding: 8px; margin: 6px 0; border-radius: 0 6px 6px 0; }
+        .ai-loading .spinner { width: 16px; height: 16px; border: 2px solid #3b82f6; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
-
-        .deep-summary { 
-            background: var(--bg-secondary); 
-            border-radius: 8px; 
-            padding: 14px; 
-            margin-top: 14px; 
-            font-size: 11px; 
-        }
-        .deep-summary .good { color: #4ade80; }
-        .deep-summary .bad { color: #f87171; }
-
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 2px; }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 5px;
-            font-weight: 500;
-            font-size: 11px;
-            border: none;
-            cursor: pointer;
-        }
-        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-        
-        .btn-secondary {
-            background: var(--bg-card);
-            color: var(--text-secondary);
-            padding: 6px 12px;
-            border-radius: 5px;
-            font-size: 11px;
-            border: 1px solid var(--border-color);
-            cursor: pointer;
-        }
-        .btn-secondary:hover { background: var(--border-color); color: var(--text-primary); }
-        
-        .prompt-panel {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            margin-top: 10px;
-            overflow: hidden;
-        }
-        .prompt-panel.collapsed { max-height: 36px; }
-        .prompt-panel.expanded { max-height: 350px; }
-        .prompt-header {
-            padding: 8px 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            background: var(--bg-card);
-        }
-        .prompt-body { padding: 10px; display: none; }
-        .prompt-panel.expanded .prompt-body { display: block; }
-        .prompt-textarea {
-            width: 100%;
-            height: 180px;
-            background: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 5px;
-            padding: 8px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 9px;
-            color: var(--text-secondary);
-            resize: none;
-        }
-        
-        .analysis-status {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 9px;
-            color: var(--text-muted);
-        }
-        .status-dot {
-            width: 5px;
-            height: 5px;
-            border-radius: 50%;
-            background: var(--text-muted);
-        }
-        .status-dot.active { background: var(--accent-green); animation: pulse 1.5s infinite; }
-        .status-dot.saved { background: var(--accent-blue); }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        
-        .ai-saved-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 3px;
-            background: rgba(59,130,246,0.15);
-            color: #60a5fa;
-            padding: 1px 6px;
-            border-radius: 3px;
-            font-size: 9px;
-            margin-left: 6px;
-        }
-        
-        /* 调试面板样式 */
-        .debug-panel {
-            background: #1a1a2e;
-            border: 1px solid #16213e;
-            border-radius: 8px;
-            margin-top: 10px;
-            font-size: 10px;
-        }
-        .debug-header {
-            padding: 8px 12px;
-            background: #16213e;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-        }
-        .debug-body {
-            padding: 10px;
-            max-height: 200px;
-            overflow-y: auto;
-            display: none;
-        }
-        .debug-panel.expanded .debug-body { display: block; }
-        .debug-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 4px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-        .debug-label { color: #a1a1aa; }
-        .debug-value { color: #4ade80; font-family: 'JetBrains Mono', monospace; }
-        .debug-value.error { color: #f87171; }
-        
-        /* CDN提示样式 */
-        .cdn-notice {
-            background: rgba(59, 130, 246, 0.1);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            border-radius: 6px;
-            padding: 8px 12px;
-            font-size: 10px;
-            color: #93c5fd;
-            margin-bottom: 10px;
-        }
+        .deep-summary { background: #111; border-radius: 8px; padding: 16px; margin-top: 16px; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
     </style>
 </head>
 <body class="min-h-screen">
-    <div id="toast-container"></div>
-
-    <div class="flex min-h-screen">
-        <!-- 侧边栏 -->
-        <aside id="sidebar" class="sidebar border-r border-zinc-800/50 p-2 flex flex-col bg-[#0c0c0e]">
-            <button onclick="toggleSidebar()" class="sidebar-toggle w-full flex items-center justify-center py-1.5 mb-2 text-zinc-500 hover:text-white text-xs rounded hover:bg-zinc-800/50">
-                <i class="fa-solid fa-chevron-left transition-transform duration-200"></i>
-            </button>
-            <div class="sidebar-content flex flex-col flex-1">
-                <div class="flex items-center gap-2 mb-3 px-1">
-                    <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                        <i class="fa-solid fa-chart-line text-white text-xs"></i>
-                    </div>
-                    <div>
-                        <span class="font-semibold text-white text-xs block">NEXUS</span>
-                        <span class="text-[9px] text-zinc-500">经营分析系统 v2.2</span>
-                    </div>
-                </div>
-                <label class="block mb-3">
-                    <div class="w-full py-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 rounded cursor-pointer text-center text-[10px] font-medium">
-                        <i class="fa-solid fa-upload mr-1"></i>上传报表
-                    </div>
-                    <input type="file" accept=".xlsx,.xls,.csv" onchange="handleFileUpload(event)" class="hidden">
-                </label>
-                <div class="flex items-center justify-between mb-1 px-1">
-                    <span class="text-[9px] text-zinc-500 uppercase">历史记录</span>
-                    <span class="text-[9px] text-zinc-600 bg-zinc-800/50 px-1.5 rounded" id="history-count">0</span>
-                </div>
-                <div id="history-list" class="flex-1 overflow-y-auto"></div>
+<div id="toast-container"></div>
+<div class="flex min-h-screen">
+    <aside id="sidebar" class="sidebar border-r border-zinc-800 p-3 flex flex-col bg-[#0c0c0e]">
+        <button onclick="toggleSidebar()" class="w-full py-2 mb-3 text-zinc-500 hover:text-white text-xs rounded hover:bg-zinc-800"><i class="fa-solid fa-chevron-left"></i></button>
+        <div class="sidebar-content flex flex-col flex-1">
+            <div class="flex items-center gap-2 mb-4">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"><i class="fa-solid fa-chart-line text-white text-sm"></i></div>
+                <div><span class="font-semibold text-white text-sm">NEXUS</span><span class="text-[9px] text-zinc-500 block">v2.5 直连版</span></div>
             </div>
-        </aside>
-
-        <!-- 主内容 -->
-        <main class="flex-1 p-3 overflow-y-auto">
-            <!-- 顶部 -->
-            <div class="flex items-center justify-between mb-3">
-                <div class="flex items-center gap-2">
-                    <span id="current-date" class="text-base font-semibold text-white">--</span>
-                    <span id="data-status" class="tag tag-red">无数据</span>
-                    <span class="tag" style="background: rgba(59,130,246,0.12); color: #60a5fa;">🚀 CDN加速</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="refreshFromGitHub()" class="btn-secondary px-2 py-1" title="刷新数据">
-                        <i class="fa-solid fa-sync"></i>
-                    </button>
-                    <button onclick="toggleDebugPanel()" class="btn-secondary px-2 py-1" title="调试信息">
-                        <i class="fa-solid fa-bug"></i>
-                    </button>
-                    <button id="save-btn" onclick="saveToGitHub()" disabled class="btn-primary px-3 py-1">
-                        <i class="fa-solid fa-cloud-arrow-up mr-1"></i>保存到云端
-                    </button>
-                    <button onclick="openSettingsModal()" class="btn-secondary px-2 py-1">
-                        <i class="fa-solid fa-gear"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- KPI - 更紧凑 -->
-            <div class="grid grid-cols-4 gap-2 mb-3">
-                <div class="card kpi-card blue">
-                    <p class="text-[9px] text-zinc-500 mb-0.5">总营收</p>
-                    <p id="kpi-revenue" class="kpi-value text-white">--</p>
-                    <div class="kpi-budget">
-                        <div class="kpi-budget-row">
-                            <span class="text-zinc-500">预算 <span id="kpi-revenue-bud" class="text-zinc-400">--</span></span>
-                            <span id="kpi-revenue-pct" class="kpi-pct">--</span>
-                        </div>
-                        <div class="kpi-budget-row mt-0.5">
-                            <span class="text-zinc-500">差额</span>
-                            <span id="kpi-revenue-diff" class="font-mono text-xs">--</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="card kpi-card green">
-                    <p class="text-[9px] text-zinc-500 mb-0.5">出租率</p>
-                    <p id="kpi-occ" class="kpi-value text-white">--</p>
-                    <div class="kpi-budget">
-                        <div class="kpi-budget-row">
-                            <span class="text-zinc-500">预算 <span id="kpi-occ-bud" class="text-zinc-400">--</span></span>
-                            <span id="kpi-occ-pct" class="kpi-pct">--</span>
-                        </div>
-                        <div class="kpi-budget-row mt-0.5">
-                            <span class="text-zinc-500">售房</span>
-                            <span id="kpi-sold" class="text-zinc-300 text-xs">--</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="card kpi-card amber">
-                    <p class="text-[9px] text-zinc-500 mb-0.5">ADR 平均房价</p>
-                    <p id="kpi-adr" class="kpi-value text-white">--</p>
-                    <div class="kpi-budget">
-                        <div class="kpi-budget-row">
-                            <span class="text-zinc-500">预算 <span id="kpi-adr-bud" class="text-zinc-400">--</span></span>
-                            <span id="kpi-adr-pct" class="kpi-pct">--</span>
-                        </div>
-                        <div class="kpi-budget-row mt-0.5">
-                            <span class="text-zinc-500">差额</span>
-                            <span id="kpi-adr-diff" class="font-mono text-xs">--</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="card kpi-card purple">
-                    <p class="text-[9px] text-zinc-500 mb-0.5">RevPAR</p>
-                    <p id="kpi-revpar" class="kpi-value text-white">--</p>
-                    <div class="kpi-budget">
-                        <div class="kpi-budget-row">
-                            <span class="text-zinc-500">预算 <span id="kpi-revpar-bud" class="text-zinc-400">--</span></span>
-                            <span id="kpi-revpar-pct" class="kpi-pct">--</span>
-                        </div>
-                        <div class="kpi-budget-row mt-0.5">
-                            <span class="text-zinc-500">差额</span>
-                            <span id="kpi-revpar-diff" class="font-mono text-xs">--</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 调试面板 -->
-            <div id="debug-panel" class="debug-panel hidden mb-3">
-                <div class="debug-header" onclick="toggleDebugBody()">
-                    <span class="text-amber-400"><i class="fa-solid fa-bug mr-1"></i>运营指标调试信息</span>
-                    <i class="fa-solid fa-chevron-down text-zinc-500" id="debug-chevron"></i>
-                </div>
-                <div class="debug-body">
-                    <div id="debug-content">
-                        <p class="text-zinc-500">上传数据后显示解析结果</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 主区域 -->
-            <div class="grid grid-cols-12 gap-3">
-                <!-- 左侧 -->
-                <div class="col-span-7 flex flex-col gap-3">
-                    <div class="card p-3">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-medium text-zinc-300">
-                                <i class="fa-solid fa-layer-group text-blue-400 mr-1"></i>部门概览
-                            </span>
-                            <button onclick="openDeepDive()" class="text-[10px] text-blue-400 hover:text-blue-300 flex items-center gap-1">
-                                <i class="fa-solid fa-table-list"></i>查看详细数据
-                            </button>
-                        </div>
-                        <table>
-                            <thead><tr><th>部门</th><th>实际</th><th>预算</th><th>差额</th><th>完成率</th></tr></thead>
-                            <tbody id="dept-table-body"><tr><td colspan="5" class="text-center text-zinc-600 py-3">--</td></tr></tbody>
-                        </table>
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div class="card p-3">
-                            <span class="text-xs font-medium text-zinc-300">
-                                <i class="fa-solid fa-chart-bar text-blue-400 mr-1"></i>营收对比
-                            </span>
-                            <div id="main-chart" style="height:130px;"></div>
-                        </div>
-                        <div class="card p-3">
-                            <span class="text-xs font-medium text-zinc-300">
-                                <i class="fa-solid fa-chart-pie text-amber-400 mr-1"></i>收入构成
-                            </span>
-                            <div id="pie-chart" style="height:130px;"></div>
-                        </div>
-                    </div>
-                    <!-- 趋势图 - 放大 -->
-                    <div class="grid grid-cols-2 gap-3">
-                        <div class="card p-3">
-                            <span class="text-xs font-medium text-zinc-300">
-                                <i class="fa-solid fa-chart-line text-green-400 mr-1"></i>营收趋势（近30天）
-                            </span>
-                            <div id="trend-chart" style="height:180px;"></div>
-                        </div>
-                        <div class="card p-3">
-                            <span class="text-xs font-medium text-zinc-300">
-                                <i class="fa-solid fa-hotel text-purple-400 mr-1"></i>运营指标趋势
-                            </span>
-                            <div id="ops-trend-chart" style="height:180px;"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 右侧：AI分析 -->
-                <div class="col-span-5">
-                    <div class="card p-3 h-full flex flex-col">
-                        <div class="flex items-center justify-between mb-2 pb-2 border-b border-zinc-800">
-                            <div class="flex items-center gap-2">
-                                <div class="w-6 h-6 rounded bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                                    <i class="fa-solid fa-robot text-white text-[10px]"></i>
-                                </div>
-                                <div>
-                                    <span class="text-xs font-medium text-white block">
-                                        AI 经营分析
-                                        <span id="ai-saved-badge" class="ai-saved-badge hidden">
-                                            <i class="fa-solid fa-cloud-check"></i>已保存
-                                        </span>
-                                    </span>
-                                    <div class="analysis-status">
-                                        <span class="status-dot" id="ai-status-dot"></span>
-                                        <span id="ai-update-time">--</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <button onclick="generateAIAnalysis()" class="btn-secondary px-2 py-1 text-[10px]" title="重新分析">
-                                <i class="fa-solid fa-rotate mr-1"></i>重新分析
-                            </button>
-                        </div>
-                        <div id="ai-analysis" class="flex-1 overflow-y-auto pr-1" style="max-height: 580px;">
-                            <div class="flex flex-col items-center justify-center py-10 text-zinc-600">
-                                <i class="fa-solid fa-wand-magic-sparkles text-xl mb-2"></i>
-                                <span class="text-[10px]">上传数据后自动生成智能分析</span>
-                            </div>
-                        </div>
-                        
-                        <!-- 提示词面板 -->
-                        <div id="prompt-panel" class="prompt-panel collapsed">
-                            <div class="prompt-header" onclick="togglePromptPanel()">
-                                <span class="text-[10px] text-zinc-400 flex items-center gap-1">
-                                    <i class="fa-solid fa-sliders"></i>自定义提示词
-                                </span>
-                                <i class="fa-solid fa-chevron-down text-zinc-500 text-[10px]" id="prompt-chevron"></i>
-                            </div>
-                            <div class="prompt-body">
-                                <textarea id="inline-prompt" class="prompt-textarea"></textarea>
-                                <div class="flex justify-between items-center mt-2">
-                                    <button onclick="resetInlinePrompt()" class="text-[10px] text-zinc-500 hover:text-zinc-300">
-                                        <i class="fa-solid fa-rotate-left mr-1"></i>恢复默认
-                                    </button>
-                                    <button onclick="applyPromptAndAnalyze()" class="btn-primary px-2 py-1 text-[10px]">
-                                        <i class="fa-solid fa-play mr-1"></i>应用并分析
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <!-- 设置模态框 -->
-    <div id="settings-modal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center">
-        <div class="bg-zinc-900 rounded-xl p-4 w-full max-w-xl border border-zinc-700">
-            <div class="flex items-center justify-between mb-3">
-                <h3 class="text-sm font-semibold text-white"><i class="fa-solid fa-gear text-blue-400 mr-2"></i>系统设置</h3>
-                <button onclick="closeModal('settings-modal')" class="text-zinc-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="cdn-notice">
-                <i class="fa-solid fa-bolt mr-1"></i>
-                <strong>已启用 jsDelivr CDN 加速</strong> - 国内无需翻墙即可访问数据（缓存延迟约10分钟）
-            </div>
-            <div class="grid grid-cols-2 gap-2 mb-3">
-                <div>
-                    <label class="text-[9px] text-zinc-500 uppercase">Webhook URL</label>
-                    <input type="text" id="settings-webhook" class="w-full mt-1 bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-[10px] font-mono text-zinc-300">
-                </div>
-                <div>
-                    <label class="text-[9px] text-zinc-500 uppercase">GitHub 仓库</label>
-                    <input type="text" id="settings-github-repo" class="w-full mt-1 bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-[10px] font-mono text-zinc-300">
-                </div>
-            </div>
-            <div class="mb-3">
-                <label class="text-[9px] text-zinc-500 uppercase">AI 分析提示词</label>
-                <textarea id="settings-ai-prompt" rows="14" class="w-full mt-1 bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-[10px] font-mono text-zinc-300"></textarea>
-            </div>
-            <div class="flex justify-between">
-                <button onclick="resetPrompt()" class="btn-secondary px-2 py-1 text-[10px]"><i class="fa-solid fa-rotate-left mr-1"></i>恢复默认</button>
-                <div class="flex gap-2">
-                    <button onclick="closeModal('settings-modal')" class="btn-secondary px-3 py-1 text-[10px]">取消</button>
-                    <button onclick="saveSettings()" class="btn-primary px-3 py-1 text-[10px]">保存</button>
-                </div>
-            </div>
+            <label class="block mb-4">
+                <div class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 rounded cursor-pointer text-center text-xs font-medium"><i class="fa-solid fa-upload mr-1"></i>上传报表</div>
+                <input type="file" accept=".xlsx,.xls,.csv" onchange="handleFileUpload(event)" class="hidden">
+            </label>
+            <div class="flex items-center justify-between mb-2"><span class="text-[10px] text-zinc-500 uppercase">历史记录</span><span id="history-count" class="text-[10px] text-zinc-600 bg-zinc-800 px-2 rounded">0</span></div>
+            <div id="history-list" class="flex-1 overflow-y-auto"></div>
         </div>
-    </div>
-
-    <!-- 深度分析 -->
-    <div id="deep-modal" class="fixed inset-0 z-50 hidden modal-backdrop flex flex-col">
-        <div class="h-10 px-3 border-b border-zinc-800 flex items-center justify-between bg-[#0c0c0e]">
+    </aside>
+    <main class="flex-1 p-4 overflow-y-auto">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+                <span id="current-date" class="text-lg font-semibold">--</span>
+                <span id="data-status" class="tag tag-red">无数据</span>
+                <span class="tag tag-blue">📡 直连模式</span>
+            </div>
             <div class="flex items-center gap-2">
-                <button onclick="closeModal('deep-modal')" class="text-zinc-400 hover:text-white text-xs"><i class="fa-solid fa-arrow-left mr-1"></i>返回</button>
-                <span class="text-xs font-medium text-white">深度分析 - 收入明细</span>
-            </div>
-            <div class="flex gap-1">
-                <button id="deep-tab-room" onclick="switchDeepTab('room')" class="px-3 py-1 rounded text-[10px] bg-zinc-700 text-white">客房收入</button>
-                <button id="deep-tab-fb" onclick="switchDeepTab('fb')" class="px-3 py-1 rounded text-[10px] text-zinc-400">餐饮收入</button>
-                <button id="deep-tab-other" onclick="switchDeepTab('other')" class="px-3 py-1 rounded text-[10px] text-zinc-400">其他收入</button>
+                <button onclick="refreshData()" class="btn-secondary px-3" title="刷新"><i class="fa-solid fa-sync"></i></button>
+                <button id="save-btn" onclick="saveToGitHub()" disabled class="btn-primary"><i class="fa-solid fa-cloud-arrow-up mr-1"></i>保存</button>
+                <button onclick="openSettingsModal()" class="btn-secondary px-3"><i class="fa-solid fa-gear"></i></button>
             </div>
         </div>
-        <div class="flex-1 overflow-y-auto p-3 bg-[#09090b]">
-            <div class="max-w-5xl mx-auto">
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="card p-3">
-                        <h4 class="text-xs font-medium text-zinc-300 mb-2"><i class="fa-solid fa-table text-blue-400 mr-1"></i>收入明细表</h4>
-                        <div class="overflow-auto max-h-72"><table><thead id="deep-table-head"></thead><tbody id="deep-table-body"></tbody></table></div>
-                    </div>
-                    <div class="card p-3">
-                        <h4 class="text-xs font-medium text-zinc-300 mb-2"><i class="fa-solid fa-chart-bar text-blue-400 mr-1"></i>收入排行前10名</h4>
-                        <div id="deep-chart" style="height:240px;"></div>
-                    </div>
+        <div class="grid grid-cols-4 gap-3 mb-4">
+            <div class="card kpi-card blue"><p class="text-[10px] text-zinc-500 mb-1">总营收</p><p id="kpi-revenue" class="kpi-value">--</p><div class="mt-2 pt-2 border-t border-zinc-800 text-[10px]"><div class="flex justify-between"><span class="text-zinc-500">预算</span><span id="kpi-revenue-bud" class="text-zinc-400">--</span></div><div class="flex justify-between mt-1"><span class="text-zinc-500">完成率</span><span id="kpi-revenue-pct" class="font-semibold">--</span></div></div></div>
+            <div class="card kpi-card green"><p class="text-[10px] text-zinc-500 mb-1">出租率</p><p id="kpi-occ" class="kpi-value">--</p><div class="mt-2 pt-2 border-t border-zinc-800 text-[10px]"><div class="flex justify-between"><span class="text-zinc-500">预算</span><span id="kpi-occ-bud" class="text-zinc-400">--</span></div><div class="flex justify-between mt-1"><span class="text-zinc-500">售房</span><span id="kpi-sold">--</span></div></div></div>
+            <div class="card kpi-card amber"><p class="text-[10px] text-zinc-500 mb-1">ADR</p><p id="kpi-adr" class="kpi-value">--</p><div class="mt-2 pt-2 border-t border-zinc-800 text-[10px]"><div class="flex justify-between"><span class="text-zinc-500">预算</span><span id="kpi-adr-bud" class="text-zinc-400">--</span></div><div class="flex justify-between mt-1"><span class="text-zinc-500">完成率</span><span id="kpi-adr-pct" class="font-semibold">--</span></div></div></div>
+            <div class="card kpi-card purple"><p class="text-[10px] text-zinc-500 mb-1">RevPAR</p><p id="kpi-revpar" class="kpi-value">--</p><div class="mt-2 pt-2 border-t border-zinc-800 text-[10px]"><div class="flex justify-between"><span class="text-zinc-500">预算</span><span id="kpi-revpar-bud" class="text-zinc-400">--</span></div><div class="flex justify-between mt-1"><span class="text-zinc-500">完成率</span><span id="kpi-revpar-pct" class="font-semibold">--</span></div></div></div>
+        </div>
+        <div class="grid grid-cols-12 gap-4">
+            <div class="col-span-7 flex flex-col gap-4">
+                <div class="card p-4"><div class="flex justify-between mb-3"><span class="text-sm font-medium"><i class="fa-solid fa-layer-group text-blue-400 mr-2"></i>部门概览</span><button onclick="openDeepDive()" class="text-[10px] text-blue-400 hover:text-blue-300"><i class="fa-solid fa-table-list mr-1"></i>详细</button></div><table><thead><tr><th>部门</th><th>实际</th><th>预算</th><th>差额</th><th>完成率</th></tr></thead><tbody id="dept-table-body"><tr><td colspan="5" class="text-center text-zinc-600 py-4">--</td></tr></tbody></table></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="card p-4"><span class="text-sm font-medium"><i class="fa-solid fa-chart-bar text-blue-400 mr-2"></i>营收对比</span><div id="main-chart" style="height:150px;"></div></div>
+                    <div class="card p-4"><span class="text-sm font-medium"><i class="fa-solid fa-chart-pie text-amber-400 mr-2"></i>收入构成</span><div id="pie-chart" style="height:150px;"></div></div>
                 </div>
-                <div class="deep-summary" id="deep-summary">
-                    <div class="flex items-center gap-2 mb-2">
-                        <i class="fa-solid fa-lightbulb text-amber-400"></i>
-                        <span class="text-xs font-medium text-white">数据分析摘要</span>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="card p-4"><span class="text-sm font-medium"><i class="fa-solid fa-chart-line text-green-400 mr-2"></i>营收趋势</span><div id="trend-chart" style="height:200px;"></div></div>
+                    <div class="card p-4"><span class="text-sm font-medium"><i class="fa-solid fa-hotel text-purple-400 mr-2"></i>运营趋势</span><div id="ops-trend-chart" style="height:200px;"></div></div>
+                </div>
+            </div>
+            <div class="col-span-5">
+                <div class="card p-4 h-full flex flex-col">
+                    <div class="flex justify-between mb-3 pb-3 border-b border-zinc-800">
+                        <div class="flex items-center gap-2"><div class="w-7 h-7 rounded bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center"><i class="fa-solid fa-robot text-white text-xs"></i></div><div><span class="text-sm font-medium">AI 经营分析</span><div class="text-[9px] text-zinc-500" id="ai-update-time">--</div></div></div>
+                        <button onclick="generateAIAnalysis()" class="btn-secondary px-3 text-[10px]"><i class="fa-solid fa-rotate mr-1"></i>分析</button>
                     </div>
-                    <div id="deep-summary-content" class="text-zinc-400">--</div>
+                    <div id="ai-analysis" class="flex-1 overflow-y-auto" style="max-height:600px;"><div class="flex flex-col items-center justify-center py-12 text-zinc-600"><i class="fa-solid fa-wand-magic-sparkles text-2xl mb-3"></i><span class="text-xs">上传数据后自动生成分析</span></div></div>
                 </div>
             </div>
         </div>
+    </main>
+</div>
+<div id="settings-modal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center">
+    <div class="bg-zinc-900 rounded-xl p-5 w-full max-w-lg border border-zinc-700">
+        <div class="flex justify-between mb-4"><h3 class="font-semibold"><i class="fa-solid fa-gear text-blue-400 mr-2"></i>设置</h3><button onclick="closeModal('settings-modal')" class="text-zinc-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button></div>
+        <div class="mb-4 p-3 bg-green-900/30 border border-green-700/50 rounded text-xs text-green-300"><i class="fa-solid fa-check-circle mr-1"></i>直连模式 - 使用GitHub Pages相对路径，无需代理</div>
+        <div class="mb-4"><label class="text-[10px] text-zinc-500">Webhook URL</label><input type="text" id="settings-webhook" class="w-full mt-1 bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-xs"></div>
+        <div class="mb-4"><label class="text-[10px] text-zinc-500">AI提示词</label><textarea id="settings-ai-prompt" rows="8" class="w-full mt-1 bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-xs"></textarea></div>
+        <div class="flex justify-end gap-2"><button onclick="closeModal('settings-modal')" class="btn-secondary">取消</button><button onclick="saveSettings()" class="btn-primary">保存</button></div>
     </div>
+</div>
+<div id="deep-modal" class="fixed inset-0 z-50 hidden modal-backdrop flex flex-col">
+    <div class="h-12 px-4 border-b border-zinc-800 flex items-center justify-between bg-[#0c0c0e]">
+        <button onclick="closeModal('deep-modal')" class="text-zinc-400 hover:text-white text-sm"><i class="fa-solid fa-arrow-left mr-2"></i>返回</button>
+        <div class="flex gap-2"><button id="deep-tab-room" onclick="switchDeepTab('room')" class="px-4 py-1 rounded text-xs bg-zinc-700">客房</button><button id="deep-tab-fb" onclick="switchDeepTab('fb')" class="px-4 py-1 rounded text-xs text-zinc-400">餐饮</button><button id="deep-tab-other" onclick="switchDeepTab('other')" class="px-4 py-1 rounded text-xs text-zinc-400">其他</button></div>
+    </div>
+    <div class="flex-1 overflow-y-auto p-4 bg-[#09090b]">
+        <div class="max-w-5xl mx-auto grid grid-cols-2 gap-4">
+            <div class="card p-4"><h4 class="text-sm font-medium mb-3">收入明细</h4><div class="overflow-auto max-h-80"><table><thead id="deep-table-head"></thead><tbody id="deep-table-body"></tbody></table></div></div>
+            <div class="card p-4"><h4 class="text-sm font-medium mb-3">TOP10</h4><div id="deep-chart" style="height:280px;"></div></div>
+        </div>
+        <div class="max-w-5xl mx-auto deep-summary mt-4"><div id="deep-summary-content">--</div></div>
+    </div>
+</div>
+<script>
+const NAME_MAP = {'corporate':'协议公司','individual':'散客','tour':'旅行团','discount':'折扣','convention':'会议','permanent':'长住','kok thai':'泰餐厅','brasserie':'西餐厅','bar':'酒吧','mini bar':'迷你吧','room service':'送餐','banquet':'宴会','rental':'租赁','laundry':'洗衣','parking':'停车','spa':'水疗'};
+function getChineseName(n){if(!n)return'未知';if(/[\u4e00-\u9fa5]/.test(n)){const m=n.match(/[\u4e00-\u9fa5]+/);if(m)return m[0];}const l=n.toLowerCase();for(const k in NAME_MAP)if(l.includes(k))return NAME_MAP[k];return n.split(/[\s\-_]/)[0].slice(0,8);}
 
-    <script>
-        // 完整的英文到中文名称映射表
-        const NAME_MAP = {
-            // 客房渠道
-            'corporate': '协议公司',
-            'individual': '个人散客',
-            'consortia': '联盟订房',
-            'local corporate': '本地协议公司',
-            'local': '本地合作',
-            'permanent': '长住客',
-            'net qualified': '净房价合格',
-            'net': '净房价',
-            'room rental': '房间出租',
-            'other room': '其他客房',
-            'other': '其他',
-            'tour series': '旅行团系列',
-            'tour': '旅行团',
-            'marketing promo': '市场推广',
-            'marketing': '市场推广',
-            'discount': '折扣房',
-            'convention': '会议团队',
-            'smrf': '特殊市场房价',
-            'meeting': '会议',
-            'negotiated': '协议价',
-            'rate': '房价',
-            'surcharge': '附加费',
-            'revenue': '收入',
-            'rev': '收入',
-            'guest': '客人',
-            'company': '公司',
-            'occ': '入住',
-            'transportation': '交通',
-            'package': '套餐',
-            'wholesale': '批发',
-            'retail': '零售',
-            'online': '在线',
-            'ota': '在线旅行社',
-            'direct': '直接预订',
-            'walk-in': '上门客',
-            'walkin': '上门客',
-            'group': '团队',
-            'fit': '自由行',
-            
-            // 餐饮相关
-            'kok thai': '泰国餐厅',
-            'alley': '巷子餐厅',
-            'brasserie': '西餐厅',
-            'bar': '酒吧',
-            'ville': '维尔餐厅',
-            'service': '客房送餐',
-            'mini bar': '迷你吧',
-            'minibar': '迷你吧',
-            'room service': '客房送餐',
-            'peacock': '孔雀厅',
-            'long bar': '廊吧',
-            'long': '廊吧',
-            'salon': '沙龙',
-            'banquet': '宴会',
-            'catering': '外卖',
-            'restaurant': '餐厅',
-            'cafe': '咖啡厅',
-            'lounge': '休息室',
-            'ling': '凌餐厅',
-            'wai': '外餐厅',
-            'food': '餐饮',
-            'beverage': '饮品',
-            'f&b': '餐饮',
-            'fb': '餐饮',
-            
-            // 其他收入
-            'rental': '租赁收入',
-            'miscellaneous': '杂项收入',
-            'misc': '杂项',
-            'telephone': '电话收入',
-            'business center': '商务中心',
-            'laundry': '洗衣收入',
-            'parking': '停车收入',
-            'spa': '水疗中心',
-            'gym': '健身中心',
-            'pool': '泳池',
-            'fitness': '健身',
-            'shop': '商店',
-            'retail': '零售',
-            'commission': '佣金',
-            'exchange': '货币兑换',
-            'internet': '网络',
-            'wifi': '无线网络',
-            'transfer': '接送',
-            'airport': '机场',
-            'valet': '代客泊车',
-            'concierge': '礼宾服务',
-            'total': '合计',
-            'subtotal': '小计'
-        };
-        
-        // 获取中文名称 - 改进匹配逻辑
-        function getChineseName(engName) {
-            if (!engName) return '未知';
-            
-            // 先检查是否已经包含中文
-            if (/[\u4e00-\u9fa5]/.test(engName)) {
-                // 提取中文部分
-                const cnMatch = engName.match(/[\u4e00-\u9fa5]+/);
-                if (cnMatch) return cnMatch[0];
-            }
-            
-            const lowerName = engName.toLowerCase().trim();
-            
-            // 完全匹配
-            if (NAME_MAP[lowerName]) {
-                return NAME_MAP[lowerName];
-            }
-            
-            // 部分匹配 - 从长到短排序，优先匹配更长的关键词
-            const sortedKeys = Object.keys(NAME_MAP).sort((a, b) => b.length - a.length);
-            for (const key of sortedKeys) {
-                if (lowerName.includes(key)) {
-                    return NAME_MAP[key];
-                }
-            }
-            
-            // 如果都没匹配到，清理名称返回
-            return engName.split(/[\s\-_]/)[0].slice(0, 8);
+const DEFAULT_PROMPT = `你是酒店经营分析师。分析数据生成HTML报告。日期:{date}，完成率:{total_pct}%，客房:{room_pct}%，餐饮:{fb_pct}%，其他:{other_pct}%，出租率:{occupancy}%，ADR:¥{adr}，RevPAR:¥{revpar}。用HTML输出含section-title、highlight-good/bad、risk-item等class。`;
+
+const STATE = {
+    currentData: null, historyIndex: [], historyData: {}, charts: {},
+    webhookUrl: localStorage.getItem('nexus_webhook_url') || 'https://n8n-fzlhzvbn.ap-northeast-1.clawcloudrun.com/webhook/hotel-save',
+    qianwen: { apiKey: 'sk-d8f9d80c5d154e5fa8ce9413560ccfe8', model: 'qwen-max', endpoint: 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions' },
+    aiPrompt: localStorage.getItem('nexus_ai_prompt') || DEFAULT_PROMPT
+};
+
+function showToast(m, t='info') {
+    const c = document.getElementById('toast-container'), e = document.createElement('div');
+    e.className = `toast toast-${t}`;
+    e.innerHTML = `<i class="fa-solid ${t==='success'?'fa-check-circle':t==='error'?'fa-exclamation-circle':'fa-info-circle'}"></i><span>${m}</span>`;
+    c.appendChild(e);
+    setTimeout(() => e.remove(), 3000);
+}
+
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); setTimeout(() => Object.values(STATE.charts).forEach(c => c?.resize()), 300); }
+function openSettingsModal() { document.getElementById('settings-webhook').value = STATE.webhookUrl; document.getElementById('settings-ai-prompt').value = STATE.aiPrompt; document.getElementById('settings-modal').classList.remove('hidden'); }
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+function saveSettings() { STATE.webhookUrl = document.getElementById('settings-webhook').value.trim(); STATE.aiPrompt = document.getElementById('settings-ai-prompt').value.trim() || DEFAULT_PROMPT; localStorage.setItem('nexus_webhook_url', STATE.webhookUrl); localStorage.setItem('nexus_ai_prompt', STATE.aiPrompt); closeModal('settings-modal'); showToast('设置已保存', 'success'); }
+
+// ========== 核心：使用相对路径直接访问数据 ==========
+async function refreshData() {
+    showToast('正在加载数据...', 'info');
+    try {
+        const res = await fetch('./data/index.json?t=' + Date.now());
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        STATE.historyIndex = await res.json();
+        showToast('已加载 ' + STATE.historyIndex.length + ' 条记录', 'success');
+        renderHistoryList();
+        if (STATE.historyIndex.length) {
+            const sorted = [...STATE.historyIndex].sort((a,b) => b.date.localeCompare(a.date));
+            await loadDayData(sorted[0].date);
         }
+        await loadTrendData();
+    } catch (e) {
+        console.error('加载失败:', e);
+        showToast('加载失败: ' + e.message, 'error');
+    }
+}
 
-        // 提示词
-        const DEFAULT_AI_PROMPT = `你是专业的酒店经营分析师。请根据以下经营数据生成详细的分析报告。
+async function loadDayData(date) {
+    if (STATE.historyData[date]) {
+        STATE.currentData = STATE.historyData[date];
+        renderDashboard(STATE.currentData);
+        displayAI(STATE.currentData);
+        document.querySelectorAll('.history-item').forEach(el => el.classList.toggle('active', el.dataset.date === date));
+        document.getElementById('save-btn').disabled = false;
+        return;
+    }
+    try {
+        const [y, m] = date.split('-');
+        const res = await fetch('./data/' + y + '/' + m + '/' + date + '.json?t=' + Date.now());
+        if (!res.ok) throw new Error();
+        const d = await res.json();
+        STATE.historyData[date] = d;
+        STATE.currentData = d;
+        renderDashboard(d);
+        displayAI(d);
+        document.querySelectorAll('.history-item').forEach(el => el.classList.toggle('active', el.dataset.date === date));
+        document.getElementById('save-btn').disabled = false;
+    } catch (e) { console.error('加载失败:', date, e); }
+}
 
-【今日经营概况】
-日期：{date}（本月第{day}天，时间进度{time_progress}%）
-今日盈亏：{profit_status}{profit_amount}万元
-整体完成率：{total_pct}%
+function displayAI(data) {
+    const c = document.getElementById('ai-analysis');
+    if (data.aiAnalysis) { c.innerHTML = data.aiAnalysis; document.getElementById('ai-update-time').textContent = data.aiAnalysisTime || '已保存'; }
+    else { c.innerHTML = '<div class="text-center py-12 text-zinc-600"><i class="fa-solid fa-wand-magic-sparkles text-2xl mb-3"></i><p class="text-xs">点击"分析"生成AI报告</p></div>'; }
+}
 
-【收入完成情况】
-- 客房收入：实际{room_act}万，预算{room_bud}万，完成率{room_pct}%，差额{room_diff}（{room_status}）
-- 餐饮收入：实际{fb_act}万，预算{fb_bud}万，完成率{fb_pct}%，差额{fb_diff}（{fb_status}）  
-- 其他收入：实际{other_act}万，预算{other_bud}万，完成率{other_pct}%，差额{other_diff}（{other_status}）
+async function loadTrendData() {
+    const sorted = [...STATE.historyIndex].sort((a,b) => a.date.localeCompare(b.date)).slice(-30);
+    const data = [];
+    for (const i of sorted) {
+        if (STATE.historyData[i.date]) data.push(STATE.historyData[i.date]);
+        else try {
+            const [y,m] = i.date.split('-');
+            const res = await fetch('./data/' + y + '/' + m + '/' + i.date + '.json');
+            if (res.ok) { const d = await res.json(); STATE.historyData[i.date] = d; data.push(d); }
+        } catch {}
+    }
+    renderTrendChart(data);
+    renderOpsTrendChart(data);
+}
 
-【运营指标】
-- 入住率：{occupancy}%（预算{occ_bud}%，{occ_status}）
-- 售房：{roomsSold}间（预算{rooms_bud}间）
-- ADR：¥{adr}（预算¥{adr_bud}，{adr_pct}%）
-- RevPAR：¥{revpar}（预算¥{revpar_bud}，{revpar_pct}%）
+async function saveToGitHub() {
+    if (!STATE.currentData) return showToast('请先上传数据', 'error');
+    const btn = document.getElementById('save-btn');
+    btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>保存中';
+    try {
+        const data = { ...STATE.currentData, savedAt: new Date().toISOString() };
+        const res = await fetch(STATE.webhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        showToast('保存成功！请等待1-2分钟后刷新', 'success');
+    } catch (e) { showToast('保存失败: ' + e.message, 'error'); }
+    finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-1"></i>保存'; }
+}
 
-【各项收入明细】
-{details}
+function renderHistoryList() {
+    const c = document.getElementById('history-list');
+    document.getElementById('history-count').textContent = STATE.historyIndex.length;
+    if (!STATE.historyIndex.length) { c.innerHTML = '<div class="text-center py-8 text-zinc-600 text-xs">暂无数据</div>'; return; }
+    const groups = {};
+    STATE.historyIndex.forEach(i => { const k = i.date.slice(0,7); if(!groups[k]) groups[k]=[]; groups[k].push(i); });
+    let html = '';
+    Object.entries(groups).sort((a,b) => b[0].localeCompare(a[0])).forEach(([m, items], idx) => {
+        items.sort((a,b) => b.date.localeCompare(a.date));
+        html += '<div class="mb-2"><div onclick="this.nextElementSibling.classList.toggle(\'expanded\');this.querySelector(\'i\').classList.toggle(\'rotate-90\')" class="flex justify-between p-2 rounded cursor-pointer hover:bg-zinc-800 text-xs text-zinc-400"><span><i class="fa-solid fa-chevron-right mr-1 transition-transform ' + (idx===0?'rotate-90':'') + '" style="font-size:8px"></i>' + m + '</span><span class="text-zinc-600">' + items.length + '</span></div><div class="month-content ' + (idx===0?'expanded':'') + '">' + items.map(i => '<div class="history-item flex justify-between" data-date="' + i.date + '" onclick="loadDayData(\'' + i.date + '\')"><span>' + i.date.slice(8) + '日</span><span class="' + ((i.variance||0)>=0?'text-green-400':'text-red-400') + ' font-mono text-[10px]">' + ((i.variance||0)>=0?'+':'') + ((i.variance||0)*100).toFixed(1) + '%</span></div>').join('') + '</div></div>';
+    });
+    c.innerHTML = html;
+}
 
-【输出格式】使用HTML，禁止Markdown。按以下结构：
+function handleFileUpload(e) {
+    const f = e.target.files[0]; if (!f) return;
+    const fn = f.name.replace(/\.(xlsx|xls|csv)$/i, '');
+    let dateFromFn = null;
+    const m1 = fn.match(/(\d{4})[-._](\d{1,2})[-._](\d{1,2})/);
+    if (m1) dateFromFn = m1[1] + '-' + m1[2].padStart(2,'0') + '-' + m1[3].padStart(2,'0');
+    const reader = new FileReader();
+    reader.onload = ev => {
+        const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' });
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
+        const parsed = parseExcelData(rows);
+        if (dateFromFn) { parsed.date = dateFromFn; parsed.weekday = ['周日','周一','周二','周三','周四','周五','周六'][new Date(dateFromFn).getDay()]; }
+        STATE.currentData = parsed;
+        renderDashboard(parsed);
+        document.getElementById('save-btn').disabled = false;
+        showToast('已加载 ' + parsed.date, 'success');
+        generateAIAnalysis();
+    };
+    reader.readAsArrayBuffer(f);
+    e.target.value = '';
+}
 
-<div class="section-title">📊 预算执行总览</div>
-<p><strong>整体完成率：{total_pct}%</strong></p>
-<div class="progress-bar"><div class="progress-fill" style="width:{total_pct_bar}%;background:{total_color}"></div></div>
-<div class="data-row"><span>客房</span><span class="{room_class}">{room_pct}%</span></div>
-<div class="data-row"><span>餐饮</span><span class="{fb_class}">{fb_pct}%</span></div>
-<div class="data-row"><span>其他</span><span class="{other_class}">{other_pct}%</span></div>
-
-<div class="section-title">🏨 客房分析</div>
-<p class="highlight-good">✓ 表现优秀：列出>100%的项目</p>
-<p class="highlight-bad">✗ 需要改进：列出<80%的项目</p>
-<div class="suggestion-item">💡 建议：改进措施</div>
-
-<div class="section-title">🍽️ 餐饮分析</div>（同上）
-
-<div class="section-title">⚠️ 风险预警</div>
-<div class="risk-item">🔴 风险点</div>
-
-<div class="section-title">📈 月度进展</div>
-<p>本月第{day}天，时间{time_progress}%</p>
-
-注意：必须使用我提供的数据，整体完成率是{total_pct}%`;
-
-        const STATE = {
-            currentData: null, historyIndex: [], historyData: {}, charts: {}, totalRooms: 260,
-            webhookUrl: localStorage.getItem('nexus_webhook_url') || 'https://n8n-fzlhzvbn.ap-northeast-1.clawcloudrun.com/webhook/hotel-save',
-            github: { owner: 'QIAN123-KIWI', repo: 'hotel-daily-reportV3', branch: 'main', dataPath: 'data' },
-            qianwen: { apiKey: 'sk-d8f9d80c5d154e5fa8ce9413560ccfe8', model: 'qwen-max', endpoint: 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions' },
-            aiPrompt: localStorage.getItem('nexus_ai_prompt') || DEFAULT_AI_PROMPT,
-            sidebarCollapsed: localStorage.getItem('nexus_sidebar_collapsed') === 'true',
-            debugMode: false
-        };
-
-        // ========== 核心修改：使用 jsDelivr CDN 替代 GitHub Raw ==========
-        // jsDelivr 国内可直接访问，无需翻墙
-        function getCdnUrl(path) {
-            return `https://cdn.jsdelivr.net/gh/${STATE.github.owner}/${STATE.github.repo}@${STATE.github.branch}/${path}`;
+function parseExcelData(rows) {
+    let d = { date: new Date().toISOString().split('T')[0], weekday: '', rows: [], roomsSold: 0, roomsBud: 0, occupancy: 0, occBud: 0, adr: 0, adrBud: 0, revpar: 0, revparBud: 0, totals: {} };
+    const num = v => { if(v==null||v==='')return 0; return parseFloat(String(v).replace(/[¥,$%]/g,''))||0; };
+    const pct = v => { if(v==null||v==='')return 0; const n=parseFloat(String(v).replace('%',''));return isNaN(n)?0:(n>1?n/100:n); };
+    rows.forEach(r => {
+        if (!r[0]) return;
+        const n = String(r[0]).trim();
+        if (n.includes('Date')||n.includes('日期')) { const m=r.join(' ').match(/(\d{1,2})\/(\w+)\/(\d{4})/);if(m){const mm={Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};d.date=m[3]+'-'+(mm[m[2]]||m[2])+'-'+m[1].padStart(2,'0');d.weekday=['周日','周一','周二','周三','周四','周五','周六'][new Date(d.date).getDay()];}}
+        if (n.includes('Total room Revenue')||n.includes('总房收入')) d.totals.room={act:num(r[6]),bud:num(r[7])};
+        if (n.includes('F&B Total')||n.includes('餐饮收入合计')) d.totals.fb={act:num(r[6]),bud:num(r[7])};
+        if (n.includes('Total Hotel Revenue')||n.includes('酒店收入合计')) d.totals.hotel={act:num(r[6]),bud:num(r[7])};
+        if (n.includes('Total Other Operating')) d.totals.other={act:num(r[6]),bud:num(r[7])};
+        if (n.includes('Occupied Rooms')||n.includes('已出租房数')) { d.roomsSold=Math.round(num(r[6]));d.roomsBud=Math.round(num(r[7])); }
+        if (n.includes('Paid Occupancy')||n.includes('客房住房率')||n.includes('Occupancy')) { d.occupancy=pct(r[6]);d.occBud=pct(r[7]); }
+        if (n.includes('Paid Average Room Rate')||n.includes('Average Rate')||(n.includes('平均房价')&&!n.includes('Rev'))) { d.adr=num(r[6]);d.adrBud=num(r[7]); }
+        if (n.includes('Rev Par')||n.includes('RevPAR')||n.includes('可出租房平均')) { d.revpar=num(r[6]);d.revparBud=num(r[7]); }
+        const isTotal = /^Total|合计|小计/i.test(n);
+        if (r.length>=7 && num(r[6])!==0 && !isTotal) {
+            let type='Other';
+            if(/Rate|Tour|Discount|Corporate|Individual|Convention|Permanent/i.test(n))type='Room';
+            else if(/Kok|Brasserie|Bar|Service|Mini|Banquet|餐/i.test(n))type='F&B';
+            d.rows.push({name:n,type,actual:num(r[6]),budget:num(r[7])});
         }
+    });
+    return d;
+}
 
-        function toggleSidebar() {
-            const s = document.getElementById('sidebar'); s.classList.toggle('collapsed');
-            STATE.sidebarCollapsed = s.classList.contains('collapsed');
-            localStorage.setItem('nexus_sidebar_collapsed', STATE.sidebarCollapsed);
-            setTimeout(() => Object.values(STATE.charts).forEach(c => c?.resize()), 250);
-        }
-        
-        function showToast(m, t = 'info') { 
-            const c = document.getElementById('toast-container'), e = document.createElement('div'); 
-            e.className = `toast toast-${t}`; 
-            e.innerHTML = `<i class="fa-solid ${t === 'success' ? 'fa-check-circle' : t === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i><span>${m}</span>`; 
-            c.appendChild(e); 
-            setTimeout(() => { e.style.opacity = '0'; setTimeout(() => e.remove(), 200); }, 2500); 
-        }
-        
-        // 调试面板
-        function toggleDebugPanel() {
-            const panel = document.getElementById('debug-panel');
-            panel.classList.toggle('hidden');
-            STATE.debugMode = !panel.classList.contains('hidden');
-            if (STATE.debugMode && STATE.currentData) {
-                updateDebugInfo(STATE.currentData);
-            }
-        }
-        
-        function toggleDebugBody() {
-            const panel = document.getElementById('debug-panel');
-            const chevron = document.getElementById('debug-chevron');
-            panel.classList.toggle('expanded');
-            chevron.style.transform = panel.classList.contains('expanded') ? 'rotate(180deg)' : '';
-        }
-        
-        function updateDebugInfo(d) {
-            const content = document.getElementById('debug-content');
-            
-            const checks = [
-                { label: 'occupancy (出租率)', value: d.occupancy, expected: '应为小数如0.512' },
-                { label: 'occBud (出租率预算)', value: d.occBud, expected: '应为小数如0.733' },
-                { label: 'roomsSold (售房数)', value: d.roomsSold, expected: '应为整数如133' },
-                { label: 'roomsBud (售房预算)', value: d.roomsBud, expected: '应为整数如190' },
-                { label: 'adr (平均房价)', value: d.adr, expected: '应为数字如2444' },
-                { label: 'adrBud (ADR预算)', value: d.adrBud, expected: '应为数字如2496' },
-                { label: 'revpar (RevPAR)', value: d.revpar, expected: '应为数字如1250' },
-                { label: 'revparBud (RevPAR预算)', value: d.revparBud, expected: '应为数字如1829' },
-            ];
-            
-            content.innerHTML = `
-                <div style="margin-bottom:10px;padding:8px;background:#0f172a;border-radius:6px;">
-                    <p style="color:#60a5fa;font-weight:600;margin-bottom:6px;">📊 运营指标解析结果</p>
-                    ${checks.map(c => `
-                        <div class="debug-item">
-                            <span class="debug-label">${c.label}</span>
-                            <span class="debug-value ${c.value === 0 || c.value === undefined ? 'error' : ''}">${c.value !== undefined ? c.value : '❌ 未解析'}</span>
-                        </div>
-                    `).join('')}
-                </div>
-                <div style="padding:8px;background:#1e1b4b;border-radius:6px;">
-                    <p style="color:#a78bfa;font-weight:600;margin-bottom:6px;">💾 将保存到云端的数据</p>
-                    <pre style="font-size:9px;color:#94a3b8;overflow-x:auto;white-space:pre-wrap;">${JSON.stringify({
-                        date: d.date,
-                        occupancy: d.occupancy,
-                        occBud: d.occBud,
-                        roomsSold: d.roomsSold,
-                        roomsBud: d.roomsBud,
-                        adr: d.adr,
-                        adrBud: d.adrBud,
-                        revpar: d.revpar,
-                        revparBud: d.revparBud
-                    }, null, 2)}</pre>
-                </div>
-            `;
-        }
-        
-        function openSettingsModal() { 
-            document.getElementById('settings-webhook').value = STATE.webhookUrl; 
-            document.getElementById('settings-github-repo').value = `${STATE.github.owner}/${STATE.github.repo}`; 
-            document.getElementById('settings-ai-prompt').value = STATE.aiPrompt; 
-            document.getElementById('settings-modal').classList.remove('hidden'); 
-        }
-        
-        function openDeepDive() { document.getElementById('deep-modal').classList.remove('hidden'); switchDeepTab('room'); }
-        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-        function resetPrompt() { document.getElementById('settings-ai-prompt').value = DEFAULT_AI_PROMPT; }
-        
-        function saveSettings() {
-            STATE.webhookUrl = document.getElementById('settings-webhook').value.trim();
-            const r = document.getElementById('settings-github-repo').value.trim().split('/');
-            if (r.length === 2) { STATE.github.owner = r[0]; STATE.github.repo = r[1]; }
-            STATE.aiPrompt = document.getElementById('settings-ai-prompt').value.trim() || DEFAULT_AI_PROMPT;
-            localStorage.setItem('nexus_webhook_url', STATE.webhookUrl);
-            localStorage.setItem('nexus_ai_prompt', STATE.aiPrompt);
-            document.getElementById('inline-prompt').value = STATE.aiPrompt;
-            closeModal('settings-modal'); 
-            showToast('设置已保存', 'success'); 
-            refreshFromGitHub();
-        }
-        
-        function togglePromptPanel() {
-            const panel = document.getElementById('prompt-panel');
-            const chevron = document.getElementById('prompt-chevron');
-            panel.classList.toggle('collapsed');
-            panel.classList.toggle('expanded');
-            chevron.style.transform = panel.classList.contains('expanded') ? 'rotate(180deg)' : '';
-            if (panel.classList.contains('expanded')) {
-                document.getElementById('inline-prompt').value = STATE.aiPrompt;
-            }
-        }
-        
-        function resetInlinePrompt() { document.getElementById('inline-prompt').value = DEFAULT_AI_PROMPT; }
-        
-        function applyPromptAndAnalyze() {
-            STATE.aiPrompt = document.getElementById('inline-prompt').value.trim() || DEFAULT_AI_PROMPT;
-            localStorage.setItem('nexus_ai_prompt', STATE.aiPrompt);
-            showToast('提示词已更新', 'success');
-            generateAIAnalysis();
-        }
+function renderDashboard(d) {
+    let room=d.totals.room||{act:0,bud:0}, fb=d.totals.fb||{act:0,bud:0}, other=d.totals.other||{act:0,bud:0}, grand=d.totals.hotel||{act:0,bud:0};
+    if(d.totals.hotel&&d.totals.room&&d.totals.fb){other.act=grand.act-room.act-fb.act;other.bud=grand.bud-room.bud-fb.bud;}
+    document.getElementById('current-date').textContent = d.date + ' ' + (d.weekday||'');
+    document.getElementById('data-status').textContent = '已加载';
+    document.getElementById('data-status').className = 'tag tag-green';
+    const fmt = n => '¥' + Math.floor(n).toLocaleString();
+    document.getElementById('kpi-revenue').textContent = fmt(grand.act);
+    document.getElementById('kpi-revenue-bud').textContent = fmt(grand.bud);
+    const revPct = grand.bud>0?(grand.act/grand.bud*100):100;
+    document.getElementById('kpi-revenue-pct').textContent = revPct.toFixed(1)+'%';
+    document.getElementById('kpi-revenue-pct').className = revPct>=100?'text-green-400 font-semibold':'text-red-400 font-semibold';
+    let occAct=d.occupancy||0,occBud=d.occBud||0;
+    if(occAct<=1)occAct*=100;if(occBud<=1)occBud*=100;
+    document.getElementById('kpi-occ').textContent = occAct.toFixed(1)+'%';
+    document.getElementById('kpi-occ-bud').textContent = occBud.toFixed(1)+'%';
+    document.getElementById('kpi-sold').textContent = (d.roomsSold||0) + '/' + (d.roomsBud||0);
+    document.getElementById('kpi-adr').textContent = '¥'+Math.floor(d.adr||0);
+    document.getElementById('kpi-adr-bud').textContent = '¥'+Math.floor(d.adrBud||0);
+    const adrPct=d.adrBud>0?(d.adr/d.adrBud*100):100;
+    document.getElementById('kpi-adr-pct').textContent = adrPct.toFixed(1)+'%';
+    document.getElementById('kpi-adr-pct').className = adrPct>=100?'text-green-400 font-semibold':'text-red-400 font-semibold';
+    document.getElementById('kpi-revpar').textContent = '¥'+Math.floor(d.revpar||0);
+    document.getElementById('kpi-revpar-bud').textContent = '¥'+Math.floor(d.revparBud||0);
+    const revparPct=d.revparBud>0?(d.revpar/d.revparBud*100):100;
+    document.getElementById('kpi-revpar-pct').textContent = revparPct.toFixed(1)+'%';
+    document.getElementById('kpi-revpar-pct').className = revparPct>=100?'text-green-400 font-semibold':'text-red-400 font-semibold';
+    const depts = [{name:'客房',act:room.act,bud:room.bud,icon:'🏨'},{name:'餐饮',act:fb.act,bud:fb.bud,icon:'🍽️'},{name:'其他',act:other.act,bud:other.bud,icon:'📦'},{name:'合计',act:grand.act,bud:grand.bud,icon:'🏢'}];
+    document.getElementById('dept-table-body').innerHTML = depts.map(dep => {
+        const diff=dep.act-dep.bud, pct=dep.bud>0?(dep.act/dep.bud*100):100;
+        return '<tr class="' + (dep.name==='合计'?'bg-zinc-800/30 font-medium':'') + '"><td>' + dep.icon + ' ' + dep.name + '</td><td class="font-mono">' + fmt(dep.act) + '</td><td class="text-zinc-500 font-mono">' + fmt(dep.bud) + '</td><td class="' + (diff>=0?'text-green-400':'text-red-400') + ' font-mono">' + (diff>=0?'+':'') + (diff/10000).toFixed(1) + '万</td><td class="' + (pct>=100?'text-green-400':pct>=90?'text-amber-400':'text-red-400') + ' font-medium">' + pct.toFixed(1) + '%</td></tr>';
+    }).join('');
+    renderMainChart(depts.slice(0,3));
+    renderPieChart(depts.slice(0,3));
+}
 
-        // 保存到云端
-        async function saveToGitHub() {
-            if (!STATE.currentData) return showToast('请先上传数据', 'error');
-            const btn = document.getElementById('save-btn'); 
-            btn.disabled = true; 
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>保存中...';
-            
-            try { 
-                const dataToSave = {
-                    date: STATE.currentData.date,
-                    weekday: STATE.currentData.weekday || '',
-                    totals: STATE.currentData.totals || {},
-                    rows: STATE.currentData.rows || [],
-                    occupancy: parseFloat(STATE.currentData.occupancy) || 0,
-                    occBud: parseFloat(STATE.currentData.occBud) || 0,
-                    roomsSold: parseInt(STATE.currentData.roomsSold) || 0,
-                    roomsBud: parseInt(STATE.currentData.roomsBud) || 0,
-                    adr: parseFloat(STATE.currentData.adr) || 0,
-                    adrBud: parseFloat(STATE.currentData.adrBud) || 0,
-                    revpar: parseFloat(STATE.currentData.revpar) || 0,
-                    revparBud: parseFloat(STATE.currentData.revparBud) || 0,
-                    aiAnalysis: STATE.currentData.aiAnalysis || null,
-                    aiAnalysisTime: STATE.currentData.aiAnalysisTime || null,
-                    savedAt: new Date().toISOString()
-                };
-                
-                console.log('📤 保存到云端的数据:', JSON.stringify(dataToSave, null, 2));
-                
-                const response = await fetch(STATE.webhookUrl, { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify(dataToSave) 
-                }); 
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                
-                STATE.historyData[STATE.currentData.date] = dataToSave;
-                
-                showToast('数据已保存（CDN缓存约10分钟后更新）', 'success'); 
-                document.getElementById('ai-saved-badge').classList.remove('hidden');
-                document.getElementById('ai-status-dot').classList.add('saved');
-                
-                setTimeout(refreshFromGitHub, 2000); 
-            }
-            catch (e) { 
-                console.error('保存失败:', e);
-                showToast('保存失败: ' + e.message, 'error'); 
-            }
-            finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-1"></i>保存到云端'; }
-        }
-        
-        // ========== 修改：使用 jsDelivr CDN ==========
-        async function refreshFromGitHub() {
-            try { 
-                // 使用 jsDelivr CDN 替代 GitHub Raw
-                const cdnUrl = getCdnUrl(`${STATE.github.dataPath}/index.json`);
-                console.log('🚀 从 CDN 加载:', cdnUrl);
-                
-                const res = await fetch(cdnUrl + '?t=' + Date.now()); 
-                if (!res.ok) throw new Error('CDN 请求失败'); 
-                STATE.historyIndex = await res.json(); 
-                renderHistoryList(); 
-                if (STATE.historyIndex.length) { 
-                    const s = [...STATE.historyIndex].sort((a, b) => b.date.localeCompare(a.date)); 
-                    await loadDayData(s[0].date); 
-                } 
-                await loadTrendData();
-                showToast('数据加载成功 (CDN)', 'success');
-            } catch (e) { 
-                console.error('CDN加载失败:', e);
-                showToast('加载失败，请检查网络', 'error');
-            }
-        }
-        
-        // ========== 修改：使用 jsDelivr CDN ==========
-        async function loadDayData(date) {
-            document.getElementById('ai-saved-badge').classList.add('hidden');
-            document.getElementById('ai-status-dot').classList.remove('saved', 'active');
-            
-            if (STATE.historyData[date]) { 
-                STATE.currentData = STATE.historyData[date]; 
-                renderDashboard(STATE.currentData);
-                displayAIAnalysisForDate(STATE.currentData);
-                if (STATE.debugMode) updateDebugInfo(STATE.currentData);
-                document.querySelectorAll('.history-item').forEach(el => el.classList.toggle('active', el.dataset.date === date));
-                document.getElementById('save-btn').disabled = false;
-                return; 
-            }
-            
-            try { 
-                const [y, m] = date.split('-'); 
-                // 使用 jsDelivr CDN
-                const cdnUrl = getCdnUrl(`${STATE.github.dataPath}/${y}/${m}/${date}.json`);
-                console.log('🚀 从 CDN 加载日期数据:', cdnUrl);
-                
-                const res = await fetch(cdnUrl + '?t=' + Date.now()); 
-                if (!res.ok) throw new Error(); 
-                const d = await res.json(); 
-                STATE.historyData[date] = d; 
-                STATE.currentData = d; 
-                renderDashboard(d);
-                displayAIAnalysisForDate(d);
-                if (STATE.debugMode) updateDebugInfo(d);
-                document.querySelectorAll('.history-item').forEach(el => el.classList.toggle('active', el.dataset.date === date)); 
-                document.getElementById('save-btn').disabled = false; 
-            } catch (e) {
-                console.error('加载日期数据失败:', e);
-            }
-        }
-        
-        function displayAIAnalysisForDate(data) {
-            const container = document.getElementById('ai-analysis');
-            const badge = document.getElementById('ai-saved-badge');
-            const statusDot = document.getElementById('ai-status-dot');
-            
-            if (data.aiAnalysis) {
-                container.innerHTML = data.aiAnalysis;
-                document.getElementById('ai-update-time').innerText = data.aiAnalysisTime || '已保存';
-                badge.classList.remove('hidden');
-                statusDot.classList.add('saved');
-            } else {
-                container.innerHTML = `
-                    <div class="flex flex-col items-center justify-center py-10 text-zinc-600">
-                        <i class="fa-solid fa-wand-magic-sparkles text-xl mb-2"></i>
-                        <span class="text-[10px]">该日期暂无AI分析</span>
-                        <button onclick="generateAIAnalysis()" class="btn-primary px-3 py-1 text-[10px] mt-3">
-                            <i class="fa-solid fa-play mr-1"></i>生成分析
-                        </button>
-                    </div>
-                `;
-                document.getElementById('ai-update-time').innerText = '--';
-                badge.classList.add('hidden');
-                statusDot.classList.remove('saved');
-            }
-        }
-        
-        // ========== 修改：使用 jsDelivr CDN ==========
-        async function loadTrendData() {
-            const s = [...STATE.historyIndex].sort((a, b) => a.date.localeCompare(b.date)).slice(-30), td = [];
-            for (const i of s) { 
-                if (STATE.historyData[i.date]) td.push(STATE.historyData[i.date]); 
-                else try { 
-                    const [y, m] = i.date.split('-'); 
-                    // 使用 jsDelivr CDN
-                    const cdnUrl = getCdnUrl(`${STATE.github.dataPath}/${y}/${m}/${i.date}.json`);
-                    const res = await fetch(cdnUrl); 
-                    if (res.ok) { const d = await res.json(); STATE.historyData[i.date] = d; td.push(d); } 
-                } catch {} 
-            }
-            renderTrendChart(td);
-            renderOpsTrendChart(td);
-        }
+function renderMainChart(depts) {
+    const el=document.getElementById('main-chart');
+    if(STATE.charts.main)STATE.charts.main.dispose();
+    const chart=echarts.init(el,'dark');
+    chart.setOption({backgroundColor:'transparent',tooltip:{trigger:'axis'},legend:{data:['实际','预算'],bottom:0,textStyle:{color:'#71717a',fontSize:10}},grid:{left:5,right:5,top:5,bottom:35,containLabel:true},xAxis:{type:'category',data:depts.map(d=>d.name),axisLabel:{fontSize:10,color:'#a1a1aa'}},yAxis:{type:'value',axisLabel:{fontSize:9,formatter:v=>(v/10000)+'w'},splitLine:{lineStyle:{color:'#27272a'}}},series:[{name:'实际',type:'bar',data:depts.map(d=>d.act),itemStyle:{color:'#3b82f6',borderRadius:[4,4,0,0]},barWidth:20},{name:'预算',type:'bar',data:depts.map(d=>d.bud),itemStyle:{color:'#3f3f46',borderRadius:[4,4,0,0]},barWidth:20}]});
+    STATE.charts.main=chart;
+}
 
-        function renderHistoryList() {
-            const c = document.getElementById('history-list'); 
-            document.getElementById('history-count').innerText = STATE.historyIndex.length;
-            if (!STATE.historyIndex.length) { 
-                c.innerHTML = '<div class="text-center py-6 text-zinc-600 text-[10px]">暂无数据</div>'; 
-                return; 
-            }
-            const g = {}; 
-            STATE.historyIndex.forEach(i => { const k = i.date.slice(0, 7); if (!g[k]) g[k] = []; g[k].push(i); });
-            let h = ''; 
-            Object.entries(g).sort((a, b) => b[0].localeCompare(a[0])).forEach(([m, items], idx) => {
-                items.sort((a, b) => b.date.localeCompare(a.date));
-                h += `<div class="mb-1">
-                    <div onclick="toggleMonth(this)" class="flex justify-between p-1.5 rounded cursor-pointer hover:bg-zinc-800/50 text-[10px] text-zinc-400">
-                        <span><i class="fa-solid fa-chevron-right mr-1 transition-transform ${idx === 0 ? 'rotate-90' : ''}" style="font-size:7px"></i>${m}</span>
-                        <span class="text-zinc-600">${items.length}</span>
-                    </div>
-                    <div class="month-content ${idx === 0 ? 'expanded' : ''}">
-                        ${items.map(i => `<div class="history-item flex justify-between" data-date="${i.date}" onclick="loadDayData('${i.date}')">
-                            <span class="text-zinc-300">${i.date.slice(8)}日</span>
-                            <span class="${(i.variance || 0) >= 0 ? 'text-green-400' : 'text-red-400'} font-mono text-[10px]">${(i.variance || 0) >= 0 ? '+' : ''}${((i.variance || 0) * 100).toFixed(1)}%</span>
-                        </div>`).join('')}
-                    </div>
-                </div>`;
-            }); 
-            c.innerHTML = h;
-        }
-        
-        function toggleMonth(h) { 
-            h.nextElementSibling.classList.toggle('expanded'); 
-            h.querySelector('i').classList.toggle('rotate-90'); 
-        }
+function renderPieChart(depts) {
+    const el=document.getElementById('pie-chart');
+    if(STATE.charts.pie)STATE.charts.pie.dispose();
+    const chart=echarts.init(el,'dark');
+    chart.setOption({backgroundColor:'transparent',tooltip:{trigger:'item',formatter:'{b}: ¥{c} ({d}%)'},series:[{type:'pie',radius:['40%','70%'],center:['50%','50%'],itemStyle:{borderRadius:4,borderColor:'#16161a',borderWidth:2},label:{show:true,fontSize:10,color:'#a1a1aa',formatter:'{b}\n{d}%'},data:[{value:depts[0].act,name:'客房',itemStyle:{color:'#3b82f6'}},{value:depts[1].act,name:'餐饮',itemStyle:{color:'#22c55e'}},{value:depts[2].act,name:'其他',itemStyle:{color:'#f59e0b'}}]}]});
+    STATE.charts.pie=chart;
+}
 
-        function handleFileUpload(e) {
-            const f = e.target.files[0]; if (!f) return;
-            const fn = f.name.replace(/\.(xlsx|xls|csv)$/i, ''); 
-            let dateFromFn = null;
-            const m1 = fn.match(/(\d{4})[-._](\d{1,2})[-._](\d{1,2})/); 
-            if (m1) dateFromFn = `${m1[1]}-${m1[2].padStart(2,'0')}-${m1[3].padStart(2,'0')}`;
-            else { 
-                const m2 = fn.match(/(\d{1,2})[-._](\d{1,2})/); 
-                if (m2) dateFromFn = `${new Date().getFullYear()}-${m2[1].padStart(2,'0')}-${m2[2].padStart(2,'0')}`; 
-            }
-            const reader = new FileReader();
-            reader.onload = ev => {
-                const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' }), 
-                      rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }), 
-                      parsed = parseExcelData(rows);
-                if (dateFromFn) { 
-                    parsed.date = dateFromFn; 
-                    parsed.weekday = ['周日','周一','周二','周三','周四','周五','周六'][new Date(dateFromFn).getDay()]; 
-                }
-                STATE.currentData = parsed; 
-                renderDashboard(parsed); 
-                document.getElementById('save-btn').disabled = false;
-                document.getElementById('ai-saved-badge').classList.add('hidden');
-                document.getElementById('ai-status-dot').classList.remove('saved');
-                
-                if (STATE.debugMode) updateDebugInfo(parsed);
-                
-                showToast(`已加载 ${parsed.date}`, 'success'); 
-                generateAIAnalysis();
-            };
-            reader.readAsArrayBuffer(f); 
-            e.target.value = '';
-        }
+function renderTrendChart(data) {
+    const el=document.getElementById('trend-chart');
+    if(STATE.charts.trend)STATE.charts.trend.dispose();
+    if(!data.length)return;
+    const chart=echarts.init(el,'dark');
+    chart.setOption({backgroundColor:'transparent',tooltip:{trigger:'axis',formatter:p=>p[0].name+'<br/>'+p.map(i=>i.marker+i.seriesName+': ¥'+(i.value/10000).toFixed(1)+'万').join('<br/>')},legend:{data:['实际','预算'],bottom:0,textStyle:{color:'#71717a',fontSize:10}},grid:{left:5,right:5,top:10,bottom:35,containLabel:true},xAxis:{type:'category',data:data.map(d=>d.date.slice(5)),axisLabel:{fontSize:9,color:'#71717a',rotate:30}},yAxis:{type:'value',axisLabel:{fontSize:9,formatter:v=>(v/10000)+'w'},splitLine:{lineStyle:{color:'#27272a'}}},series:[{name:'实际',type:'line',data:data.map(d=>d.totals?.hotel?.act||0),smooth:true,symbol:'circle',symbolSize:4,lineStyle:{color:'#3b82f6',width:2},itemStyle:{color:'#3b82f6'},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(59,130,246,0.3)'},{offset:1,color:'rgba(59,130,246,0)'}]}}},{name:'预算',type:'line',data:data.map(d=>d.totals?.hotel?.bud||0),smooth:true,symbol:'none',lineStyle:{color:'#71717a',width:1,type:'dashed'}}]});
+    STATE.charts.trend=chart;
+}
 
-        function parseExcelData(rows) {
-            let d = { 
-                date: new Date().toISOString().split('T')[0], weekday: '', rows: [], 
-                roomsSold: 0, roomsBud: 0, occupancy: 0, occBud: 0, 
-                adr: 0, adrBud: 0, revpar: 0, revparBud: 0, totals: {} 
-            };
-            
-            const num = v => {
-                if (v === null || v === undefined || v === '') return 0;
-                const str = String(v).trim();
-                const cleaned = str.replace(/[¥￥,$%]/g, '').trim();
-                const parsed = parseFloat(cleaned);
-                return isNaN(parsed) ? 0 : parsed;
-            };
-            
-            const pct = v => {
-                if (v === null || v === undefined || v === '') return 0;
-                const str = String(v).trim();
-                if (!str.includes('%') && parseFloat(str) <= 1) {
-                    return parseFloat(str);
-                }
-                const cleaned = str.replace('%', '').trim();
-                const parsed = parseFloat(cleaned);
-                if (isNaN(parsed)) return 0;
-                return parsed > 1 ? parsed / 100 : parsed;
-            };
-            
-            console.log('📊 开始解析Excel数据，共', rows.length, '行');
-            
-            rows.forEach((r, rowIndex) => {
-                if (!r[0]) return; 
-                const n = String(r[0]).trim();
-                
-                if (n.includes('Date') || n.includes('日期')) { 
-                    const m = r.join(' ').match(/(\d{1,2})\/(\w+)\/(\d{4})/); 
-                    if (m) { 
-                        const mm = {Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'}; 
-                        d.date = `${m[3]}-${mm[m[2]]||m[2]}-${m[1].padStart(2,'0')}`; 
-                        d.weekday = ['周日','周一','周二','周三','周四','周五','周六'][new Date(d.date).getDay()]; 
-                    } 
-                }
-                
-                if (n.includes('Total room Revenue') || n.includes('总房收入')) d.totals.room = { act: num(r[6]), bud: num(r[7]) };
-                if (n.includes('F&B Total') || n.includes('餐饮收入合计')) d.totals.fb = { act: num(r[6]), bud: num(r[7]) };
-                if (n.includes('Total Hotel Revenue') || n.includes('酒店收入合计')) d.totals.hotel = { act: num(r[6]), bud: num(r[7]) };
-                if (n.includes('Total Other Operating') || n.includes('其他经营收入合计')) d.totals.other = { act: num(r[6]), bud: num(r[7]) };
-                
-                if (n.includes('Occupied Rooms') || n.includes('已出租房数') || n.includes('出租房间')) { 
-                    d.roomsSold = Math.round(num(r[6])); 
-                    d.roomsBud = Math.round(num(r[7])); 
-                    console.log(`✅ 行${rowIndex}: 解析售房数 - 实际:${d.roomsSold}, 预算:${d.roomsBud}`);
-                }
-                
-                if (n.includes('Paid Occupancy') || n.includes('客房住房率') || n.includes('出租率') || n.includes('Occupancy')) { 
-                    d.occupancy = pct(r[6]); 
-                    d.occBud = pct(r[7]); 
-                    console.log(`✅ 行${rowIndex}: 解析出租率 - 实际:${d.occupancy}(${(d.occupancy*100).toFixed(1)}%), 预算:${d.occBud}(${(d.occBud*100).toFixed(1)}%)`);
-                }
-                
-                if (n.includes('Paid Average Room Rate') || n.includes('Average Rate') || (n.includes('平均房价') && !n.includes('可出租') && !n.includes('Rev'))) { 
-                    d.adr = num(r[6]); 
-                    d.adrBud = num(r[7]); 
-                    console.log(`✅ 行${rowIndex}: 解析ADR - 实际:${d.adr}, 预算:${d.adrBud}`);
-                }
-                
-                if (n.includes('Rev Par') || n.includes('RevPAR') || n.includes('可出租房平均') || n.includes('每可用房收入')) { 
-                    d.revpar = num(r[6]); 
-                    d.revparBud = num(r[7]); 
-                    console.log(`✅ 行${rowIndex}: 解析RevPAR - 实际:${d.revpar}, 预算:${d.revparBud}`);
-                }
-                
-                const isTotal = /^Total|合计|小计|Subtotal/i.test(n);
-                if (r.length >= 7 && num(r[6]) !== 0 && !isTotal) {
-                    let type = 'Other';
-                    if (/Rate|Negotiated|Tour|Discount|Marketing|Permanent|Surcharge|服务费|Convention|SMRF|Meeting|Consortia|房费|Corporate|Individual|Net|Guest|Package|Wholesale|OTA|FIT|Group/i.test(n)) type = 'Room';
-                    else if (/Kok|Alley|Brasserie|Bar|Ville|Service|Mini|蔚景|百味|廊吧|羿庭|Ling|Wai|Peacock|Long|Salon|餐|Food|Beverage|Restaurant|Cafe|Lounge|F&B/i.test(n)) type = 'F&B';
-                    else if (/Banquet|宴会|会议/i.test(n)) type = 'F&B';
-                    d.rows.push({ name: n, type, actual: num(r[6]), budget: num(r[7]) });
-                }
-            });
-            
-            console.log('📊 解析完成，运营指标:', {
-                occupancy: d.occupancy,
-                occBud: d.occBud,
-                roomsSold: d.roomsSold,
-                roomsBud: d.roomsBud,
-                adr: d.adr,
-                adrBud: d.adrBud,
-                revpar: d.revpar,
-                revparBud: d.revparBud
-            });
-            
-            return d;
-        }
+function renderOpsTrendChart(data) {
+    const el=document.getElementById('ops-trend-chart');
+    if(STATE.charts.opsTrend)STATE.charts.opsTrend.dispose();
+    if(!data.length||!data.some(d=>d.revpar||d.adr||d.occupancy)){el.innerHTML='<div class="flex items-center justify-center h-full text-zinc-600 text-xs">暂无数据</div>';return;}
+    const chart=echarts.init(el,'dark');
+    chart.setOption({backgroundColor:'transparent',tooltip:{trigger:'axis'},legend:{data:['RevPAR','ADR','入住率'],bottom:0,textStyle:{color:'#71717a',fontSize:10}},grid:{left:5,right:35,top:10,bottom:35,containLabel:true},xAxis:{type:'category',data:data.map(d=>d.date.slice(5)),axisLabel:{fontSize:9,color:'#71717a',rotate:30}},yAxis:[{type:'value',position:'left',axisLabel:{fontSize:9,formatter:v=>'¥'+v},splitLine:{lineStyle:{color:'#27272a'}}},{type:'value',position:'right',min:0,max:100,axisLabel:{fontSize:9,formatter:v=>v+'%'},splitLine:{show:false}}],series:[{name:'RevPAR',type:'line',yAxisIndex:0,data:data.map(d=>Math.floor(d.revpar||0)),smooth:true,symbol:'circle',symbolSize:4,lineStyle:{color:'#a855f7',width:2},itemStyle:{color:'#a855f7'}},{name:'ADR',type:'line',yAxisIndex:0,data:data.map(d=>Math.floor(d.adr||0)),smooth:true,symbol:'circle',symbolSize:4,lineStyle:{color:'#f59e0b',width:2},itemStyle:{color:'#f59e0b'}},{name:'入住率',type:'line',yAxisIndex:1,data:data.map(d=>{const o=d.occupancy||0;return o<=1?(o*100).toFixed(1):o.toFixed(1);}),smooth:true,symbol:'circle',symbolSize:4,lineStyle:{color:'#22c55e',width:2},itemStyle:{color:'#22c55e'},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(34,197,94,0.2)'},{offset:1,color:'rgba(34,197,94,0)'}]}}}]});
+    STATE.charts.opsTrend=chart;
+}
 
-        function renderDashboard(d) {
-            let room = d.totals.room || { act: 0, bud: 0 };
-            let fb = d.totals.fb || { act: 0, bud: 0 };
-            let other = d.totals.other || { act: 0, bud: 0 };
-            let grand = d.totals.hotel || { act: 0, bud: 0 };
-            
-            if (d.totals.hotel && d.totals.room && d.totals.fb) { 
-                other.act = grand.act - room.act - fb.act; 
-                other.bud = grand.bud - room.bud - fb.bud; 
-            }
-            
-            if (STATE.currentData?.date === d.date) {
-                STATE.currentData.totals = { room, fb, other, hotel: grand };
-            }
+async function generateAIAnalysis() {
+    if(!STATE.currentData)return;
+    const c=document.getElementById('ai-analysis');
+    c.innerHTML='<div class="flex flex-col items-center justify-center py-12"><div class="ai-loading"><div class="spinner"></div></div><p class="text-zinc-500 text-xs mt-3">AI分析中...</p></div>';
+    try {
+        const d=STATE.currentData;
+        const room=d.totals?.room||{act:0,bud:0},fb=d.totals?.fb||{act:0,bud:0},other=d.totals?.other||{act:0,bud:0},hotel=d.totals?.hotel||{act:0,bud:0};
+        const totalPct=hotel.bud>0?(hotel.act/hotel.bud*100).toFixed(1):'100';
+        const roomPct=room.bud>0?(room.act/room.bud*100).toFixed(1):'100';
+        const fbPct=fb.bud>0?(fb.act/fb.bud*100).toFixed(1):'100';
+        const otherPct=other.bud>0?(other.act/other.bud*100).toFixed(1):'100';
+        let occ=d.occupancy||0;if(occ<=1)occ*=100;
+        const prompt=STATE.aiPrompt.replace(/{date}/g,d.date).replace(/{total_pct}/g,totalPct).replace(/{room_pct}/g,roomPct).replace(/{fb_pct}/g,fbPct).replace(/{other_pct}/g,otherPct).replace(/{occupancy}/g,occ.toFixed(1)).replace(/{adr}/g,Math.floor(d.adr||0)).replace(/{revpar}/g,Math.floor(d.revpar||0));
+        const res=await fetch(STATE.qianwen.endpoint,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+STATE.qianwen.apiKey},body:JSON.stringify({model:STATE.qianwen.model,messages:[{role:'user',content:prompt}],temperature:0.5,max_tokens:1500})});
+        if(!res.ok)throw new Error();
+        const result=await res.json();
+        let content=result.choices[0].message.content;
+        content=content.replace(/```html\n?/gi,'').replace(/```\n?/g,'').trim();
+        c.innerHTML=content;
+        STATE.currentData.aiAnalysis=content;
+        STATE.currentData.aiAnalysisTime=new Date().toLocaleString('zh-CN');
+        document.getElementById('ai-update-time').textContent=STATE.currentData.aiAnalysisTime;
+    } catch(e) { console.error(e); c.innerHTML='<div class="text-center py-12 text-zinc-600"><i class="fa-solid fa-exclamation-circle text-2xl mb-3"></i><p class="text-xs">AI分析失败</p></div>'; }
+}
 
-            document.getElementById('current-date').innerText = d.date + ' ' + (d.weekday || '');
-            document.getElementById('data-status').innerText = '已加载'; 
-            document.getElementById('data-status').className = 'tag tag-green';
+function openDeepDive(){document.getElementById('deep-modal').classList.remove('hidden');switchDeepTab('room');}
+function switchDeepTab(tab) {
+    ['room','fb','other'].forEach(t=>{const b=document.getElementById('deep-tab-'+t);b.classList.toggle('bg-zinc-700',t===tab);b.classList.toggle('text-zinc-400',t!==tab);});
+    if(!STATE.currentData)return;
+    const typeMap={room:['Room'],fb:['F&B'],other:['Other']};
+    let rows=STATE.currentData.rows.filter(r=>typeMap[tab].includes(r.type));
+    rows=rows.filter(r=>!/Total|合计/i.test(r.name)).sort((a,b)=>b.actual-a.actual);
+    document.getElementById('deep-table-head').innerHTML='<tr><th>项目</th><th>实际</th><th>预算</th><th>完成率</th></tr>';
+    document.getElementById('deep-table-body').innerHTML=rows.map(r=>{const p=r.budget>0?(r.actual/r.budget*100):100;return '<tr><td>'+getChineseName(r.name)+'</td><td class="font-mono">¥'+r.actual.toLocaleString()+'</td><td class="text-zinc-500 font-mono">¥'+r.budget.toLocaleString()+'</td><td class="'+(p>=100?'text-green-400':p>=80?'text-amber-400':'text-red-400')+'">'+p.toFixed(0)+'%</td></tr>';}).join('');
+    const el=document.getElementById('deep-chart');
+    if(STATE.charts.deep)STATE.charts.deep.dispose();
+    const chart=echarts.init(el,'dark'),top=rows.slice(0,10);
+    chart.setOption({backgroundColor:'transparent',tooltip:{trigger:'axis'},legend:{data:['实际','预算'],bottom:0,textStyle:{color:'#71717a',fontSize:10}},grid:{left:5,right:5,top:5,bottom:40,containLabel:true},xAxis:{type:'category',data:top.map(r=>getChineseName(r.name)),axisLabel:{rotate:35,fontSize:9,color:'#a1a1aa'}},yAxis:{type:'value',axisLabel:{fontSize:9},splitLine:{lineStyle:{color:'#27272a'}}},series:[{name:'实际',type:'bar',data:top.map(r=>r.actual),itemStyle:{color:'#3b82f6',borderRadius:[4,4,0,0]},barWidth:16},{name:'预算',type:'bar',data:top.map(r=>r.budget),itemStyle:{color:'#3f3f46',borderRadius:[4,4,0,0]},barWidth:16}]});
+    STATE.charts.deep=chart;
+    const totalAct=rows.reduce((s,r)=>s+r.actual,0),totalBud=rows.reduce((s,r)=>s+r.budget,0);
+    const totalPct=totalBud>0?(totalAct/totalBud*100).toFixed(1):100;
+    document.getElementById('deep-summary-content').innerHTML='<p><strong>整体完成率：<span class="'+(parseFloat(totalPct)>=100?'text-green-400':'text-red-400')+'">'+totalPct+'%</span></strong> | 实际 ¥'+(totalAct/10000).toFixed(1)+'万 / 预算 ¥'+(totalBud/10000).toFixed(1)+'万</p>';
+}
 
-            const fmt = n => '¥' + Math.floor(n).toLocaleString();
-            
-            document.getElementById('kpi-revenue').innerText = fmt(grand.act); 
-            document.getElementById('kpi-revenue-bud').innerText = fmt(grand.bud);
-            const revPct = grand.bud > 0 ? (grand.act / grand.bud * 100) : 100;
-            const revDiff = grand.act - grand.bud;
-            document.getElementById('kpi-revenue-pct').innerText = revPct.toFixed(1) + '%';
-            document.getElementById('kpi-revenue-pct').className = `kpi-pct ${revPct >= 100 ? 'text-green-400' : 'text-red-400'}`;
-            document.getElementById('kpi-revenue-diff').innerText = (revDiff >= 0 ? '+' : '') + (revDiff / 10000).toFixed(1) + '万';
-            document.getElementById('kpi-revenue-diff').className = `font-mono text-xs ${revDiff >= 0 ? 'text-green-400' : 'text-red-400'}`;
-
-            let occAct = d.occupancy || 0;
-            let occBud = d.occBud || 0;
-            if (occAct <= 1) occAct = occAct * 100;
-            if (occBud <= 1) occBud = occBud * 100;
-            const occPct = occBud > 0 ? (occAct / occBud * 100) : 100;
-            document.getElementById('kpi-occ').innerText = occAct.toFixed(1) + '%';
-            document.getElementById('kpi-occ-bud').innerText = occBud.toFixed(1) + '%';
-            document.getElementById('kpi-occ-pct').innerText = occPct.toFixed(1) + '%';
-            document.getElementById('kpi-occ-pct').className = `kpi-pct ${occAct >= occBud ? 'text-green-400' : 'text-red-400'}`;
-            document.getElementById('kpi-sold').innerText = `${d.roomsSold || 0}/${Math.floor(d.roomsBud || 260)}`;
-
-            const adrAct = d.adr || 0;
-            const adrBud = d.adrBud || 0;
-            const adrPct = adrBud > 0 ? (adrAct / adrBud * 100) : 100;
-            const adrDiff = adrAct - adrBud;
-            document.getElementById('kpi-adr').innerText = '¥' + Math.floor(adrAct);
-            document.getElementById('kpi-adr-bud').innerText = '¥' + Math.floor(adrBud);
-            document.getElementById('kpi-adr-pct').innerText = adrPct.toFixed(1) + '%';
-            document.getElementById('kpi-adr-pct').className = `kpi-pct ${adrPct >= 100 ? 'text-green-400' : adrPct >= 90 ? 'text-amber-400' : 'text-red-400'}`;
-            document.getElementById('kpi-adr-diff').innerText = (adrDiff >= 0 ? '+' : '') + '¥' + Math.floor(adrDiff);
-            document.getElementById('kpi-adr-diff').className = `font-mono text-xs ${adrDiff >= 0 ? 'text-green-400' : 'text-red-400'}`;
-
-            const revparAct = d.revpar || 0;
-            const revparBud = d.revparBud || 0;
-            const revparPct = revparBud > 0 ? (revparAct / revparBud * 100) : 100;
-            const revparDiff = revparAct - revparBud;
-            document.getElementById('kpi-revpar').innerText = '¥' + Math.floor(revparAct);
-            document.getElementById('kpi-revpar-bud').innerText = '¥' + Math.floor(revparBud);
-            document.getElementById('kpi-revpar-pct').innerText = revparPct.toFixed(1) + '%';
-            document.getElementById('kpi-revpar-pct').className = `kpi-pct ${revparPct >= 100 ? 'text-green-400' : revparPct >= 90 ? 'text-amber-400' : 'text-red-400'}`;
-            document.getElementById('kpi-revpar-diff').innerText = (revparDiff >= 0 ? '+' : '') + '¥' + Math.floor(revparDiff);
-            document.getElementById('kpi-revpar-diff').className = `font-mono text-xs ${revparDiff >= 0 ? 'text-green-400' : 'text-red-400'}`;
-
-            const depts = [
-                { name: '客房收入', act: room.act, bud: room.bud, icon: '🏨' },
-                { name: '餐饮收入', act: fb.act, bud: fb.bud, icon: '🍽️' },
-                { name: '其他收入', act: other.act, bud: other.bud, icon: '📦' },
-                { name: '酒店合计', act: grand.act, bud: grand.bud, icon: '🏢' }
-            ];
-            
-            document.getElementById('dept-table-body').innerHTML = depts.map(dep => {
-                const diff = dep.act - dep.bud;
-                const pct = dep.bud > 0 ? (dep.act / dep.bud * 100) : 100;
-                return `<tr class="${dep.name === '酒店合计' ? 'bg-zinc-800/30 font-medium' : ''}">
-                    <td class="text-zinc-300">${dep.icon} ${dep.name}</td>
-                    <td class="font-mono text-white">¥${Math.floor(dep.act).toLocaleString()}</td>
-                    <td class="text-zinc-500 font-mono">¥${Math.floor(dep.bud).toLocaleString()}</td>
-                    <td class="${diff >= 0 ? 'text-green-400' : 'text-red-400'} font-mono">${diff >= 0 ? '+' : ''}${(diff/10000).toFixed(1)}万</td>
-                    <td class="${pct >= 100 ? 'text-green-400' : pct >= 90 ? 'text-amber-400' : 'text-red-400'} font-medium">${pct.toFixed(1)}%</td>
-                </tr>`;
-            }).join('');
-
-            renderMainChart(depts.slice(0, 3));
-            renderPieChart(depts.slice(0, 3));
-        }
-
-        function renderMainChart(depts) {
-            const el = document.getElementById('main-chart');
-            if (STATE.charts.main) STATE.charts.main.dispose();
-            const chart = echarts.init(el, 'dark');
-            chart.setOption({
-                backgroundColor: 'transparent',
-                tooltip: { trigger: 'axis' },
-                legend: { data: ['实际', '预算'], bottom: 0, textStyle: { color: '#71717a', fontSize: 9 } },
-                grid: { left: 5, right: 5, top: 5, bottom: 35, containLabel: true },
-                xAxis: { type: 'category', data: depts.map(d => d.name), axisLabel: { fontSize: 9, color: '#a1a1aa' } },
-                yAxis: { type: 'value', axisLabel: { fontSize: 8, formatter: v => (v/10000) + 'w' }, splitLine: { lineStyle: { color: '#27272a' } } },
-                series: [
-                    { name: '实际', type: 'bar', data: depts.map(d => d.act), itemStyle: { color: '#3b82f6', borderRadius: [3, 3, 0, 0] }, barWidth: 16 },
-                    { name: '预算', type: 'bar', data: depts.map(d => d.bud), itemStyle: { color: '#3f3f46', borderRadius: [3, 3, 0, 0] }, barWidth: 16 }
-                ]
-            });
-            STATE.charts.main = chart;
-        }
-
-        function renderPieChart(depts) {
-            const el = document.getElementById('pie-chart');
-            if (STATE.charts.pie) STATE.charts.pie.dispose();
-            const chart = echarts.init(el, 'dark');
-            chart.setOption({
-                backgroundColor: 'transparent',
-                tooltip: { trigger: 'item', formatter: '{b}: ¥{c} ({d}%)' },
-                series: [{
-                    type: 'pie', radius: ['35%', '65%'], center: ['50%', '50%'],
-                    itemStyle: { borderRadius: 4, borderColor: '#16161a', borderWidth: 2 },
-                    label: { show: true, fontSize: 9, color: '#a1a1aa', formatter: '{b}\n{d}%' },
-                    labelLine: { length: 8, length2: 4 },
-                    data: [
-                        { value: depts[0].act, name: '客房', itemStyle: { color: '#3b82f6' } },
-                        { value: depts[1].act, name: '餐饮', itemStyle: { color: '#22c55e' } },
-                        { value: depts[2].act, name: '其他', itemStyle: { color: '#f59e0b' } }
-                    ]
-                }]
-            });
-            STATE.charts.pie = chart;
-        }
-
-        function renderTrendChart(data) {
-            const el = document.getElementById('trend-chart');
-            if (STATE.charts.trend) STATE.charts.trend.dispose();
-            if (!data.length) return;
-            
-            const chart = echarts.init(el, 'dark');
-            chart.setOption({
-                backgroundColor: 'transparent',
-                tooltip: { trigger: 'axis', formatter: p => p[0].name + '<br/>' + p.map(i => `${i.marker} ${i.seriesName}: ¥${(i.value/10000).toFixed(1)}万`).join('<br/>') },
-                legend: { data: ['实际营收', '预算'], bottom: 0, textStyle: { color: '#71717a', fontSize: 9 } },
-                grid: { left: 5, right: 5, top: 10, bottom: 35, containLabel: true },
-                xAxis: { type: 'category', data: data.map(d => d.date.slice(5)), axisLabel: { fontSize: 8, color: '#71717a', rotate: 30 } },
-                yAxis: { type: 'value', axisLabel: { fontSize: 8, formatter: v => (v/10000) + 'w' }, splitLine: { lineStyle: { color: '#27272a' } } },
-                series: [
-                    { name: '实际营收', type: 'line', data: data.map(d => d.totals?.hotel?.act || 0), smooth: true, symbol: 'circle', symbolSize: 3, lineStyle: { color: '#3b82f6', width: 2 }, itemStyle: { color: '#3b82f6' }, areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(59,130,246,0.3)' }, { offset: 1, color: 'rgba(59,130,246,0)' }] } } },
-                    { name: '预算', type: 'line', data: data.map(d => d.totals?.hotel?.bud || 0), smooth: true, symbol: 'none', lineStyle: { color: '#71717a', width: 1, type: 'dashed' } }
-                ]
-            });
-            STATE.charts.trend = chart;
-        }
-
-        function renderOpsTrendChart(data) {
-            const el = document.getElementById('ops-trend-chart');
-            if (STATE.charts.opsTrend) STATE.charts.opsTrend.dispose();
-            if (!data.length) return;
-            
-            const hasOpsData = data.some(d => d.revpar || d.adr || d.occupancy);
-            if (!hasOpsData) {
-                el.innerHTML = '<div class="flex items-center justify-center h-full text-zinc-600 text-[10px]">暂无运营指标历史数据<br>保存新数据后将显示趋势</div>';
-                return;
-            }
-            
-            const chart = echarts.init(el, 'dark');
-            chart.setOption({
-                backgroundColor: 'transparent',
-                tooltip: { 
-                    trigger: 'axis', 
-                    formatter: p => {
-                        let result = p[0].name + '<br/>';
-                        p.forEach(i => {
-                            if (i.seriesName === '入住率') {
-                                result += `${i.marker} ${i.seriesName}: ${i.value}%<br/>`;
-                            } else {
-                                result += `${i.marker} ${i.seriesName}: ¥${i.value}<br/>`;
-                            }
-                        });
-                        return result;
-                    }
-                },
-                legend: { data: ['RevPAR', 'ADR', '入住率'], bottom: 0, textStyle: { color: '#71717a', fontSize: 9 } },
-                grid: { left: 5, right: 35, top: 10, bottom: 35, containLabel: true },
-                xAxis: { type: 'category', data: data.map(d => d.date.slice(5)), axisLabel: { fontSize: 8, color: '#71717a', rotate: 30 } },
-                yAxis: [
-                    { type: 'value', name: '', position: 'left', axisLabel: { fontSize: 8, formatter: v => '¥' + v }, splitLine: { lineStyle: { color: '#27272a' } } },
-                    { type: 'value', name: '', position: 'right', min: 0, max: 100, axisLabel: { fontSize: 8, formatter: v => v + '%' }, splitLine: { show: false } }
-                ],
-                series: [
-                    { 
-                        name: 'RevPAR', 
-                        type: 'line', 
-                        yAxisIndex: 0, 
-                        data: data.map(d => Math.floor(d.revpar || 0)), 
-                        smooth: true, 
-                        symbol: 'circle', 
-                        symbolSize: 3, 
-                        lineStyle: { color: '#a855f7', width: 2 }, 
-                        itemStyle: { color: '#a855f7' } 
-                    },
-                    { 
-                        name: 'ADR', 
-                        type: 'line', 
-                        yAxisIndex: 0, 
-                        data: data.map(d => Math.floor(d.adr || 0)), 
-                        smooth: true, 
-                        symbol: 'circle', 
-                        symbolSize: 3, 
-                        lineStyle: { color: '#f59e0b', width: 2 }, 
-                        itemStyle: { color: '#f59e0b' } 
-                    },
-                    { 
-                        name: '入住率', 
-                        type: 'line', 
-                        yAxisIndex: 1, 
-                        data: data.map(d => { 
-                            const o = d.occupancy || 0; 
-                            return o <= 1 ? (o * 100).toFixed(1) : o.toFixed(1); 
-                        }), 
-                        smooth: true, 
-                        symbol: 'circle', 
-                        symbolSize: 3, 
-                        lineStyle: { color: '#22c55e', width: 2 }, 
-                        itemStyle: { color: '#22c55e' }, 
-                        areaStyle: { 
-                            color: { 
-                                type: 'linear', 
-                                x: 0, y: 0, x2: 0, y2: 1, 
-                                colorStops: [
-                                    { offset: 0, color: 'rgba(34,197,94,0.2)' }, 
-                                    { offset: 1, color: 'rgba(34,197,94,0)' }
-                                ] 
-                            } 
-                        } 
-                    }
-                ]
-            });
-            STATE.charts.opsTrend = chart;
-        }
-
-        // AI 分析
-        async function generateAIAnalysis() {
-            if (!STATE.currentData) return;
-            const container = document.getElementById('ai-analysis');
-            const statusDot = document.getElementById('ai-status-dot');
-            
-            document.getElementById('ai-saved-badge').classList.add('hidden');
-            statusDot.classList.remove('saved');
-            
-            container.innerHTML = '<div class="flex flex-col items-center justify-center py-10"><div class="ai-loading"><div class="spinner"></div></div><p class="text-zinc-500 text-[10px] mt-2">AI分析中...</p></div>';
-            statusDot.classList.add('active');
-            
-            try {
-                const d = STATE.currentData;
-                const dayNum = parseInt(d.date.split('-')[2]);
-                const daysInMonth = new Date(d.date.split('-')[0], d.date.split('-')[1], 0).getDate();
-                const timeProgress = ((dayNum / daysInMonth) * 100).toFixed(1);
-                
-                const room = d.totals?.room || { act: 0, bud: 0 };
-                const fb = d.totals?.fb || { act: 0, bud: 0 };
-                const other = d.totals?.other || { act: 0, bud: 0 };
-                const hotel = d.totals?.hotel || { act: 0, bud: 0 };
-                
-                const roomDiff = room.act - room.bud;
-                const fbDiff = fb.act - fb.bud;
-                const otherDiff = other.act - other.bud;
-                const hotelDiff = hotel.act - hotel.bud;
-                
-                const roomPct = room.bud > 0 ? (room.act / room.bud * 100).toFixed(1) : '100';
-                const fbPct = fb.bud > 0 ? (fb.act / fb.bud * 100).toFixed(1) : '100';
-                const otherPct = other.bud > 0 ? (other.act / other.bud * 100).toFixed(1) : '100';
-                const totalPct = hotel.bud > 0 ? (hotel.act / hotel.bud * 100).toFixed(1) : '100';
-                
-                const adrPct = d.adrBud > 0 ? (d.adr / d.adrBud * 100).toFixed(1) : '100';
-                const revparPct = d.revparBud > 0 ? (d.revpar / d.revparBud * 100).toFixed(1) : '100';
-                
-                const fmtDiff = v => (v >= 0 ? '+' : '') + (v / 10000).toFixed(1) + '万';
-                
-                const roomRows = d.rows.filter(r => r.type === 'Room').sort((a, b) => b.actual - a.actual);
-                const fbRows = d.rows.filter(r => r.type === 'F&B').sort((a, b) => b.actual - a.actual);
-                
-                const roomDetails = roomRows.map(r => {
-                    const pct = r.budget > 0 ? (r.actual / r.budget * 100).toFixed(0) : 100;
-                    return `${getChineseName(r.name)}: ¥${r.actual.toLocaleString()} / ¥${r.budget.toLocaleString()} (${pct}%)`;
-                }).join('\n');
-                
-                const fbDetails = fbRows.map(r => {
-                    const pct = r.budget > 0 ? (r.actual / r.budget * 100).toFixed(0) : 100;
-                    return `${getChineseName(r.name)}: ¥${r.actual.toLocaleString()} / ¥${r.budget.toLocaleString()} (${pct}%)`;
-                }).join('\n');
-                
-                let occPct = d.occupancy || 0;
-                let occBudPct = d.occBud || 0;
-                if (occPct <= 1) occPct = occPct * 100;
-                if (occBudPct <= 1) occBudPct = occBudPct * 100;
-                
-                const prompt = STATE.aiPrompt
-                    .replace(/{date}/g, d.date)
-                    .replace(/{day}/g, dayNum)
-                    .replace(/{time_progress}/g, timeProgress)
-                    .replace(/{profit_status}/g, hotelDiff >= 0 ? '盈余' : '亏损')
-                    .replace(/{profit_amount}/g, Math.abs(hotelDiff / 10000).toFixed(1))
-                    .replace(/{total_pct}/g, totalPct)
-                    .replace(/{total_pct_bar}/g, Math.min(parseFloat(totalPct), 150))
-                    .replace(/{total_color}/g, parseFloat(totalPct) >= 100 ? '#22c55e' : parseFloat(totalPct) >= 90 ? '#f59e0b' : '#ef4444')
-                    .replace(/{room_act}/g, (room.act / 10000).toFixed(1))
-                    .replace(/{room_bud}/g, (room.bud / 10000).toFixed(1))
-                    .replace(/{room_pct}/g, roomPct)
-                    .replace(/{room_diff}/g, fmtDiff(roomDiff))
-                    .replace(/{room_status}/g, roomDiff >= 0 ? '超额' : '缺口')
-                    .replace(/{room_class}/g, roomDiff >= 0 ? 'highlight-good' : 'highlight-bad')
-                    .replace(/{fb_act}/g, (fb.act / 10000).toFixed(1))
-                    .replace(/{fb_bud}/g, (fb.bud / 10000).toFixed(1))
-                    .replace(/{fb_pct}/g, fbPct)
-                    .replace(/{fb_diff}/g, fmtDiff(fbDiff))
-                    .replace(/{fb_status}/g, fbDiff >= 0 ? '超额' : '缺口')
-                    .replace(/{fb_class}/g, fbDiff >= 0 ? 'highlight-good' : 'highlight-bad')
-                    .replace(/{other_act}/g, (other.act / 10000).toFixed(1))
-                    .replace(/{other_bud}/g, (other.bud / 10000).toFixed(1))
-                    .replace(/{other_pct}/g, otherPct)
-                    .replace(/{other_diff}/g, fmtDiff(otherDiff))
-                    .replace(/{other_status}/g, otherDiff >= 0 ? '超额' : '缺口')
-                    .replace(/{other_class}/g, otherDiff >= 0 ? 'highlight-good' : 'highlight-bad')
-                    .replace(/{occupancy}/g, occPct.toFixed(1))
-                    .replace(/{occ_bud}/g, occBudPct.toFixed(1))
-                    .replace(/{occ_status}/g, occPct >= occBudPct ? '达标' : '未达标')
-                    .replace(/{adr}/g, Math.floor(d.adr || 0))
-                    .replace(/{adr_bud}/g, Math.floor(d.adrBud || 0))
-                    .replace(/{adr_pct}/g, adrPct)
-                    .replace(/{revpar}/g, Math.floor(d.revpar || 0))
-                    .replace(/{revpar_bud}/g, Math.floor(d.revparBud || 0))
-                    .replace(/{revpar_pct}/g, revparPct)
-                    .replace(/{roomsSold}/g, d.roomsSold)
-                    .replace(/{rooms_bud}/g, Math.floor(d.roomsBud || 0))
-                    .replace(/{details}/g, `【客房明细】\n${roomDetails}\n\n【餐饮明细】\n${fbDetails}`);
-
-                const res = await fetch(STATE.qianwen.endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${STATE.qianwen.apiKey}` },
-                    body: JSON.stringify({ model: STATE.qianwen.model, messages: [{ role: 'user', content: prompt }], temperature: 0.5, max_tokens: 1800 })
-                });
-                
-                if (!res.ok) throw new Error();
-                const result = await res.json();
-                let aiContent = result.choices[0].message.content;
-                aiContent = aiContent.replace(/```html\n?/gi, '').replace(/```\n?/g, '').replace(/#{1,3}\s/g, '').replace(/\*\*/g, '').trim();
-                container.innerHTML = aiContent;
-                
-                const analysisTime = new Date().toLocaleString('zh-CN');
-                document.getElementById('ai-update-time').innerText = analysisTime;
-                
-                STATE.currentData.aiAnalysis = aiContent;
-                STATE.currentData.aiAnalysisTime = analysisTime;
-                
-                statusDot.classList.remove('active');
-            } catch (e) {
-                console.error(e);
-                statusDot.classList.remove('active');
-                renderBasicAnalysis();
-            }
-        }
-
-        function renderBasicAnalysis() {
-            if (!STATE.currentData) return;
-            const d = STATE.currentData, c = document.getElementById('ai-analysis');
-            const hotel = d.totals?.hotel || { act: 0, bud: 0 };
-            const room = d.totals?.room || { act: 0, bud: 0 };
-            const fb = d.totals?.fb || { act: 0, bud: 0 };
-            const other = d.totals?.other || { act: 0, bud: 0 };
-            
-            const hotelPct = hotel.bud > 0 ? (hotel.act / hotel.bud * 100).toFixed(1) : 100;
-            const roomPct = room.bud > 0 ? (room.act / room.bud * 100).toFixed(1) : 100;
-            const fbPct = fb.bud > 0 ? (fb.act / fb.bud * 100).toFixed(1) : 100;
-            const otherPct = other.bud > 0 ? (other.act / other.bud * 100).toFixed(1) : 100;
-            
-            const goodItems = d.rows.filter(r => r.budget > 1000 && r.actual / r.budget >= 1).slice(0, 5);
-            const badItems = d.rows.filter(r => r.budget > 1000 && r.actual / r.budget < 0.8).slice(0, 5);
-            
-            c.innerHTML = `
-                <div class="section-title">📊 预算执行总览</div>
-                <p><strong>整体完成率：${hotelPct}%</strong></p>
-                <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(hotelPct, 150)}%;background:${hotelPct >= 100 ? '#22c55e' : '#ef4444'}"></div></div>
-                <div class="data-row"><span>客房</span><span class="${roomPct >= 100 ? 'highlight-good' : 'highlight-bad'}">${roomPct}%</span></div>
-                <div class="data-row"><span>餐饮</span><span class="${fbPct >= 100 ? 'highlight-good' : 'highlight-bad'}">${fbPct}%</span></div>
-                <div class="data-row"><span>其他</span><span class="${otherPct >= 100 ? 'highlight-good' : 'highlight-bad'}">${otherPct}%</span></div>
-                
-                ${goodItems.length > 0 ? `<div class="section-title">✅ 表现优秀</div><p class="highlight-good">${goodItems.map(r => getChineseName(r.name) + '(' + (r.actual/r.budget*100).toFixed(0) + '%)').join('、')}</p>` : ''}
-                ${badItems.length > 0 ? `<div class="section-title">⚠️ 需要关注</div><p class="highlight-bad">${badItems.map(r => getChineseName(r.name) + '(' + (r.actual/r.budget*100).toFixed(0) + '%)').join('、')}</p>` : ''}
-                
-                <div class="risk-item">AI分析服务暂时不可用</div>
-            `;
-            
-            const analysisTime = new Date().toLocaleString('zh-CN') + ' (基础)';
-            document.getElementById('ai-update-time').innerText = analysisTime;
-            STATE.currentData.aiAnalysis = c.innerHTML;
-            STATE.currentData.aiAnalysisTime = analysisTime;
-        }
-
-        function switchDeepTab(tab) {
-            ['room', 'fb', 'other'].forEach(t => { 
-                const b = document.getElementById(`deep-tab-${t}`); 
-                b.classList.toggle('bg-zinc-700', t === tab); 
-                b.classList.toggle('text-white', t === tab); 
-                b.classList.toggle('text-zinc-400', t !== tab); 
-            });
-            if (!STATE.currentData) return;
-            
-            const typeMap = { room: ['Room'], fb: ['F&B'], other: ['Other'] };
-            const nameMap = { room: '客房收入', fb: '餐饮收入', other: '其他收入' };
-            
-            let rows = STATE.currentData.rows.filter(r => typeMap[tab].includes(r.type));
-            rows = rows.filter(r => !/Total|合计|小计|Subtotal/i.test(r.name));
-            rows = rows.sort((a, b) => b.actual - a.actual);
-            
-            document.getElementById('deep-table-head').innerHTML = `<tr><th>项目名称</th><th>实际</th><th>预算</th><th>差额</th><th>完成率</th></tr>`;
-            document.getElementById('deep-table-body').innerHTML = rows.map(r => { 
-                const diff = r.actual - r.budget, p = r.budget > 0 ? (r.actual / r.budget * 100) : 100;
-                return `<tr>
-                    <td class="text-zinc-300" title="${r.name}">${getChineseName(r.name)}</td>
-                    <td class="font-mono text-white">¥${r.actual.toLocaleString()}</td>
-                    <td class="text-zinc-500 font-mono">¥${r.budget.toLocaleString()}</td>
-                    <td class="${diff >= 0 ? 'text-green-400' : 'text-red-400'} font-mono">${diff >= 0 ? '+' : ''}${Math.floor(diff).toLocaleString()}</td>
-                    <td class="${p >= 100 ? 'text-green-400' : p >= 80 ? 'text-amber-400' : 'text-red-400'}">${p.toFixed(0)}%</td>
-                </tr>`; 
-            }).join('');
-            
-            const el = document.getElementById('deep-chart'); 
-            if (STATE.charts.deep) STATE.charts.deep.dispose();
-            const chart = echarts.init(el, 'dark'), top = rows.slice(0, 10);
-            chart.setOption({ 
-                backgroundColor: 'transparent', 
-                tooltip: { trigger: 'axis' }, 
-                legend: { data: ['实际', '预算'], bottom: 0, textStyle: { color: '#71717a', fontSize: 9 } }, 
-                grid: { left: 5, right: 5, top: 5, bottom: 40, containLabel: true }, 
-                xAxis: { type: 'category', data: top.map(r => getChineseName(r.name)), axisLabel: { rotate: 35, fontSize: 8, color: '#a1a1aa' } }, 
-                yAxis: { type: 'value', axisLabel: { fontSize: 8 }, splitLine: { lineStyle: { color: '#27272a' } } }, 
-                series: [
-                    { name: '实际', type: 'bar', data: top.map(r => r.actual), itemStyle: { color: '#3b82f6', borderRadius: [3, 3, 0, 0] }, barWidth: 12 }, 
-                    { name: '预算', type: 'bar', data: top.map(r => r.budget), itemStyle: { color: '#3f3f46', borderRadius: [3, 3, 0, 0] }, barWidth: 12 }
-                ] 
-            });
-            STATE.charts.deep = chart;
-            
-            const good = rows.filter(r => r.budget > 500 && r.actual / r.budget >= 1);
-            const bad = rows.filter(r => r.budget > 500 && r.actual / r.budget < 0.8);
-            const totalAct = rows.reduce((s, r) => s + r.actual, 0);
-            const totalBud = rows.reduce((s, r) => s + r.budget, 0);
-            const totalPct = totalBud > 0 ? (totalAct / totalBud * 100).toFixed(1) : 100;
-            const totalDiff = totalAct - totalBud;
-            
-            document.getElementById('deep-summary-content').innerHTML = `
-                <p style="margin-bottom:10px;">
-                    <strong>${nameMap[tab]}整体：</strong>完成率 
-                    <span class="${parseFloat(totalPct) >= 100 ? 'good' : 'bad'}" style="font-size:14px;font-weight:bold;">${totalPct}%</span>
-                    　实际 ¥${(totalAct/10000).toFixed(1)}万 | 预算 ¥${(totalBud/10000).toFixed(1)}万 | 
-                    ${totalDiff >= 0 ? '超额' : '缺口'} <span class="${totalDiff >= 0 ? 'good' : 'bad'}">${Math.abs(totalDiff/10000).toFixed(1)}万</span>
-                </p>
-                
-                ${good.length > 0 ? `
-                <div style="margin-top:12px;padding:10px;background:rgba(34,197,94,0.1);border-radius:6px;">
-                    <p style="margin-bottom:6px;"><span class="good" style="font-weight:bold;">✓ 表现优秀（${good.length}个项目）</span></p>
-                    <p style="font-size:10px;line-height:1.6;">${good.slice(0,10).map(r => `<span style="display:inline-block;background:#1a1a1f;padding:1px 6px;border-radius:3px;margin:1px 3px 1px 0;">${getChineseName(r.name)} <span class="good">${(r.actual/r.budget*100).toFixed(0)}%</span></span>`).join('')}</p>
-                </div>` : '<p style="margin-top:10px;color:#71717a;font-size:10px;">暂无超额完成项目</p>'}
-                
-                ${bad.length > 0 ? `
-                <div style="margin-top:10px;padding:10px;background:rgba(239,68,68,0.1);border-radius:6px;">
-                    <p style="margin-bottom:6px;"><span class="bad" style="font-weight:bold;">✗ 需要关注（${bad.length}个项目未达80%）</span></p>
-                    <p style="font-size:10px;line-height:1.6;">${bad.slice(0,10).map(r => `<span style="display:inline-block;background:#1a1a1f;padding:1px 6px;border-radius:3px;margin:1px 3px 1px 0;">${getChineseName(r.name)} <span class="bad">${(r.actual/r.budget*100).toFixed(0)}%</span></span>`).join('')}</p>
-                </div>` : ''}
-            `;
-        }
-
-        window.addEventListener('resize', () => Object.values(STATE.charts).forEach(c => c?.resize()));
-        document.addEventListener('DOMContentLoaded', () => { 
-            if (STATE.sidebarCollapsed) document.getElementById('sidebar').classList.add('collapsed'); 
-            document.getElementById('inline-prompt').value = STATE.aiPrompt;
-            console.log('🚀 已启用 jsDelivr CDN 加速，国内无需翻墙');
-            refreshFromGitHub(); 
-        });
-    </script>
+window.addEventListener('resize',()=>Object.values(STATE.charts).forEach(c=>c?.resize()));
+document.addEventListener('DOMContentLoaded',()=>{console.log('🚀 NEXUS v2.5 直连版启动');refreshData();});
+</script>
 </body>
 </html>
