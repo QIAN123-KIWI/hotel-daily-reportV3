@@ -549,11 +549,11 @@
             charts: {},
             totalRooms: 260,
             // Webhook URL - 从 localStorage 读取或使用默认值
-            webhookUrl: localStorage.getItem('nexus_webhook_url') || '',
-            // GitHub 配置
+            webhookUrl: localStorage.getItem('nexus_webhook_url') || 'https://n8n-fzlhzvbn.ap-northeast-1.clawcloudrun.com/webhook/hotel-save',
+            // GitHub 配置 - 硬编码确保任何浏览器都能加载
             github: {
-                owner: localStorage.getItem('nexus_github_owner') || 'QIAN123-KIWI',
-                repo: localStorage.getItem('nexus_github_repo') || 'hotel-daily-report',
+                owner: 'QIAN123-KIWI',
+                repo: 'hotel-daily-reportV3',
                 branch: 'main',
                 dataPath: 'data'
             }
