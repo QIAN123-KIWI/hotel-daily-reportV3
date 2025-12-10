@@ -3,435 +3,183 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>酒店经营日报 | NEXUS Dashboard</title>
+    <title>酒店经营日报 | NEXUS</title>
     
-    <!-- 依赖库 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
-
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        dark: { bg: '#09090b', card: '#18181b', border: '#27272a' },
-                        accent: { blue: '#3b82f6', green: '#22c55e', red: '#ef4444', amber: '#f59e0b', purple: '#a855f7' }
-                    },
-                    fontFamily: { 
-                        sans: ['Space Grotesk', 'Noto Sans SC', 'sans-serif'], 
-                        mono: ['JetBrains Mono', 'monospace'] 
-                    }
-                }
-            }
-        }
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
 
     <style>
-        * { box-sizing: border-box; }
-        body { 
-            background: #09090b; 
-            color: #fafafa; 
-            font-family: 'Space Grotesk', 'Noto Sans SC', sans-serif;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #09090b; color: #fafafa; font-family: 'Noto Sans SC', sans-serif; font-size: 12px; }
         
-        /* 背景网格 */
-        .bg-grid {
-            position: fixed;
-            inset: 0;
-            background-image: 
-                linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
-            background-size: 60px 60px;
-            pointer-events: none;
-            z-index: -1;
-        }
+        .card { background: #18181b; border: 1px solid #27272a; border-radius: 8px; }
+        .kpi-card { padding: 10px 12px; border-left: 3px solid; }
+        .kpi-card.blue { border-color: #3b82f6; }
+        .kpi-card.green { border-color: #22c55e; }
+        .kpi-card.amber { border-color: #f59e0b; }
+        .kpi-card.purple { border-color: #a855f7; }
+        .kpi-value { font-size: 1.1rem; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
         
-        /* 卡片样式 */
-        .card {
-            background: #18181b;
-            border: 1px solid #27272a;
-            border-radius: 16px;
-            transition: all 0.3s ease;
-        }
-        .card:hover { border-color: #3f3f46; }
+        .tag { padding: 1px 4px; border-radius: 3px; font-size: 9px; font-weight: 600; }
+        .tag-green { background: rgba(34,197,94,0.15); color: #22c55e; }
+        .tag-red { background: rgba(239,68,68,0.15); color: #ef4444; }
         
-        /* KPI卡片渐变边框 */
-        .kpi-card {
-            position: relative;
-            background: linear-gradient(135deg, #18181b 0%, #1f1f23 100%);
-            border: 1px solid transparent;
-            background-clip: padding-box;
-        }
-        .kpi-card::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: 16px;
-            padding: 1px;
-            background: linear-gradient(135deg, rgba(59,130,246,0.3), rgba(168,85,247,0.1));
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            pointer-events: none;
-        }
+        table { width: 100%; border-collapse: collapse; font-size: 10px; }
+        th, td { padding: 5px 3px; text-align: left; border-bottom: 1px solid #27272a; }
+        th { color: #71717a; font-size: 9px; }
         
-        /* 月份折叠组件 */
-        .month-group { border: 1px solid #27272a; border-radius: 12px; overflow: hidden; }
-        .month-header {
-            background: linear-gradient(90deg, rgba(59,130,246,0.1) 0%, transparent 100%);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .month-header:hover { background: linear-gradient(90deg, rgba(59,130,246,0.15) 0%, transparent 100%); }
-        .month-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
-        .month-content.expanded { max-height: 2000px; }
+        .sidebar { width: 180px; transition: width 0.2s; }
+        .sidebar.collapsed { width: 40px; }
+        .sidebar.collapsed .sidebar-content { display: none; }
+        .sidebar.collapsed .sidebar-toggle i { transform: rotate(180deg); }
         
-        /* 日期卡片 */
-        .date-card {
-            background: #1f1f23;
-            border: 1px solid #27272a;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .date-card:hover { 
-            border-color: #3b82f6;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px -5px rgba(59, 130, 246, 0.2);
-        }
-        .date-card.active { 
-            border-color: #3b82f6;
-            background: rgba(59, 130, 246, 0.1);
-        }
+        .history-item { padding: 6px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+        .history-item:hover { background: #27272a; }
+        .history-item.active { background: #27272a; border-left: 2px solid #3b82f6; }
+        .month-content { max-height: 0; overflow: hidden; transition: max-height 0.2s; }
+        .month-content.expanded { max-height: 300px; }
         
-        /* 表格样式 */
-        .data-table { width: 100%; border-collapse: separate; border-spacing: 0; }
-        .data-table th {
-            font-size: 0.7rem;
-            color: #71717a;
-            padding: 12px 16px;
-            text-align: right;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            border-bottom: 1px solid #27272a;
-            background: rgba(39, 39, 42, 0.5);
-        }
-        .data-table th:first-child { text-align: left; border-radius: 8px 0 0 0; }
-        .data-table th:last-child { border-radius: 0 8px 0 0; }
-        .data-table td {
-            padding: 14px 16px;
-            border-bottom: 1px solid rgba(39, 39, 42, 0.5);
-            font-size: 0.875rem;
-            text-align: right;
-            font-family: 'JetBrains Mono', monospace;
-        }
-        .data-table td:first-child { 
-            text-align: left; 
-            font-family: 'Space Grotesk', sans-serif;
-            font-weight: 500;
-            color: #e4e4e7;
-        }
-        .data-table tr:hover { background: rgba(59, 130, 246, 0.05); }
-        
-        /* 标签样式 */
-        .tag { padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 600; }
-        .tag-green { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.2); }
-        .tag-red { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
-        .tag-amber { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.2); }
-        
-        /* 滚动条 */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #52525b; }
-        
-        /* Toast */
-        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 100; }
-        .toast {
-            padding: 12px 20px;
-            border-radius: 10px;
-            font-size: 0.875rem;
-            font-weight: 500;
-            margin-bottom: 10px;
-            animation: slideIn 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .toast-success { background: rgba(34, 197, 94, 0.9); color: white; }
-        .toast-error { background: rgba(239, 68, 68, 0.9); color: white; }
-        .toast-info { background: rgba(59, 130, 246, 0.9); color: white; }
+        #toast-container { position: fixed; top: 12px; right: 12px; z-index: 9999; }
+        .toast { padding: 6px 12px; border-radius: 4px; font-size: 11px; margin-bottom: 4px; animation: slideIn 0.2s; }
+        .toast-success { background: #166534; }
+        .toast-error { background: #991b1b; }
+        .toast-info { background: #1e40af; }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } }
         
-        /* 模态框 */
-        .modal-backdrop { background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); }
-        .modal-content { animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
-        @keyframes modalIn { from { transform: scale(0.95) translateY(20px); opacity: 0; } }
+        .modal-backdrop { background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); }
         
-        /* AI分析区域 */
-        .ai-section h4 { 
-            color: #60a5fa; 
-            font-weight: 600; 
-            font-size: 0.9rem; 
-            margin: 1.5rem 0 0.75rem 0;
-            padding-left: 12px;
-            border-left: 3px solid #3b82f6;
-        }
-        .ai-section p { color: #a1a1aa; line-height: 1.7; font-size: 0.875rem; }
+        /* AI 分析样式 */
+        #ai-analysis { font-size: 11px; line-height: 1.6; }
+        #ai-analysis .section-title { color: #60a5fa; font-size: 11px; font-weight: 600; margin: 10px 0 6px 0; display: flex; align-items: center; gap: 6px; }
+        #ai-analysis .section-title:first-child { margin-top: 0; }
+        #ai-analysis p { color: #d4d4d8; margin: 4px 0; }
+        #ai-analysis strong { color: #f4f4f5; }
+        #ai-analysis .highlight-good { color: #4ade80; }
+        #ai-analysis .highlight-bad { color: #f87171; }
+        #ai-analysis .data-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #27272a; }
+        #ai-analysis .data-row:last-child { border-bottom: none; }
+        #ai-analysis .sub-item { padding-left: 12px; font-size: 10px; color: #a1a1aa; }
         
-        /* 加载动画 */
-        .loading-pulse {
-            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        
-        /* 趋势箭头 */
-        .trend-up { color: #22c55e; }
-        .trend-down { color: #ef4444; }
+        .ai-loading .spinner { width: 14px; height: 14px; border: 2px solid #3b82f6; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .deep-summary { background: #1f1f23; border-radius: 6px; padding: 12px; margin-top: 12px; font-size: 11px; }
+        .deep-summary .good { color: #4ade80; }
+        .deep-summary .bad { color: #f87171; }
+
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 2px; }
     </style>
 </head>
 <body class="min-h-screen">
-    <div class="bg-grid"></div>
-    <div class="toast-container" id="toast-container"></div>
+    <div id="toast-container"></div>
 
-    <!-- 主布局 -->
-    <div class="flex h-screen overflow-hidden">
-        
-        <!-- 左侧边栏 - 历史记录 -->
-        <aside class="w-72 bg-[#0f0f11] border-r border-zinc-800 flex flex-col">
-            <!-- Logo区域 -->
-            <div class="h-16 flex items-center px-5 border-b border-zinc-800">
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                    <i class="fa-solid fa-chart-line text-white text-sm"></i>
-                </div>
-                <div class="ml-3">
-                    <div class="font-bold text-white tracking-tight">NEXUS</div>
-                    <div class="text-[10px] text-zinc-500 font-medium">Hotel Analytics</div>
-                </div>
-            </div>
-            
-            <!-- 上传按钮 -->
-            <div class="p-4 border-b border-zinc-800">
-                <input type="file" id="excel-upload" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFileUpload(event)">
-                <button onclick="document.getElementById('excel-upload').click()" 
-                    class="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 rounded-xl text-white font-semibold text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
-                    <i class="fa-solid fa-cloud-arrow-up"></i>
-                    上传今日报表
-                </button>
-                <p class="text-[10px] text-zinc-600 mt-2 text-center">支持 .xlsx / .xls / .csv</p>
-            </div>
-            
-            <!-- 历史记录列表 -->
-            <div class="flex-1 overflow-y-auto p-4">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-xs font-semibold text-zinc-500 uppercase tracking-wider">历史记录</span>
-                    <span class="text-[10px] text-zinc-600" id="total-records">0 条</span>
-                </div>
-                <div id="history-list" class="space-y-3">
-                    <!-- 动态生成月份分组 -->
-                    <div class="text-center py-8 text-zinc-600">
-                        <i class="fa-solid fa-inbox text-2xl mb-2"></i>
-                        <p class="text-xs">暂无历史数据</p>
+    <div class="flex min-h-screen">
+        <!-- 侧边栏 -->
+        <aside id="sidebar" class="sidebar border-r border-zinc-800 p-2 flex flex-col bg-[#0c0c0e]">
+            <button onclick="toggleSidebar()" class="sidebar-toggle w-full flex items-center justify-center py-1.5 mb-2 text-zinc-500 hover:text-white text-xs">
+                <i class="fa-solid fa-chevron-left transition-transform"></i>
+            </button>
+            <div class="sidebar-content flex flex-col flex-1">
+                <div class="flex items-center gap-2 mb-3 px-1">
+                    <div class="w-6 h-6 rounded bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                        <i class="fa-solid fa-chart-line text-white text-[10px]"></i>
                     </div>
+                    <span class="font-semibold text-white text-xs">NEXUS</span>
                 </div>
-            </div>
-            
-            <!-- 底部配置 -->
-            <div class="p-4 border-t border-zinc-800 bg-zinc-900/50">
-                <label class="text-[10px] text-zinc-500 uppercase font-semibold tracking-wider">总房量配置</label>
-                <input type="number" id="total-rooms-config" value="260" 
-                    class="w-full mt-2 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm font-mono text-blue-400 focus:outline-none focus:border-blue-500"
-                    onchange="recalculateAll()">
+                <label class="block mb-3">
+                    <div class="w-full py-1.5 bg-blue-600 hover:bg-blue-500 rounded cursor-pointer text-center text-[10px] font-medium">
+                        <i class="fa-solid fa-upload mr-1"></i>上传报表
+                    </div>
+                    <input type="file" accept=".xlsx,.xls,.csv" onchange="handleFileUpload(event)" class="hidden">
+                </label>
+                <div class="flex items-center justify-between mb-1 px-1">
+                    <span class="text-[9px] text-zinc-500 uppercase">历史</span>
+                    <span class="text-[9px] text-zinc-600" id="history-count">0</span>
+                </div>
+                <div id="history-list" class="flex-1 overflow-y-auto"></div>
             </div>
         </aside>
 
-        <!-- 主内容区 -->
-        <main class="flex-1 flex flex-col overflow-hidden">
-            
-            <!-- 顶部栏 -->
-            <header class="h-16 border-b border-zinc-800 flex items-center justify-between px-6 bg-[#0f0f11]/80 backdrop-blur-sm">
-                <div>
-                    <h1 class="text-lg font-bold text-white">Daily Revenue Report</h1>
-                    <div class="flex items-center gap-2 mt-0.5">
-                        <span class="text-xs text-zinc-500 font-mono" id="current-date">--</span>
-                        <span class="tag tag-green" id="data-status">等待数据</span>
+        <!-- 主内容 -->
+        <main class="flex-1 p-2.5 overflow-y-auto">
+            <!-- 顶部 -->
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                    <span id="current-date" class="text-base font-semibold text-white">--</span>
+                    <span id="data-status" class="tag tag-red">无数据</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <button onclick="refreshFromGitHub()" class="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 rounded text-[10px] text-zinc-400"><i class="fa-solid fa-sync"></i></button>
+                    <button id="save-btn" onclick="saveToGitHub()" disabled class="px-2.5 py-1 bg-green-600 hover:bg-green-500 disabled:opacity-40 rounded text-[10px] font-medium"><i class="fa-solid fa-cloud-arrow-up mr-1"></i>保存</button>
+                    <button onclick="openSettingsModal()" class="w-6 h-6 bg-zinc-800 hover:bg-zinc-700 rounded flex items-center justify-center text-zinc-400 text-[10px]"><i class="fa-solid fa-gear"></i></button>
+                </div>
+            </div>
+
+            <!-- KPI -->
+            <div class="grid grid-cols-4 gap-2 mb-2">
+                <div class="card kpi-card blue">
+                    <p class="text-[9px] text-zinc-500">总营收 Total Revenue</p>
+                    <p id="kpi-revenue" class="kpi-value text-white">--</p>
+                    <p class="text-[9px] text-zinc-500">预算 <span id="kpi-revenue-bud">--</span> <span id="kpi-revenue-tag" class="tag">--</span></p>
+                </div>
+                <div class="card kpi-card green">
+                    <p class="text-[9px] text-zinc-500">出租率 Occupancy</p>
+                    <p id="kpi-occ" class="kpi-value text-white">--</p>
+                    <p class="text-[9px] text-zinc-500">售房 <span id="kpi-sold">--</span>/260</p>
+                </div>
+                <div class="card kpi-card amber">
+                    <p class="text-[9px] text-zinc-500">ADR 平均房价</p>
+                    <p id="kpi-adr" class="kpi-value text-white">--</p>
+                    <p class="text-[9px] text-zinc-500">预算 <span id="kpi-adr-bud">--</span></p>
+                </div>
+                <div class="card kpi-card purple">
+                    <p class="text-[9px] text-zinc-500">RevPAR 每房收益</p>
+                    <p id="kpi-revpar" class="kpi-value text-white">--</p>
+                    <p class="text-[9px] text-zinc-500">预算 <span id="kpi-revpar-bud">--</span></p>
+                </div>
+            </div>
+
+            <!-- 主区域 -->
+            <div class="grid grid-cols-12 gap-2 mb-2">
+                <!-- 左侧 -->
+                <div class="col-span-5 flex flex-col gap-2">
+                    <div class="card p-2">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-[10px] font-medium text-zinc-300"><i class="fa-solid fa-layer-group text-blue-400 mr-1"></i>部门概览</span>
+                            <button onclick="openDeepDive()" class="text-[9px] text-blue-400 hover:text-blue-300 flex items-center gap-1">
+                                <i class="fa-solid fa-table-list"></i>查看详细数据
+                            </button>
+                        </div>
+                        <table>
+                            <thead><tr><th>部门</th><th>实际</th><th>预算</th><th>差额</th><th>完成</th></tr></thead>
+                            <tbody id="dept-table-body"><tr><td colspan="5" class="text-center text-zinc-600 py-2">--</td></tr></tbody>
+                        </table>
+                    </div>
+                    <div class="card p-2">
+                        <span class="text-[10px] font-medium text-zinc-300"><i class="fa-solid fa-chart-bar text-blue-400 mr-1"></i>营收对比</span>
+                        <div id="main-chart" style="height:120px;"></div>
+                    </div>
+                    <div class="card p-2">
+                        <span class="text-[10px] font-medium text-zinc-300"><i class="fa-solid fa-chart-line text-amber-400 mr-1"></i>历史趋势</span>
+                        <div id="trend-chart" style="height:110px;"></div>
                     </div>
                 </div>
-                
-                <div class="flex items-center gap-3">
-                    <button onclick="refreshFromGitHub()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-zinc-300 text-xs font-medium transition-colors flex items-center gap-2">
-                        <i class="fa-solid fa-rotate"></i> 刷新数据
-                    </button>
-                    <button onclick="openPasteModal()" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-zinc-300 text-xs font-medium transition-colors flex items-center gap-2">
-                        <i class="fa-solid fa-paste"></i> 粘贴数据
-                    </button>
-                    <button onclick="saveToGitHub()" id="save-btn" class="px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg text-white text-xs font-medium transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                        <i class="fa-solid fa-cloud-arrow-up"></i> 保存到云端
-                    </button>
-                    <button onclick="openSettingsModal()" class="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-zinc-300 text-xs font-medium transition-colors">
-                        <i class="fa-solid fa-gear"></i>
-                    </button>
-                </div>
-            </header>
 
-            <!-- 滚动内容区 -->
-            <div class="flex-1 overflow-y-auto p-6">
-                <div class="max-w-7xl mx-auto space-y-6">
-                    
-                    <!-- KPI卡片组 -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <!-- 总营收 -->
-                        <div class="kpi-card card p-5">
-                            <div class="flex items-start justify-between">
-                                <div>
-                                    <div class="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider">Total Revenue</div>
-                                    <div class="text-zinc-400 text-sm mt-0.5">总营收</div>
-                                </div>
-                                <div class="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                                    <i class="fa-solid fa-sack-dollar text-blue-400"></i>
-                                </div>
-                            </div>
-                            <div class="mt-4 text-2xl font-bold text-white font-mono" id="kpi-revenue">¥--</div>
-                            <div class="mt-2 flex items-center gap-2">
-                                <span class="text-xs text-zinc-500">预算</span>
-                                <span class="text-xs font-mono text-zinc-400" id="kpi-revenue-bud">--</span>
-                                <span class="tag" id="kpi-revenue-tag">--</span>
-                            </div>
+                <!-- 右侧：AI分析 -->
+                <div class="col-span-7">
+                    <div class="card p-3 h-full">
+                        <div class="flex items-center justify-between mb-2 pb-2 border-b border-zinc-800">
+                            <span class="text-[11px] font-medium text-white"><i class="fa-solid fa-robot text-purple-400 mr-1"></i>AI 经营分析</span>
+                            <span id="ai-update-time" class="text-[9px] text-zinc-600">--</span>
                         </div>
-                        
-                        <!-- 出租率 -->
-                        <div class="kpi-card card p-5">
-                            <div class="flex items-start justify-between">
-                                <div>
-                                    <div class="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider">Occupancy</div>
-                                    <div class="text-zinc-400 text-sm mt-0.5">出租率</div>
-                                </div>
-                                <div class="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
-                                    <i class="fa-solid fa-bed text-green-400"></i>
-                                </div>
-                            </div>
-                            <div class="mt-4 text-2xl font-bold text-white font-mono" id="kpi-occ">--%</div>
-                            <div class="mt-2 flex items-center gap-2">
-                                <span class="text-xs text-zinc-500">已售间夜</span>
-                                <span class="text-xs font-mono text-zinc-400" id="kpi-sold">--</span>
-                            </div>
-                        </div>
-                        
-                        <!-- ADR -->
-                        <div class="kpi-card card p-5">
-                            <div class="flex items-start justify-between">
-                                <div>
-                                    <div class="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider">ADR</div>
-                                    <div class="text-zinc-400 text-sm mt-0.5">平均房价</div>
-                                </div>
-                                <div class="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
-                                    <i class="fa-solid fa-tags text-purple-400"></i>
-                                </div>
-                            </div>
-                            <div class="mt-4 text-2xl font-bold text-white font-mono" id="kpi-adr">¥--</div>
-                            <div class="mt-2 flex items-center gap-2">
-                                <span class="text-xs text-zinc-500">YTD</span>
-                                <span class="text-xs font-mono text-zinc-400" id="kpi-adr-ytd">--</span>
-                            </div>
-                        </div>
-                        
-                        <!-- RevPAR -->
-                        <div class="kpi-card card p-5">
-                            <div class="flex items-start justify-between">
-                                <div>
-                                    <div class="text-[10px] text-zinc-500 font-semibold uppercase tracking-wider">RevPAR</div>
-                                    <div class="text-zinc-400 text-sm mt-0.5">每间可供房收入</div>
-                                </div>
-                                <div class="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
-                                    <i class="fa-solid fa-chart-simple text-amber-400"></i>
-                                </div>
-                            </div>
-                            <div class="mt-4 text-2xl font-bold text-amber-400 font-mono" id="kpi-revpar">¥--</div>
-                            <div class="mt-2 flex items-center gap-2">
-                                <span class="text-xs text-zinc-500">YTD</span>
-                                <span class="text-xs font-mono text-zinc-400" id="kpi-revpar-ytd">--</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 主体双栏布局 -->
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        
-                        <!-- 左侧：图表+表格 -->
-                        <div class="lg:col-span-2 space-y-6">
-                            <!-- 部门概览表 -->
-                            <div class="card overflow-hidden">
-                                <div class="px-5 py-4 border-b border-zinc-800 flex items-center justify-between">
-                                    <h3 class="font-semibold text-white flex items-center gap-2">
-                                        <i class="fa-solid fa-layer-group text-blue-400"></i>
-                                        部门概览
-                                    </h3>
-                                    <button onclick="openDeepDive()" class="text-xs text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1">
-                                        <i class="fa-solid fa-expand"></i> 详细分析
-                                    </button>
-                                </div>
-                                <div class="overflow-x-auto">
-                                    <table class="data-table">
-                                        <thead>
-                                            <tr>
-                                                <th>部门</th>
-                                                <th>实际</th>
-                                                <th>预算</th>
-                                                <th>差异</th>
-                                                <th>完成率</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="dept-table-body">
-                                            <tr><td colspan="5" class="text-center text-zinc-500 py-8">等待数据...</td></tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            
-                            <!-- 主图表 -->
-                            <div class="card p-5">
-                                <h3 class="font-semibold text-white mb-4 flex items-center gap-2">
-                                    <i class="fa-solid fa-chart-column text-blue-400"></i>
-                                    营收对比
-                                </h3>
-                                <div id="main-chart" class="w-full h-[300px]"></div>
-                            </div>
-                            
-                            <!-- 趋势图表 -->
-                            <div class="card p-5">
-                                <h3 class="font-semibold text-white mb-4 flex items-center gap-2">
-                                    <i class="fa-solid fa-chart-line text-green-400"></i>
-                                    历史趋势 (近30天)
-                                </h3>
-                                <div id="trend-chart" class="w-full h-[250px]"></div>
-                            </div>
-                        </div>
-                        
-                        <!-- 右侧：AI分析 -->
-                        <div class="lg:col-span-1">
-                            <div class="card p-5 sticky top-6 bg-gradient-to-b from-[#18181b] to-[#1a1a1f] border-blue-500/20">
-                                <div class="flex items-center justify-between mb-4 pb-4 border-b border-zinc-800">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
-                                        <span class="text-sm font-semibold text-blue-400">AI 分析报告</span>
-                                    </div>
-                                    <span class="text-[10px] text-zinc-600 font-mono" id="ai-update-time">--</span>
-                                </div>
-                                <div id="ai-analysis" class="ai-section text-sm overflow-y-auto max-h-[600px]">
-                                    <div class="flex flex-col items-center justify-center py-12 text-zinc-600">
-                                        <i class="fa-solid fa-robot text-3xl mb-3"></i>
-                                        <p class="text-sm">上传数据后生成分析</p>
-                                    </div>
-                                </div>
+                        <div id="ai-analysis" class="overflow-y-auto pr-1" style="max-height: 380px;">
+                            <div class="flex items-center justify-center py-8 text-zinc-600 text-xs">
+                                <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>上传数据后自动分析
                             </div>
                         </div>
                     </div>
@@ -440,815 +188,468 @@
         </main>
     </div>
 
-    <!-- 粘贴数据模态框 -->
-    <div id="paste-modal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
-        <div class="bg-[#18181b] border border-zinc-700 w-full max-w-2xl rounded-2xl p-6 modal-content">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-paste text-blue-400"></i>
-                    粘贴 Excel 数据
-                </h3>
-                <button onclick="closeModal('paste-modal')" class="text-zinc-500 hover:text-white">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-            <p class="text-xs text-zinc-500 mb-4">从 Excel 中全选 (Ctrl+A) 复制后粘贴到下方</p>
-            <textarea id="paste-input" class="w-full h-64 bg-zinc-900 border border-zinc-700 rounded-xl p-4 text-xs font-mono text-zinc-300 focus:outline-none focus:border-blue-500 resize-none" placeholder="在此粘贴..."></textarea>
-            <div class="flex justify-end gap-3 mt-4">
-                <button onclick="closeModal('paste-modal')" class="px-4 py-2 text-zinc-400 hover:text-white text-sm font-medium">取消</button>
-                <button onclick="handlePasteData()" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-semibold text-sm">
-                    <i class="fa-solid fa-bolt mr-2"></i>解析数据
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- 设置模态框 -->
-    <div id="settings-modal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center p-4">
-        <div class="bg-[#18181b] border border-zinc-700 w-full max-w-lg rounded-2xl p-6 modal-content">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                    <i class="fa-solid fa-gear text-blue-400"></i>
-                    系统设置
-                </h3>
-                <button onclick="closeModal('settings-modal')" class="text-zinc-500 hover:text-white">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
+    <div id="settings-modal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center">
+        <div class="bg-zinc-900 rounded-lg p-4 w-full max-w-xl border border-zinc-700">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="text-sm font-semibold text-white"><i class="fa-solid fa-gear text-blue-400 mr-2"></i>设置</h3>
+                <button onclick="closeModal('settings-modal')" class="text-zinc-500 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            
-            <div class="space-y-4">
+            <div class="grid grid-cols-2 gap-2 mb-3">
                 <div>
-                    <label class="text-xs text-zinc-500 uppercase font-semibold tracking-wider">n8n Webhook URL</label>
-                    <input type="text" id="settings-webhook" 
-                        class="w-full mt-2 bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-sm font-mono text-zinc-300 focus:outline-none focus:border-blue-500"
-                        placeholder="https://your-n8n.app/webhook/hotel-save">
-                    <p class="text-[10px] text-zinc-600 mt-1">用于保存数据到 GitHub 的 Webhook 地址</p>
+                    <label class="text-[9px] text-zinc-500 uppercase">Webhook URL</label>
+                    <input type="text" id="settings-webhook" class="w-full mt-1 bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-[10px] font-mono text-zinc-300">
                 </div>
-                
                 <div>
-                    <label class="text-xs text-zinc-500 uppercase font-semibold tracking-wider">GitHub 用户名</label>
-                    <input type="text" id="settings-github-owner" 
-                        class="w-full mt-2 bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-sm font-mono text-zinc-300 focus:outline-none focus:border-blue-500"
-                        placeholder="QIAN123-KIWI">
-                </div>
-                
-                <div>
-                    <label class="text-xs text-zinc-500 uppercase font-semibold tracking-wider">GitHub 仓库名</label>
-                    <input type="text" id="settings-github-repo" 
-                        class="w-full mt-2 bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-sm font-mono text-zinc-300 focus:outline-none focus:border-blue-500"
-                        placeholder="hotel-daily-report">
+                    <label class="text-[9px] text-zinc-500 uppercase">GitHub 仓库 (owner/repo)</label>
+                    <input type="text" id="settings-github-repo" class="w-full mt-1 bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-[10px] font-mono text-zinc-300">
                 </div>
             </div>
-            
-            <div class="flex justify-end gap-3 mt-6">
-                <button onclick="closeModal('settings-modal')" class="px-4 py-2 text-zinc-400 hover:text-white text-sm font-medium">取消</button>
-                <button onclick="saveSettings()" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-semibold text-sm">
-                    <i class="fa-solid fa-check mr-2"></i>保存设置
-                </button>
+            <div class="mb-3">
+                <label class="text-[9px] text-zinc-500 uppercase">AI 分析提示词</label>
+                <textarea id="settings-ai-prompt" rows="14" class="w-full mt-1 bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-[10px] font-mono text-zinc-300 leading-relaxed"></textarea>
+            </div>
+            <div class="flex justify-between">
+                <button onclick="resetPrompt()" class="px-2 py-1 text-zinc-400 hover:text-white text-[10px]"><i class="fa-solid fa-rotate-left mr-1"></i>恢复默认</button>
+                <div class="flex gap-2">
+                    <button onclick="closeModal('settings-modal')" class="px-2 py-1 text-zinc-400 text-[10px]">取消</button>
+                    <button onclick="saveSettings()" class="px-3 py-1 bg-blue-600 text-white rounded text-[10px] font-medium">保存</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- 深度分析模态框 -->
+    <!-- 深度分析 -->
     <div id="deep-modal" class="fixed inset-0 z-50 hidden modal-backdrop flex flex-col">
-        <div class="h-16 px-6 border-b border-zinc-800 flex items-center justify-between bg-[#0f0f11]">
-            <div class="flex items-center gap-4">
-                <button onclick="closeModal('deep-modal')" class="w-8 h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white">
-                    <i class="fa-solid fa-arrow-left"></i>
-                </button>
-                <h3 class="font-bold text-lg text-white">深度运营分析</h3>
+        <div class="h-10 px-3 border-b border-zinc-800 flex items-center justify-between bg-[#0c0c0e]">
+            <div class="flex items-center gap-2">
+                <button onclick="closeModal('deep-modal')" class="text-zinc-400 hover:text-white text-xs"><i class="fa-solid fa-arrow-left mr-2"></i>返回</button>
+                <span class="text-xs font-medium text-white">深度分析 - 收入明细</span>
             </div>
-            <div class="flex gap-1 bg-zinc-800 p-1 rounded-lg">
-                <button onclick="switchDeepTab('room')" id="deep-tab-room" class="px-4 py-2 rounded-md text-xs font-semibold text-white bg-zinc-700">客房</button>
-                <button onclick="switchDeepTab('fb')" id="deep-tab-fb" class="px-4 py-2 rounded-md text-xs font-semibold text-zinc-400 hover:text-white">餐饮</button>
-                <button onclick="switchDeepTab('other')" id="deep-tab-other" class="px-4 py-2 rounded-md text-xs font-semibold text-zinc-400 hover:text-white">其他</button>
+            <div class="flex gap-1">
+                <button id="deep-tab-room" onclick="switchDeepTab('room')" class="px-3 py-1 rounded text-[10px] bg-zinc-700 text-white">客房收入</button>
+                <button id="deep-tab-fb" onclick="switchDeepTab('fb')" class="px-3 py-1 rounded text-[10px] text-zinc-400">餐饮收入</button>
+                <button id="deep-tab-other" onclick="switchDeepTab('other')" class="px-3 py-1 rounded text-[10px] text-zinc-400">其他收入</button>
             </div>
         </div>
-        <div class="flex-1 overflow-y-auto p-6 bg-[#09090b]">
-            <div class="max-w-5xl mx-auto space-y-6">
-                <div class="card p-5">
-                    <h4 class="text-sm font-semibold text-zinc-400 mb-4">营收排行</h4>
-                    <div id="deep-chart" class="w-full h-[350px]"></div>
+        <div class="flex-1 overflow-y-auto p-3 bg-[#09090b]">
+            <div class="max-w-5xl mx-auto">
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="card p-3">
+                        <h4 class="text-xs font-medium text-zinc-300 mb-2"><i class="fa-solid fa-table text-blue-400 mr-1"></i>收入明细表</h4>
+                        <div class="overflow-auto max-h-72"><table><thead id="deep-table-head"></thead><tbody id="deep-table-body"></tbody></table></div>
+                    </div>
+                    <div class="card p-3">
+                        <h4 class="text-xs font-medium text-zinc-300 mb-2"><i class="fa-solid fa-chart-bar text-blue-400 mr-1"></i>收入排行前10名</h4>
+                        <div id="deep-chart" style="height:220px;"></div>
+                    </div>
                 </div>
-                <div class="card overflow-hidden">
-                    <table class="data-table">
-                        <thead id="deep-table-head"></thead>
-                        <tbody id="deep-table-body"></tbody>
-                    </table>
+                <div class="deep-summary" id="deep-summary">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fa-solid fa-lightbulb text-amber-400"></i>
+                        <span class="text-xs font-medium text-white">数据分析摘要</span>
+                    </div>
+                    <div id="deep-summary-content" class="text-zinc-400">--</div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // ==================== 全局状态 ====================
+        // 提示词 - 直接告诉AI已计算好的数据，不让它自己算
+        const DEFAULT_AI_PROMPT = `你是酒店经营分析师。以下是已经计算好的经营数据，请直接使用这些数据进行分析，不要自己重新计算。
+
+【今日经营概况 - 以下数据已计算好，请直接使用】
+日期：{date}
+今日盈亏：{profit_status}{profit_amount}万元
+- 客房收入差额：{room_diff}（{room_status}）
+- 餐饮收入差额：{fb_diff}（{fb_status}）  
+- 其他收入差额：{other_diff}（{other_status}）
+
+入住率：{occupancy}%（预算{occ_bud}%，{occ_status}）
+售房：{roomsSold}间（预算{rooms_bud}间）
+ADR平均房价：¥{adr}
+RevPAR：¥{revpar}
+
+【各项收入明细】
+{details}
+
+【分析要求】
+请用HTML格式输出分析报告，禁止使用##、###、**等Markdown格式。
+
+1. 今日盈亏部分：直接使用上面提供的盈亏数据，分析每个板块差额的原因
+2. 客房分析：根据明细数据，指出哪些渠道/房型表现好（完成率>100%），哪些差（<80%）
+3. 餐饮分析：根据明细数据，指出哪些餐厅表现好，哪些差
+4. 风险预警：指出需要重点关注的问题
+5. 月度预测：本月第{day}天，时间进度{time_progress}%
+
+输出格式：
+<div class="section-title">💰 今日盈亏</div>
+<p><strong>{直接用我给的盈亏数据}</strong></p>
+<div class="data-row"><span>客房</span><span class="{highlight-good或highlight-bad}">{直接用我给的差额}</span></div>
+<p class="sub-item">→ {分析原因，引用具体明细项目}</p>
+...后续板块同理
+
+重要：所有数字必须使用我提供的数据，不要自己计算！`;
+
         const STATE = {
-            currentData: null,
-            historyIndex: [],
-            historyData: {},
-            charts: {},
-            totalRooms: 260,
-            // Webhook URL - 从 localStorage 读取或使用默认值
+            currentData: null, historyIndex: [], historyData: {}, charts: {}, totalRooms: 260,
             webhookUrl: localStorage.getItem('nexus_webhook_url') || 'https://n8n-fzlhzvbn.ap-northeast-1.clawcloudrun.com/webhook/hotel-save',
-            // GitHub 配置 - 硬编码确保任何浏览器都能加载
-            github: {
-                owner: 'QIAN123-KIWI',
-                repo: 'hotel-daily-reportV3',
-                branch: 'main',
-                dataPath: 'data'
-            }
+            github: { owner: 'QIAN123-KIWI', repo: 'hotel-daily-reportV3', branch: 'main', dataPath: 'data' },
+            qianwen: { apiKey: 'sk-d8f9d80c5d154e5fa8ce9413560ccfe8', model: 'qwen-max', endpoint: 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions' },
+            aiPrompt: localStorage.getItem('nexus_ai_prompt') || DEFAULT_AI_PROMPT,
+            sidebarCollapsed: localStorage.getItem('nexus_sidebar_collapsed') === 'true'
         };
 
-        // ==================== Toast 系统 ====================
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            const icons = { success: 'fa-check', error: 'fa-xmark', info: 'fa-info' };
-            toast.className = `toast toast-${type}`;
-            toast.innerHTML = `<i class="fa-solid ${icons[type]}"></i> ${message}`;
-            container.appendChild(toast);
-            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+        // 工具函数
+        function toggleSidebar() {
+            const s = document.getElementById('sidebar'); s.classList.toggle('collapsed');
+            STATE.sidebarCollapsed = s.classList.contains('collapsed');
+            localStorage.setItem('nexus_sidebar_collapsed', STATE.sidebarCollapsed);
+            setTimeout(() => Object.values(STATE.charts).forEach(c => c?.resize()), 250);
         }
-
-        // ==================== 模态框 ====================
-        function openPasteModal() {
-            document.getElementById('paste-modal').classList.remove('hidden');
-            document.getElementById('paste-input').value = '';
-            document.getElementById('paste-input').focus();
-        }
-        function openDeepDive() {
-            document.getElementById('deep-modal').classList.remove('hidden');
-            switchDeepTab('room');
-        }
-        function openSettingsModal() {
-            document.getElementById('settings-webhook').value = STATE.webhookUrl;
-            document.getElementById('settings-github-owner').value = STATE.github.owner;
-            document.getElementById('settings-github-repo').value = STATE.github.repo;
-            document.getElementById('settings-modal').classList.remove('hidden');
-        }
-        function closeModal(id) {
-            document.getElementById(id).classList.add('hidden');
-        }
-        
+        function showToast(m, t = 'info') { const c = document.getElementById('toast-container'), e = document.createElement('div'); e.className = `toast toast-${t}`; e.innerHTML = m; c.appendChild(e); setTimeout(() => { e.style.opacity = '0'; setTimeout(() => e.remove(), 200); }, 2500); }
+        function openSettingsModal() { document.getElementById('settings-webhook').value = STATE.webhookUrl; document.getElementById('settings-github-repo').value = `${STATE.github.owner}/${STATE.github.repo}`; document.getElementById('settings-ai-prompt').value = STATE.aiPrompt; document.getElementById('settings-modal').classList.remove('hidden'); }
+        function openDeepDive() { document.getElementById('deep-modal').classList.remove('hidden'); switchDeepTab('room'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+        function resetPrompt() { document.getElementById('settings-ai-prompt').value = DEFAULT_AI_PROMPT; }
         function saveSettings() {
-            const webhookUrl = document.getElementById('settings-webhook').value.trim();
-            const owner = document.getElementById('settings-github-owner').value.trim();
-            const repo = document.getElementById('settings-github-repo').value.trim();
-            
-            STATE.webhookUrl = webhookUrl;
-            STATE.github.owner = owner || 'QIAN123-KIWI';
-            STATE.github.repo = repo || 'hotel-daily-report';
-            
-            localStorage.setItem('nexus_webhook_url', webhookUrl);
-            localStorage.setItem('nexus_github_owner', STATE.github.owner);
-            localStorage.setItem('nexus_github_repo', STATE.github.repo);
-            
-            closeModal('settings-modal');
-            showToast('设置已保存', 'success');
-            
-            // 刷新数据
-            refreshFromGitHub();
+            STATE.webhookUrl = document.getElementById('settings-webhook').value.trim();
+            const r = document.getElementById('settings-github-repo').value.trim().split('/');
+            if (r.length === 2) { STATE.github.owner = r[0]; STATE.github.repo = r[1]; }
+            STATE.aiPrompt = document.getElementById('settings-ai-prompt').value.trim() || DEFAULT_AI_PROMPT;
+            localStorage.setItem('nexus_webhook_url', STATE.webhookUrl);
+            localStorage.setItem('nexus_ai_prompt', STATE.aiPrompt);
+            closeModal('settings-modal'); showToast('✓ 已保存', 'success'); refreshFromGitHub();
         }
 
-        // ==================== 保存到 GitHub ====================
+        // 云端
         async function saveToGitHub() {
-            if (!STATE.currentData) {
-                showToast('请先上传数据', 'error');
-                return;
-            }
-            
-            if (!STATE.webhookUrl) {
-                showToast('请先在设置中配置 Webhook URL', 'error');
-                openSettingsModal();
-                return;
-            }
-            
-            const btn = document.getElementById('save-btn');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 保存中...';
-            
-            try {
-                // 创建带超时的请求
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
-                
-                const response = await fetch(STATE.webhookUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(STATE.currentData),
-                    signal: controller.signal
-                });
-                
-                clearTimeout(timeoutId);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                
-                let result;
-                const text = await response.text();
-                try {
-                    result = JSON.parse(text);
-                } catch (e) {
-                    // 如果返回的不是 JSON，但请求成功了，也算成功
-                    result = { success: true };
-                }
-                
-                if (result.success || response.ok) {
-                    showToast(`✓ ${STATE.currentData.date} 数据已保存`, 'success');
-                    // 3秒后刷新（给 GitHub 更多时间同步）
-                    setTimeout(refreshFromGitHub, 3000);
-                } else {
-                    throw new Error(result.message || '保存失败');
-                }
-            } catch (err) {
-                console.error('保存失败:', err);
-                if (err.name === 'AbortError') {
-                    showToast('保存超时，请检查网络后重试', 'error');
-                } else if (err.message === 'Failed to fetch') {
-                    // 可能是网络问题，但数据可能已经保存成功
-                    showToast('网络请求异常，请刷新页面检查数据是否已保存', 'warning');
-                    setTimeout(refreshFromGitHub, 2000);
-                } else {
-                    showToast('保存失败: ' + err.message, 'error');
-                }
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> 保存到云端';
-            }
+            if (!STATE.currentData) return showToast('请先上传', 'error');
+            const btn = document.getElementById('save-btn'); btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            try { await fetch(STATE.webhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(STATE.currentData) }); showToast('✓ 已保存', 'success'); setTimeout(refreshFromGitHub, 2000); }
+            catch { showToast('保存失败', 'error'); }
+            finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-1"></i>保存'; }
         }
-
-        // ==================== 数据加载 ====================
         async function refreshFromGitHub() {
-            showToast('正在加载数据...', 'info');
-            try {
-                // 加载索引文件
-                const indexUrl = `https://raw.githubusercontent.com/${STATE.github.owner}/${STATE.github.repo}/${STATE.github.branch}/${STATE.github.dataPath}/index.json?t=${Date.now()}`;
-                const indexRes = await fetch(indexUrl);
-                if (!indexRes.ok) throw new Error('索引文件不存在');
-                STATE.historyIndex = await indexRes.json();
-                
-                // 渲染历史列表
-                renderHistoryList();
-                
-                // 加载最新一天的数据
-                if (STATE.historyIndex.length > 0) {
-                    const sorted = [...STATE.historyIndex].sort((a, b) => b.date.localeCompare(a.date));
-                    await loadDayData(sorted[0].date);
-                }
-                
-                // 加载趋势数据
-                await loadTrendData();
-                
-                document.getElementById('total-records').innerText = `${STATE.historyIndex.length} 条`;
-                showToast('数据加载成功', 'success');
-            } catch (err) {
-                console.error('加载失败:', err);
-                showToast('暂无历史数据，请上传第一份报表', 'info');
-            }
+            try { 
+                const res = await fetch(`https://raw.githubusercontent.com/${STATE.github.owner}/${STATE.github.repo}/${STATE.github.branch}/${STATE.github.dataPath}/index.json?t=${Date.now()}`); 
+                if (!res.ok) throw new Error(); 
+                STATE.historyIndex = await res.json(); 
+                renderHistoryList(); 
+                if (STATE.historyIndex.length) { 
+                    const s = [...STATE.historyIndex].sort((a, b) => b.date.localeCompare(a.date)); 
+                    await loadDayData(s[0].date); 
+                } 
+                await loadTrendData(); 
+            } catch (e) { console.error(e); }
         }
-
-        async function loadDayData(dateStr) {
-            try {
-                const [year, month] = dateStr.split('-');
-                const url = `https://raw.githubusercontent.com/${STATE.github.owner}/${STATE.github.repo}/${STATE.github.branch}/${STATE.github.dataPath}/${year}/${month}/${dateStr}.json?t=${Date.now()}`;
-                const res = await fetch(url);
-                if (!res.ok) throw new Error('数据文件不存在');
-                const data = await res.json();
-                STATE.currentData = data;
-                STATE.historyData[dateStr] = data;
-                renderDashboard(data);
-                document.getElementById('save-btn').disabled = false;
-                
-                // 更新选中状态
-                document.querySelectorAll('.date-card').forEach(el => {
-                    el.classList.toggle('active', el.dataset.date === dateStr);
-                });
-            } catch (err) {
-                console.error('加载日数据失败:', err);
-                showToast('加载失败: ' + dateStr, 'error');
-            }
+        async function loadDayData(date) {
+            if (STATE.historyData[date]) { STATE.currentData = STATE.historyData[date]; renderDashboard(STATE.currentData); return; }
+            try { const [y, m] = date.split('-'); const res = await fetch(`https://raw.githubusercontent.com/${STATE.github.owner}/${STATE.github.repo}/${STATE.github.branch}/${STATE.github.dataPath}/${y}/${m}/${date}.json?t=${Date.now()}`); if (!res.ok) throw new Error(); const d = await res.json(); STATE.historyData[date] = d; STATE.currentData = d; renderDashboard(d); document.querySelectorAll('.history-item').forEach(el => el.classList.toggle('active', el.dataset.date === date)); document.getElementById('save-btn').disabled = false; } catch {}
         }
-
         async function loadTrendData() {
-            // 加载最近30天数据用于趋势图
-            const trendData = [];
-            const dates = [...STATE.historyIndex].sort((a, b) => a.date.localeCompare(b.date)).slice(-30);
-            
-            for (const item of dates) {
-                if (STATE.historyData[item.date]) {
-                    trendData.push(STATE.historyData[item.date]);
-                } else {
-                    try {
-                        const [year, month] = item.date.split('-');
-                        const url = `https://raw.githubusercontent.com/${STATE.github.owner}/${STATE.github.repo}/${STATE.github.branch}/${STATE.github.dataPath}/${year}/${month}/${item.date}.json`;
-                        const res = await fetch(url);
-                        if (res.ok) {
-                            const data = await res.json();
-                            STATE.historyData[item.date] = data;
-                            trendData.push(data);
-                        }
-                    } catch (e) { /* ignore */ }
-                }
+            const s = [...STATE.historyIndex].sort((a, b) => a.date.localeCompare(b.date)).slice(-30), td = [];
+            for (const i of s) { 
+                if (STATE.historyData[i.date]) td.push(STATE.historyData[i.date]); 
+                else try { const [y, m] = i.date.split('-'); const res = await fetch(`https://raw.githubusercontent.com/${STATE.github.owner}/${STATE.github.repo}/${STATE.github.branch}/${STATE.github.dataPath}/${y}/${m}/${i.date}.json`); if (res.ok) { const d = await res.json(); STATE.historyData[i.date] = d; td.push(d); } } catch {} 
             }
-            
-            renderTrendChart(trendData);
+            renderTrendChart(td);
         }
 
-        // ==================== 历史列表渲染 ====================
+        // 历史列表
         function renderHistoryList() {
-            const container = document.getElementById('history-list');
-            if (STATE.historyIndex.length === 0) {
-                container.innerHTML = '<div class="text-center py-8 text-zinc-600"><i class="fa-solid fa-inbox text-2xl mb-2"></i><p class="text-xs">暂无历史数据</p></div>';
-                return;
-            }
-
-            // 按年月分组
-            const groups = {};
-            STATE.historyIndex.forEach(item => {
-                const [year, month] = item.date.split('-');
-                const key = `${year}-${month}`;
-                if (!groups[key]) groups[key] = [];
-                groups[key].push(item);
-            });
-
-            // 按时间倒序排列
-            const sortedKeys = Object.keys(groups).sort().reverse();
-            
-            let html = '';
-            sortedKeys.forEach((key, idx) => {
-                const [year, month] = key.split('-');
-                const monthNames = ['', '1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
-                const items = groups[key].sort((a, b) => b.date.localeCompare(a.date));
-                const isExpanded = idx === 0; // 默认展开最新月份
-                
-                html += `
-                    <div class="month-group">
-                        <div class="month-header px-4 py-3 flex items-center justify-between" onclick="toggleMonth(this)">
-                            <div class="flex items-center gap-2">
-                                <i class="fa-solid fa-chevron-right text-xs text-zinc-500 transition-transform ${isExpanded ? 'rotate-90' : ''}"></i>
-                                <span class="font-semibold text-sm text-white">${year}年${monthNames[parseInt(month)]}</span>
-                            </div>
-                            <span class="text-[10px] text-zinc-500">${items.length}条</span>
-                        </div>
-                        <div class="month-content ${isExpanded ? 'expanded' : ''} px-3 pb-3">
-                            <div class="space-y-2 pt-2">
-                                ${items.map(item => `
-                                    <div class="date-card px-3 py-2 flex items-center justify-between" 
-                                         data-date="${item.date}" 
-                                         onclick="loadDayData('${item.date}')">
-                                        <div>
-                                            <div class="text-xs font-medium text-white">${item.date.split('-')[2]}日</div>
-                                            <div class="text-[10px] text-zinc-500">${item.weekday || ''}</div>
-                                        </div>
-                                        <div class="text-right">
-                                            <div class="text-xs font-mono ${(item.variance || 0) >= 0 ? 'text-green-400' : 'text-red-400'}">
-                                                ${(item.variance || 0) >= 0 ? '+' : ''}${((item.variance || 0) * 100).toFixed(1)}%
-                                            </div>
-                                            <div class="text-[10px] text-zinc-500 font-mono">¥${Math.floor((item.revenue || 0)/10000)}万</div>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = html;
+            const c = document.getElementById('history-list'); document.getElementById('history-count').innerText = STATE.historyIndex.length;
+            if (!STATE.historyIndex.length) { c.innerHTML = '<div class="text-center py-4 text-zinc-600 text-[10px]">暂无数据</div>'; return; }
+            const g = {}; STATE.historyIndex.forEach(i => { const k = i.date.slice(0, 7); if (!g[k]) g[k] = []; g[k].push(i); });
+            let h = ''; Object.entries(g).sort((a, b) => b[0].localeCompare(a[0])).forEach(([m, items], idx) => {
+                items.sort((a, b) => b.date.localeCompare(a.date));
+                h += `<div class="mb-1"><div onclick="toggleMonth(this)" class="flex justify-between p-1 rounded cursor-pointer hover:bg-zinc-800 text-[10px] text-zinc-400"><span><i class="fa-solid fa-chevron-right mr-1 transition-transform ${idx === 0 ? 'rotate-90' : ''}" style="font-size:7px"></i>${m}</span><span class="text-zinc-600">${items.length}</span></div><div class="month-content ${idx === 0 ? 'expanded' : ''}">${items.map(i => `<div class="history-item flex justify-between" data-date="${i.date}" onclick="loadDayData('${i.date}')"><span class="text-zinc-300">${i.date.slice(8)}日</span><span class="${(i.variance || 0) >= 0 ? 'text-green-400' : 'text-red-400'} font-mono text-[10px]">${(i.variance || 0) >= 0 ? '+' : ''}${((i.variance || 0) * 100).toFixed(1)}%</span></div>`).join('')}</div></div>`;
+            }); c.innerHTML = h;
         }
+        function toggleMonth(h) { h.nextElementSibling.classList.toggle('expanded'); h.querySelector('i').classList.toggle('rotate-90'); }
 
-        function toggleMonth(header) {
-            const content = header.nextElementSibling;
-            const icon = header.querySelector('i');
-            content.classList.toggle('expanded');
-            icon.classList.toggle('rotate-90');
-        }
-
-        // ==================== Excel 解析 ====================
-        function handleFileUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            // 从文件名提取日期 (支持多种格式)
-            const fileName = file.name.replace(/\.(xlsx|xls|csv)$/i, '');
-            let dateFromFileName = null;
-            
-            // 尝试匹配 YYYY-MM-DD 或 YYYY.MM.DD 或 YYYY/MM/DD 格式
-            const fullDateMatch = fileName.match(/(\d{4})[-./](\d{1,2})[-./](\d{1,2})/);
-            if (fullDateMatch) {
-                dateFromFileName = `${fullDateMatch[1]}-${fullDateMatch[2].padStart(2,'0')}-${fullDateMatch[3].padStart(2,'0')}`;
-            } else {
-                // 尝试匹配 MM-DD 或 MM.DD 格式，使用当前年份
-                const shortDateMatch = fileName.match(/(\d{1,2})[-./](\d{1,2})/);
-                if (shortDateMatch) {
-                    const year = new Date().getFullYear();
-                    dateFromFileName = `${year}-${shortDateMatch[1].padStart(2,'0')}-${shortDateMatch[2].padStart(2,'0')}`;
-                }
-            }
-            
-            console.log('文件名:', fileName, '提取日期:', dateFromFileName);
-            
+        // Excel 解析
+        function handleFileUpload(e) {
+            const f = e.target.files[0]; if (!f) return;
+            const fn = f.name.replace(/\.(xlsx|xls|csv)$/i, ''); let dateFromFn = null;
+            const m1 = fn.match(/(\d{4})[-._](\d{1,2})[-._](\d{1,2})/); if (m1) dateFromFn = `${m1[1]}-${m1[2].padStart(2,'0')}-${m1[3].padStart(2,'0')}`;
+            else { const m2 = fn.match(/(\d{1,2})[-._](\d{1,2})/); if (m2) dateFromFn = `${new Date().getFullYear()}-${m2[1].padStart(2,'0')}-${m2[2].padStart(2,'0')}`; }
             const reader = new FileReader();
-            reader.onload = function(e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { header: 1 });
-                const parsed = parseExcelData(rows);
-                
-                // 如果从文件名提取到日期，优先使用文件名日期
-                if (dateFromFileName) {
-                    parsed.date = dateFromFileName;
-                    parsed.weekday = ['周日','周一','周二','周三','周四','周五','周六'][new Date(dateFromFileName).getDay()];
-                }
-                
-                STATE.currentData = parsed;
-                renderDashboard(parsed);
-                document.getElementById('save-btn').disabled = false;
-                showToast(`Excel 解析成功 (${parsed.date})，点击「保存到云端」持久化`, 'success');
+            reader.onload = ev => {
+                const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' }), rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }), parsed = parseExcelData(rows);
+                if (dateFromFn) { parsed.date = dateFromFn; parsed.weekday = ['周日','周一','周二','周三','周四','周五','周六'][new Date(dateFromFn).getDay()]; }
+                STATE.currentData = parsed; renderDashboard(parsed); document.getElementById('save-btn').disabled = false; showToast(`✓ ${parsed.date}`, 'success'); generateAIAnalysis();
             };
-            reader.readAsArrayBuffer(file);
-            event.target.value = '';
-        }
-
-        function handlePasteData() {
-            const raw = document.getElementById('paste-input').value;
-            if (!raw.trim()) return showToast('请先粘贴数据', 'error');
-            
-            const rows = raw.split('\n').map(row => row.split('\t'));
-            const parsed = parseExcelData(rows);
-            STATE.currentData = parsed;
-            renderDashboard(parsed);
-            document.getElementById('save-btn').disabled = false;
-            closeModal('paste-modal');
-            showToast('数据解析成功，点击「保存到云端」持久化', 'success');
+            reader.readAsArrayBuffer(f); e.target.value = '';
         }
 
         function parseExcelData(rows) {
-            let data = {
-                date: new Date().toISOString().split('T')[0],
-                weekday: ['周日','周一','周二','周三','周四','周五','周六'][new Date().getDay()],
-                rows: [],
-                roomsSold: 0,
-                adrYtd: 0,
-                revparYtd: 0,
-                occYtd: 0,
-                totals: { room: null, fb: null, hotel: null },
-                aiAnalysis: null
-            };
-
-            const cleanNum = (val) => {
-                if (!val) return 0;
-                if (typeof val === 'string') return parseFloat(val.replace(/[¥,]/g, '')) || 0;
-                return parseFloat(val) || 0;
-            };
-
-            // 第一遍：提取汇总数据和日期
-            rows.forEach(row => {
-                if (!row[0]) return;
-                const name = String(row[0]).trim();
-
-                // 日期提取
-                if (name.includes('Date') || name.includes('日期')) {
-                    const match = row.join(' ').match(/(\d{1,2})\/(\w+)\/(\d{4})/);
-                    if (match) {
-                        const monthMap = { Jan:'01', Feb:'02', Mar:'03', Apr:'04', May:'05', Jun:'06', Jul:'07', Aug:'08', Sep:'09', Oct:'10', Nov:'11', Dec:'12' };
-                        data.date = `${match[3]}-${monthMap[match[2]] || match[2]}-${match[1].padStart(2,'0')}`;
-                        data.weekday = ['周日','周一','周二','周三','周四','周五','周六'][new Date(data.date).getDay()];
-                    }
+            let d = { date: new Date().toISOString().split('T')[0], weekday: '', rows: [], roomsSold: 0, roomsBud: 0, occupancy: 0, occBud: 0, adr: 0, adrBud: 0, revpar: 0, revparBud: 0, totals: {} };
+            const num = v => v ? parseFloat(String(v).replace(/[¥,%]/g, '')) || 0 : 0;
+            
+            rows.forEach(r => {
+                if (!r[0]) return; 
+                const n = String(r[0]).trim();
+                
+                if (n.includes('Date') || n.includes('日期')) { 
+                    const m = r.join(' ').match(/(\d{1,2})\/(\w+)\/(\d{4})/); 
+                    if (m) { const mm = {Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'}; d.date = `${m[3]}-${mm[m[2]]||m[2]}-${m[1].padStart(2,'0')}`; d.weekday = ['周日','周一','周二','周三','周四','周五','周六'][new Date(d.date).getDay()]; } 
                 }
-
-                // 汇总行
-                if (name.includes('Total Hotel Revenue') || name.includes('酒店收入合计'))
-                    data.totals.hotel = { act: cleanNum(row[6]), bud: cleanNum(row[7]) };
-                if (name.includes('Total room Revenue') || (name.includes('总房收入') && !name.includes('Net')))
-                    data.totals.room = { act: cleanNum(row[6]), bud: cleanNum(row[7]) };
-                if (name.includes('F&B Total') || name.includes('餐饮收入合计'))
-                    data.totals.fb = { act: cleanNum(row[6]), bud: cleanNum(row[7]) };
-
-                // YTD指标
-                if (name.includes('Paid Average Room Rate') || name.includes('平均房价')) data.adrYtd = cleanNum(row[12]);
-                if (name.includes('Rev Par') || name.includes('可出租平均房价')) data.revparYtd = cleanNum(row[12]);
-                if (name.includes('Paid Occupancy') || name.includes('客房住房率')) data.occYtd = cleanNum(row[12]);
-            });
-
-            // 第二遍：提取明细行
-            rows.forEach(row => {
-                if (!row[0]) return;
-                const name = String(row[0]).trim();
-
-                // 跳过标题行和汇总行
-                if (name.includes('Daily Revenue') || name.includes('Day 星期') || name === 'Rooms' ||
-                    name.includes('Food & Beverage') || name.includes('Total') || name.includes('Sub - Total') ||
-                    name.includes('ROOM STATISTICS') || name.includes('Other Operating')) return;
-
-                let type = 'Other';
-                let isRoom = false;
-
-                // 分类逻辑
-                if (name.includes('Rate') || name.includes('Consortia') || name.includes('Negotiated') ||
-                    name.includes('Tour') || name.includes('Marketing') || name.includes('Discounts') ||
-                    name.includes('Permanent') || name.includes('Surcharge')) {
-                    type = 'Room';
-                    isRoom = true;
-                } else if (name.includes('Wai King') || name.includes('Peacock') || name.includes('Brasserie') ||
-                           name.includes('Long Bar') || name.includes('Salon') || name.includes('Room Service') ||
-                           name.includes('Mini Bar')) {
-                    type = 'F&B';
-                } else if (name.includes('Banquet') || name.includes('Rental')) {
-                    type = 'Banquet';
-                } else if (name.includes('Laundry') || name.includes('Parking') || name.includes('SPA') ||
-                           name.includes('Sundry')) {
-                    type = 'Other';
-                }
-
-                const act = cleanNum(row[6]);
-                const bud = cleanNum(row[7]);
-                const ytdAct = cleanNum(row[12]);
-                const ytdBud = cleanNum(row[13]);
-                const rooms = (isRoom && !name.includes('Surcharge')) ? cleanNum(row[2]) : 0;
-
-                if (act !== 0 || bud !== 0 || rooms !== 0 || ytdAct !== 0) {
-                    if (isRoom) data.roomsSold += rooms;
-                    data.rows.push({ name, type, actual: act, budget: bud, rooms, ytdAct, ytdBud });
+                
+                if (n.includes('Total room Revenue') || n.includes('总房收入')) d.totals.room = { act: num(r[6]), bud: num(r[7]) };
+                if (n.includes('F&B Total') || n.includes('餐饮收入合计')) d.totals.fb = { act: num(r[6]), bud: num(r[7]) };
+                if (n.includes('Total Hotel Revenue') || n.includes('酒店收入合计')) d.totals.hotel = { act: num(r[6]), bud: num(r[7]) };
+                if (n.includes('Total Other Operating') || n.includes('其他经营收入合计')) d.totals.other = { act: num(r[6]), bud: num(r[7]) };
+                
+                if (n.includes('Occupied Rooms') || n.includes('已出租房数')) { d.roomsSold = num(r[6]); d.roomsBud = num(r[7]); }
+                if (n.includes('Paid Occupancy') || n.includes('客房住房率')) { d.occupancy = num(r[6]); d.occBud = num(r[7]); }
+                if (n.includes('Paid Average Room Rate') || (n.includes('平均房价') && !n.includes('可出租') && !n.includes('Rev'))) { d.adr = num(r[6]); d.adrBud = num(r[7]); }
+                if (n.includes('Rev Par') || n.includes('可出租')) { d.revpar = num(r[6]); d.revparBud = num(r[7]); }
+                
+                if (r.length >= 7 && num(r[6]) !== 0) {
+                    let type = 'Other';
+                    if (/Rate|Negotiated|Tour|Discount|Marketing|Permanent|Surcharge|服务费|Convention|SMRF|Meeting|Consortia|房费/.test(n)) type = 'Room';
+                    else if (/Kok|Alley|Brasserie|Bar|Ville|Service|Mini|蔚景|百味|廊吧|羿庭|Ling|Wai|Peacock|Long|Salon|餐/.test(n)) type = 'F&B';
+                    else if (/Banquet|宴会|Rental|会议/.test(n)) type = 'Banquet';
+                    d.rows.push({ name: n, type, actual: num(r[6]), budget: num(r[7]) });
                 }
             });
-
-            return data;
+            return d;
         }
 
-        // ==================== Dashboard 渲染 ====================
-        function renderDashboard(data) {
-            STATE.totalRooms = parseInt(document.getElementById('total-rooms-config').value) || 260;
+        // Dashboard
+        function renderDashboard(d) {
+            let room = d.totals.room || { act: 0, bud: 0 };
+            let fb = d.totals.fb || { act: 0, bud: 0 };
+            let other = d.totals.other || { act: 0, bud: 0 };
+            let grand = d.totals.hotel || { act: 0, bud: 0 };
             
-            // 计算汇总
-            let room = { act: 0, bud: 0 };
-            let fb = { act: 0, bud: 0 };
-            let other = { act: 0, bud: 0 };
-
-            if (data.totals.room) { room = data.totals.room; }
-            if (data.totals.fb) { fb = data.totals.fb; }
-
-            data.rows.forEach(r => {
-                if (r.type === 'Room' && !data.totals.room) { room.act += r.actual; room.bud += r.budget; }
-                else if ((r.type === 'F&B' || r.type === 'Banquet') && !data.totals.fb) { fb.act += r.actual; fb.bud += r.budget; }
-                else if (r.type === 'Other') { other.act += r.actual; other.bud += r.budget; }
-            });
-
-            let grand = data.totals.hotel || { act: room.act + fb.act + other.act, bud: room.bud + fb.bud + other.bud };
-            if (data.totals.hotel && data.totals.room && data.totals.fb) {
-                other.act = grand.act - room.act - fb.act;
-                other.bud = grand.bud - room.bud - fb.bud;
+            if (d.totals.hotel && d.totals.room && d.totals.fb) { 
+                other.act = grand.act - room.act - fb.act; 
+                other.bud = grand.bud - room.bud - fb.bud; 
+            }
+            
+            // 保存计算好的 totals
+            if (STATE.currentData?.date === d.date) {
+                STATE.currentData.totals = { room, fb, other, hotel: grand };
             }
 
-            // 更新UI
-            document.getElementById('current-date').innerText = data.date;
-            document.getElementById('data-status').innerText = '数据已加载';
+            document.getElementById('current-date').innerText = d.date + ' ' + (d.weekday || '');
+            document.getElementById('data-status').innerText = '已加载'; 
             document.getElementById('data-status').className = 'tag tag-green';
 
-            // KPI卡片
             const fmt = n => '¥' + Math.floor(n).toLocaleString();
-            document.getElementById('kpi-revenue').innerText = fmt(grand.act);
+            
+            document.getElementById('kpi-revenue').innerText = fmt(grand.act); 
             document.getElementById('kpi-revenue-bud').innerText = fmt(grand.bud);
-            
-            const variance = grand.bud > 0 ? (grand.act / grand.bud - 1) : 0;
-            const varTag = document.getElementById('kpi-revenue-tag');
-            varTag.innerText = (variance >= 0 ? '+' : '') + (variance * 100).toFixed(1) + '%';
-            varTag.className = `tag ${variance >= 0 ? 'tag-green' : 'tag-red'}`;
+            const v = grand.bud > 0 ? (grand.act / grand.bud - 1) : 0; 
+            const vt = document.getElementById('kpi-revenue-tag'); 
+            vt.innerText = (v >= 0 ? '+' : '') + (v * 100).toFixed(1) + '%'; 
+            vt.className = `tag ${v >= 0 ? 'tag-green' : 'tag-red'}`;
 
-            const occ = data.roomsSold / STATE.totalRooms * 100;
-            document.getElementById('kpi-occ').innerText = occ.toFixed(1) + '%';
-            document.getElementById('kpi-sold').innerText = data.roomsSold;
+            const occPct = (d.occupancy || 0) * 100;
+            document.getElementById('kpi-occ').innerText = occPct.toFixed(1) + '%'; 
+            document.getElementById('kpi-sold').innerText = d.roomsSold;
 
-            const adr = data.roomsSold > 0 ? room.act / data.roomsSold : 0;
-            document.getElementById('kpi-adr').innerText = fmt(adr);
-            document.getElementById('kpi-adr-ytd').innerText = data.adrYtd ? fmt(data.adrYtd) : '--';
+            document.getElementById('kpi-adr').innerText = fmt(d.adr);
+            document.getElementById('kpi-adr-bud').innerText = d.adrBud ? fmt(d.adrBud) : '--';
 
-            const revpar = room.act / STATE.totalRooms;
-            document.getElementById('kpi-revpar').innerText = fmt(revpar);
-            document.getElementById('kpi-revpar-ytd').innerText = data.revparYtd ? fmt(data.revparYtd) : '--';
+            document.getElementById('kpi-revpar').innerText = fmt(d.revpar);
+            document.getElementById('kpi-revpar-bud').innerText = d.revparBud ? fmt(d.revparBud) : '--';
 
-            // 更新 STATE.currentData 的汇总数据（确保保存时数据完整）
-            if (STATE.currentData && STATE.currentData.date === data.date) {
-                STATE.currentData.totals = {
-                    room: { act: room.act, bud: room.bud },
-                    fb: { act: fb.act, bud: fb.bud },
-                    other: { act: other.act, bud: other.bud },
-                    hotel: { act: grand.act, bud: grand.bud }
-                };
-            }
-
-            // 部门表格
             renderDeptTable(room, fb, other, grand);
-            
-            // 主图表
             renderMainChart(room, fb, other);
             
-            // AI分析
-            renderAIAnalysis(data, grand, room, fb, other);
+            if (d.aiAnalysis) { 
+                document.getElementById('ai-analysis').innerHTML = d.aiAnalysis; 
+                document.getElementById('ai-update-time').innerText = new Date().toLocaleString('zh-CN'); 
+            }
         }
 
         function renderDeptTable(room, fb, other, grand) {
-            const tbody = document.getElementById('dept-table-body');
-            const row = (name, act, bud) => {
-                const diff = act - bud;
-                const pct = bud > 0 ? (act / bud * 100) : 100;
-                return `
-                    <tr>
-                        <td>${name}</td>
-                        <td class="text-white font-medium">¥${Math.floor(act).toLocaleString()}</td>
-                        <td class="text-zinc-500">¥${Math.floor(bud).toLocaleString()}</td>
-                        <td class="${diff >= 0 ? 'text-green-400' : 'text-red-400'}">${diff >= 0 ? '+' : ''}${Math.floor(diff).toLocaleString()}</td>
-                        <td class="${pct >= 100 ? 'text-green-400' : pct >= 80 ? 'text-amber-400' : 'text-red-400'} font-medium">${pct.toFixed(1)}%</td>
-                    </tr>
-                `;
+            const row = (n, a, b) => { 
+                const diff = a - b, p = b > 0 ? (a / b * 100) : 100; 
+                return `<tr><td class="text-zinc-300">${n}</td><td class="font-mono">¥${(a/10000).toFixed(1)}万</td><td class="text-zinc-500 font-mono">¥${(b/10000).toFixed(1)}万</td><td class="${diff >= 0 ? 'text-green-400' : 'text-red-400'} font-mono">${diff >= 0 ? '+' : ''}${(diff/10000).toFixed(1)}万</td><td class="${p >= 100 ? 'text-green-400' : p >= 80 ? 'text-amber-400' : 'text-red-400'}">${p.toFixed(0)}%</td></tr>`; 
             };
-            tbody.innerHTML = row('客房 Room', room.act, room.bud) +
-                              row('餐饮 F&B', fb.act, fb.bud) +
-                              row('其他 Other', other.act, other.bud) +
-                              `<tr class="bg-zinc-800/50">${row('合计 Total', grand.act, grand.bud).replace(/<\/?tr>/g, '')}</tr>`;
+            document.getElementById('dept-table-body').innerHTML = row('客房 Room', room.act, room.bud) + row('餐饮 F&B', fb.act, fb.bud) + row('其他 Other', other.act, other.bud) + `<tr class="bg-zinc-800/50 font-medium">${row('合计 Total', grand.act, grand.bud).replace(/<\/?tr>/g, '')}</tr>`;
         }
 
         function renderMainChart(room, fb, other) {
-            const el = document.getElementById('main-chart');
+            const el = document.getElementById('main-chart'); 
             if (STATE.charts.main) STATE.charts.main.dispose();
-            const chart = echarts.init(el, 'dark', { renderer: 'canvas' });
-            chart.setOption({
-                backgroundColor: 'transparent',
-                tooltip: { trigger: 'axis' },
-                legend: { bottom: 0, textStyle: { color: '#a1a1aa' } },
-                grid: { left: 50, right: 20, top: 20, bottom: 60 },
-                xAxis: { type: 'category', data: ['客房', '餐饮', '其他'], axisLine: { lineStyle: { color: '#27272a' } } },
-                yAxis: { type: 'value', splitLine: { lineStyle: { color: '#27272a', type: 'dashed' } } },
-                series: [
-                    { name: '实际', type: 'bar', data: [room.act, fb.act, other.act], itemStyle: { color: '#3b82f6', borderRadius: [4,4,0,0] }, barWidth: 40 },
-                    { name: '预算', type: 'bar', data: [room.bud, fb.bud, other.bud], itemStyle: { color: '#3f3f46', borderRadius: [4,4,0,0] }, barWidth: 40 }
-                ]
-            });
+            const chart = echarts.init(el, 'dark'), fmtK = v => (v / 10000).toFixed(0) + '万';
+            chart.setOption({ backgroundColor: 'transparent', grid: { left: 5, right: 5, top: 15, bottom: 15, containLabel: true }, xAxis: { type: 'category', data: ['客房', '餐饮', '其他'], axisLabel: { fontSize: 9 } }, yAxis: { type: 'value', axisLabel: { fontSize: 8, formatter: fmtK }, splitLine: { lineStyle: { color: '#27272a', type: 'dashed' } } }, series: [{ name: '实际', type: 'bar', data: [room.act, fb.act, other.act], itemStyle: { color: '#3b82f6', borderRadius: [2, 2, 0, 0] }, barWidth: 18, label: { show: true, position: 'top', fontSize: 8, color: '#3b82f6', formatter: p => fmtK(p.value) } }, { name: '预算', type: 'bar', data: [room.bud, fb.bud, other.bud], itemStyle: { color: '#3f3f46', borderRadius: [2, 2, 0, 0] }, barWidth: 18 }] });
             STATE.charts.main = chart;
         }
 
-        function renderTrendChart(trendData) {
-            const el = document.getElementById('trend-chart');
+        function renderTrendChart(td) {
+            const el = document.getElementById('trend-chart'); 
             if (STATE.charts.trend) STATE.charts.trend.dispose();
+            if (!td.length) { el.innerHTML = '<div class="flex items-center justify-center h-full text-zinc-600 text-[10px]">暂无历史数据</div>'; return; }
             
-            if (trendData.length === 0) {
-                el.innerHTML = '<div class="flex items-center justify-center h-full text-zinc-600"><i class="fa-solid fa-chart-line text-2xl mr-2"></i>暂无历史数据</div>';
-                return;
-            }
-
-            const chart = echarts.init(el, 'dark', { renderer: 'canvas' });
-            chart.setOption({
-                backgroundColor: 'transparent',
-                tooltip: { trigger: 'axis' },
-                legend: { bottom: 0, textStyle: { color: '#a1a1aa' } },
-                grid: { left: 50, right: 20, top: 20, bottom: 50 },
-                xAxis: { 
-                    type: 'category', 
-                    data: trendData.map(d => d.date.slice(5)),
-                    axisLine: { lineStyle: { color: '#27272a' } }
-                },
-                yAxis: { type: 'value', splitLine: { lineStyle: { color: '#27272a', type: 'dashed' } } },
-                series: [
-                    { 
-                        name: 'RevPAR', 
-                        type: 'line', 
-                        data: trendData.map(d => {
-                            const roomAct = d.totals?.room?.act || 0;
-                            return Math.floor(roomAct / STATE.totalRooms);
-                        }),
-                        smooth: true,
-                        lineStyle: { color: '#f59e0b', width: 2 },
-                        itemStyle: { color: '#f59e0b' }
-                    },
-                    {
-                        name: '总营收',
-                        type: 'bar',
-                        data: trendData.map(d => d.totals?.hotel?.act || 0),
-                        itemStyle: { color: 'rgba(59, 130, 246, 0.5)', borderRadius: [2,2,0,0] },
-                        barWidth: 15
-                    }
-                ]
+            const chartData = td.map(d => {
+                let adr = d.adr || 0, revpar = d.revpar || 0, occ = (d.occupancy || 0) * 100;
+                if (!adr && d.totals?.room && d.roomsSold) adr = d.totals.room.act / d.roomsSold;
+                if (!revpar && d.totals?.room) revpar = d.totals.room.act / 260;
+                if (!occ && d.roomsSold) occ = (d.roomsSold / 260) * 100;
+                return { date: d.date, adr: Math.floor(adr), revpar: Math.floor(revpar), occ: occ.toFixed(1) };
             });
+            
+            const chart = echarts.init(el, 'dark');
+            chart.setOption({ backgroundColor: 'transparent', tooltip: { trigger: 'axis', textStyle: { fontSize: 10 } }, legend: { data: ['ADR', 'RevPAR', '入住率'], bottom: 0, textStyle: { color: '#71717a', fontSize: 8 }, itemWidth: 10, itemHeight: 6 }, grid: { left: 35, right: 30, top: 10, bottom: 28 }, xAxis: { type: 'category', data: chartData.map(d => d.date.slice(5)), axisLabel: { fontSize: 8 }, boundaryGap: false }, yAxis: [{ type: 'value', axisLabel: { fontSize: 8, formatter: v => '¥' + v }, splitLine: { lineStyle: { color: '#27272a', type: 'dashed' } }, min: v => Math.floor(v.min * 0.9) }, { type: 'value', min: 0, max: 100, axisLabel: { formatter: '{value}%', fontSize: 8 } }], series: [{ name: 'ADR', type: 'line', data: chartData.map(d => d.adr), smooth: true, lineStyle: { color: '#f59e0b', width: 2 }, itemStyle: { color: '#f59e0b' }, symbol: 'circle', symbolSize: 5 }, { name: 'RevPAR', type: 'line', data: chartData.map(d => d.revpar), smooth: true, lineStyle: { color: '#a855f7', width: 2 }, itemStyle: { color: '#a855f7' }, symbol: 'circle', symbolSize: 5 }, { name: '入住率', type: 'bar', yAxisIndex: 1, data: chartData.map(d => d.occ), itemStyle: { color: 'rgba(34, 197, 94, 0.4)', borderRadius: [2, 2, 0, 0] }, barWidth: 10 }] });
             STATE.charts.trend = chart;
         }
 
-        function renderAIAnalysis(data, grand, room, fb, other) {
+        // AI 分析 - 直接传递已计算好的数据
+        async function generateAIAnalysis() {
+            if (!STATE.currentData) return;
             const container = document.getElementById('ai-analysis');
-            document.getElementById('ai-update-time').innerText = new Date().toLocaleString('zh-CN');
+            container.innerHTML = '<div class="ai-loading flex items-center justify-center py-8"><div class="spinner mr-2"></div><span class="text-zinc-500 text-[10px]">正在生成分析...</span></div>';
 
-            // 如果有预生成的AI分析，直接显示
-            if (data.aiAnalysis) {
-                container.innerHTML = data.aiAnalysis;
-                return;
+            try {
+                const d = STATE.currentData;
+                const room = d.totals?.room || { act: 0, bud: 0 };
+                const fb = d.totals?.fb || { act: 0, bud: 0 };
+                const other = d.totals?.other || { act: 0, bud: 0 };
+                const hotel = d.totals?.hotel || { act: 0, bud: 0 };
+                
+                // 计算所有差额（已计算好，直接传给AI）
+                const hotelDiff = hotel.act - hotel.bud;
+                const roomDiff = room.act - room.bud;
+                const fbDiff = fb.act - fb.bud;
+                const otherDiff = other.act - other.bud;
+                
+                const [year, month, day] = d.date.split('-');
+                const dayNum = parseInt(day);
+                const daysInMonth = new Date(year, month, 0).getDate();
+                const timeProgress = ((dayNum / daysInMonth) * 100).toFixed(0);
+                
+                // 构建明细 - 按类型分组
+                const roomDetails = d.rows.filter(r => r.type === 'Room').map(r => {
+                    const pct = r.budget > 0 ? ((r.actual/r.budget)*100).toFixed(0) : '--';
+                    return `${r.name.split(' ')[0]}: ¥${r.actual.toLocaleString()}, 完成${pct}%`;
+                }).join('\n');
+                
+                const fbDetails = d.rows.filter(r => r.type === 'F&B' || r.type === 'Banquet').map(r => {
+                    const pct = r.budget > 0 ? ((r.actual/r.budget)*100).toFixed(0) : '--';
+                    return `${r.name.split(' ')[0]}: ¥${r.actual.toLocaleString()}, 完成${pct}%`;
+                }).join('\n');
+                
+                const fmtDiff = v => (v >= 0 ? '+' : '') + (v / 10000).toFixed(1) + '万';
+                const occPct = ((d.occupancy || 0) * 100).toFixed(1);
+                const occBudPct = ((d.occBud || 0) * 100).toFixed(1);
+                
+                const prompt = STATE.aiPrompt
+                    .replace(/{date}/g, d.date)
+                    .replace(/{day}/g, dayNum)
+                    .replace(/{time_progress}/g, timeProgress)
+                    .replace(/{profit_status}/g, hotelDiff >= 0 ? '盈余' : '亏损')
+                    .replace(/{profit_amount}/g, Math.abs(hotelDiff / 10000).toFixed(1))
+                    .replace(/{room_diff}/g, fmtDiff(roomDiff))
+                    .replace(/{room_status}/g, roomDiff >= 0 ? '超额' : '缺口')
+                    .replace(/{fb_diff}/g, fmtDiff(fbDiff))
+                    .replace(/{fb_status}/g, fbDiff >= 0 ? '超额' : '缺口')
+                    .replace(/{other_diff}/g, fmtDiff(otherDiff))
+                    .replace(/{other_status}/g, otherDiff >= 0 ? '超额' : '缺口')
+                    .replace(/{occupancy}/g, occPct)
+                    .replace(/{occ_bud}/g, occBudPct)
+                    .replace(/{occ_status}/g, parseFloat(occPct) >= parseFloat(occBudPct) ? '达标' : '未达标')
+                    .replace(/{adr}/g, Math.floor(d.adr || 0))
+                    .replace(/{revpar}/g, Math.floor(d.revpar || 0))
+                    .replace(/{roomsSold}/g, d.roomsSold)
+                    .replace(/{rooms_bud}/g, Math.floor(d.roomsBud || 0))
+                    .replace(/{details}/g, `【客房收入明细】\n${roomDetails}\n\n【餐饮收入明细】\n${fbDetails}`);
+
+                const res = await fetch(STATE.qianwen.endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${STATE.qianwen.apiKey}` },
+                    body: JSON.stringify({ model: STATE.qianwen.model, messages: [{ role: 'user', content: prompt }], temperature: 0.5, max_tokens: 1200 })
+                });
+                if (!res.ok) throw new Error();
+                const result = await res.json();
+                let aiContent = result.choices[0].message.content;
+                aiContent = aiContent.replace(/```html\n?/gi, '').replace(/```\n?/g, '').replace(/#{1,3}\s/g, '').replace(/\*\*/g, '').trim();
+                container.innerHTML = aiContent;
+                document.getElementById('ai-update-time').innerText = new Date().toLocaleString('zh-CN');
+                STATE.currentData.aiAnalysis = aiContent;
+            } catch (e) {
+                console.error(e);
+                renderBasicAnalysis();
             }
+        }
 
-            // 本地生成基础分析
-            const fmt = n => '¥' + Math.floor(n/10000).toLocaleString() + '万';
-            const pct = (a, b) => b > 0 ? ((a/b)*100).toFixed(0) + '%' : '-';
-            const isBeat = grand.act >= grand.bud;
+        function renderBasicAnalysis() {
+            if (!STATE.currentData) return;
+            const d = STATE.currentData, c = document.getElementById('ai-analysis');
+            const hotel = d.totals?.hotel || { act: 0, bud: 0 };
+            const room = d.totals?.room || { act: 0, bud: 0 };
+            const fb = d.totals?.fb || { act: 0, bud: 0 };
+            const other = d.totals?.other || { act: 0, bud: 0 };
             
-            // 找出问题餐厅
-            const problemOutlets = data.rows
-                .filter(r => r.type === 'F&B' && r.budget > 1000 && (r.actual / r.budget) < 0.8)
-                .map(r => r.name.split('(')[0]);
+            const hotelDiff = hotel.act - hotel.bud;
+            const roomDiff = room.act - room.bud;
+            const fbDiff = fb.act - fb.bud;
+            const otherDiff = other.act - other.bud;
+            const fmtD = v => (v >= 0 ? '+' : '') + (v / 10000).toFixed(1) + '万';
+            
+            const goodItems = d.rows.filter(r => r.budget > 1000 && r.actual / r.budget >= 1).slice(0, 5);
+            const badItems = d.rows.filter(r => r.budget > 1000 && r.actual / r.budget < 0.8).slice(0, 5);
+            
+            c.innerHTML = `
+                <div class="section-title">💰 今日盈亏</div>
+                <p><strong>今日${hotelDiff >= 0 ? '盈余' : '亏损'}${Math.abs(hotelDiff / 10000).toFixed(1)}万元</strong></p>
+                <div class="data-row"><span>客房收入</span><span class="${roomDiff >= 0 ? 'highlight-good' : 'highlight-bad'}">${fmtD(roomDiff)}</span></div>
+                <p class="sub-item">→ 入住率${((d.occupancy||0)*100).toFixed(1)}%（预算${((d.occBud||0)*100).toFixed(1)}%），售房${d.roomsSold}间</p>
+                <div class="data-row"><span>餐饮收入</span><span class="${fbDiff >= 0 ? 'highlight-good' : 'highlight-bad'}">${fmtD(fbDiff)}</span></div>
+                <p class="sub-item">→ 完成预算的${(fb.bud > 0 ? (fb.act/fb.bud*100).toFixed(0) : 100)}%</p>
+                <div class="data-row"><span>其他收入</span><span class="${otherDiff >= 0 ? 'highlight-good' : 'highlight-bad'}">${fmtD(otherDiff)}</span></div>
+                
+                <div class="section-title">🏨 客房分析</div>
+                <p><strong>房价水平：</strong>ADR ¥${Math.floor(d.adr)}，RevPAR ¥${Math.floor(d.revpar)}</p>
+                
+                ${goodItems.length > 0 ? `<div class="section-title">✅ 表现优秀</div><p class="highlight-good">${goodItems.map(r => r.name.split(' ')[0] + '(' + (r.actual/r.budget*100).toFixed(0) + '%)').join('、')}</p>` : ''}
+                ${badItems.length > 0 ? `<div class="section-title">⚠️ 需要关注</div><p class="highlight-bad">${badItems.map(r => r.name.split(' ')[0] + '(' + (r.actual/r.budget*100).toFixed(0) + '%)').join('、')}</p>` : ''}
+            `;
+            document.getElementById('ai-update-time').innerText = new Date().toLocaleString('zh-CN');
+        }
 
-            container.innerHTML = `
-                <h4><i class="fa-solid fa-bullseye mr-2"></i>今日概要</h4>
-                <p>
-                    今日总收入 <strong class="text-white">${fmt(grand.act)}</strong>，
-                    <span class="tag ${isBeat ? 'tag-green' : 'tag-red'}">${isBeat ? '超' : '低于'}预算 ${(Math.abs(grand.act/grand.bud-1)*100).toFixed(1)}%</span>
-                </p>
-
-                <h4><i class="fa-solid fa-chart-pie mr-2"></i>板块分析</h4>
-                <p><strong>客房：</strong>完成率 ${pct(room.act, room.bud)}，${room.act >= room.bud ? '超额完成' : '未达预算'}</p>
-                <p><strong>餐饮：</strong>完成率 ${pct(fb.act, fb.bud)}，${fb.act >= fb.bud ? '表现良好' : '需关注'}</p>
-                <p><strong>其他：</strong>完成率 ${pct(other.act, other.bud)}</p>
-
-                ${problemOutlets.length > 0 ? `
-                <h4><i class="fa-solid fa-triangle-exclamation mr-2"></i>风险预警</h4>
-                <p class="text-red-400">今日未达标餐厅：${problemOutlets.join('、')}</p>
-                ` : ''}
-
-                <div class="mt-6 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                    <p class="text-xs text-blue-400"><i class="fa-solid fa-info-circle mr-1"></i> 保存到云端后，n8n 可自动调用千问API生成更详细的AI分析。</p>
-                </div>
+        // 深度分析
+        function switchDeepTab(tab) {
+            ['room', 'fb', 'other'].forEach(t => { const b = document.getElementById(`deep-tab-${t}`); b.classList.toggle('bg-zinc-700', t === tab); b.classList.toggle('text-white', t === tab); b.classList.toggle('text-zinc-400', t !== tab); });
+            if (!STATE.currentData) return;
+            
+            const typeMap = { room: ['Room'], fb: ['F&B', 'Banquet'], other: ['Other'] };
+            const nameMap = { room: '客房收入', fb: '餐饮收入', other: '其他收入' };
+            const rows = STATE.currentData.rows.filter(r => typeMap[tab].includes(r.type)).sort((a, b) => b.actual - a.actual);
+            
+            document.getElementById('deep-table-head').innerHTML = `<tr><th>项目名称</th><th>实际收入</th><th>预算金额</th><th>差额</th><th>完成率</th></tr>`;
+            document.getElementById('deep-table-body').innerHTML = rows.map(r => { 
+                const diff = r.actual - r.budget, p = r.budget > 0 ? (r.actual / r.budget * 100) : 100; 
+                return `<tr><td class="text-zinc-300">${r.name}</td><td class="font-mono text-white">¥${r.actual.toLocaleString()}</td><td class="text-zinc-500 font-mono">¥${r.budget.toLocaleString()}</td><td class="${diff >= 0 ? 'text-green-400' : 'text-red-400'} font-mono">${diff >= 0 ? '+' : ''}${Math.floor(diff).toLocaleString()}</td><td class="${p >= 100 ? 'text-green-400' : p >= 80 ? 'text-amber-400' : 'text-red-400'} font-medium">${p.toFixed(0)}%</td></tr>`; 
+            }).join('');
+            
+            const el = document.getElementById('deep-chart'); if (STATE.charts.deep) STATE.charts.deep.dispose();
+            const chart = echarts.init(el, 'dark'), top = rows.slice(0, 10);
+            chart.setOption({ backgroundColor: 'transparent', tooltip: { trigger: 'axis' }, legend: { data: ['实际收入', '预算金额'], bottom: 0, textStyle: { color: '#71717a', fontSize: 9 } }, grid: { left: 10, right: 10, top: 10, bottom: 50, containLabel: true }, xAxis: { type: 'category', data: top.map(r => r.name.split(' ')[0].slice(0, 8)), axisLabel: { rotate: 30, fontSize: 8, color: '#a1a1aa' } }, yAxis: { type: 'value', axisLabel: { fontSize: 8 }, splitLine: { lineStyle: { color: '#27272a', type: 'dashed' } } }, series: [{ name: '实际收入', type: 'bar', data: top.map(r => r.actual), itemStyle: { color: '#3b82f6', borderRadius: [2, 2, 0, 0] }, barWidth: 12 }, { name: '预算金额', type: 'bar', data: top.map(r => r.budget), itemStyle: { color: '#3f3f46', borderRadius: [2, 2, 0, 0] }, barWidth: 12 }] });
+            STATE.charts.deep = chart;
+            
+            const good = rows.filter(r => r.budget > 1000 && r.actual / r.budget >= 1);
+            const bad = rows.filter(r => r.budget > 1000 && r.actual / r.budget < 0.8);
+            const totalAct = rows.reduce((s, r) => s + r.actual, 0);
+            const totalBud = rows.reduce((s, r) => s + r.budget, 0);
+            const totalPct = totalBud > 0 ? (totalAct / totalBud * 100).toFixed(0) : 100;
+            const totalDiff = totalAct - totalBud;
+            
+            document.getElementById('deep-summary-content').innerHTML = `
+                <p><strong>${nameMap[tab]}整体情况：</strong>完成率 <span class="${totalPct >= 100 ? 'good' : 'bad'}">${totalPct}%</span>，实际¥${(totalAct/10000).toFixed(1)}万，预算¥${(totalBud/10000).toFixed(1)}万，${totalDiff >= 0 ? '超额' : '缺口'}<span class="${totalDiff >= 0 ? 'good' : 'bad'}">${Math.abs(totalDiff/10000).toFixed(1)}万</span></p>
+                ${good.length > 0 ? `<p class="mt-2"><span class="good">✓ 表现优秀（${good.length}个）：</span>${good.slice(0,5).map(r => r.name.split(' ')[0] + '（' + (r.actual/r.budget*100).toFixed(0) + '%）').join('、')}</p>` : '<p class="mt-2 text-zinc-500">暂无达标项目</p>'}
+                ${bad.length > 0 ? `<p class="mt-2"><span class="bad">✗ 需要关注（${bad.length}个）：</span>${bad.slice(0,5).map(r => r.name.split(' ')[0] + '（' + (r.actual/r.budget*100).toFixed(0) + '%）').join('、')}</p>` : ''}
             `;
         }
 
-        // ==================== 深度分析 ====================
-        function switchDeepTab(tab) {
-            ['room', 'fb', 'other'].forEach(t => {
-                const btn = document.getElementById(`deep-tab-${t}`);
-                btn.classList.toggle('bg-zinc-700', t === tab);
-                btn.classList.toggle('text-white', t === tab);
-                btn.classList.toggle('text-zinc-400', t !== tab);
-            });
-
-            if (!STATE.currentData) return;
-            
-            const filterTypes = tab === 'room' ? ['Room'] : tab === 'fb' ? ['F&B', 'Banquet'] : ['Other'];
-            const rows = STATE.currentData.rows
-                .filter(r => filterTypes.includes(r.type))
-                .sort((a, b) => b.actual - a.actual);
-
-            // 表头
-            const thead = document.getElementById('deep-table-head');
-            thead.innerHTML = `<tr><th>项目</th>${tab === 'room' ? '<th>间夜</th>' : ''}<th>实际</th><th>预算</th><th>差异</th><th>完成率</th></tr>`;
-
-            // 表体
-            const tbody = document.getElementById('deep-table-body');
-            tbody.innerHTML = rows.map(r => {
-                const diff = r.actual - r.budget;
-                const pct = r.budget > 0 ? (r.actual / r.budget * 100) : 100;
-                return `
-                    <tr>
-                        <td>${r.name}</td>
-                        ${tab === 'room' ? `<td class="text-zinc-500">${r.rooms || '-'}</td>` : ''}
-                        <td class="text-white font-medium">¥${Math.floor(r.actual).toLocaleString()}</td>
-                        <td class="text-zinc-500">¥${Math.floor(r.budget).toLocaleString()}</td>
-                        <td class="${diff >= 0 ? 'text-green-400' : 'text-red-400'}">${diff >= 0 ? '+' : ''}${Math.floor(diff).toLocaleString()}</td>
-                        <td class="${pct >= 100 ? 'text-green-400' : pct >= 80 ? 'text-amber-400' : 'text-red-400'}">${pct.toFixed(1)}%</td>
-                    </tr>
-                `;
-            }).join('');
-
-            // 图表
-            const el = document.getElementById('deep-chart');
-            if (STATE.charts.deep) STATE.charts.deep.dispose();
-            const chart = echarts.init(el, 'dark', { renderer: 'canvas' });
-            const top10 = rows.slice(0, 10);
-            chart.setOption({
-                backgroundColor: 'transparent',
-                tooltip: { trigger: 'axis' },
-                grid: { left: 20, right: 20, top: 20, bottom: 80, containLabel: true },
-                xAxis: { 
-                    type: 'category', 
-                    data: top10.map(r => r.name.split('(')[0].slice(0, 10)),
-                    axisLabel: { rotate: 30, fontSize: 10, color: '#a1a1aa' }
-                },
-                yAxis: { type: 'value', splitLine: { lineStyle: { color: '#27272a', type: 'dashed' } } },
-                series: [
-                    { name: '实际', type: 'bar', data: top10.map(r => r.actual), itemStyle: { color: '#3b82f6', borderRadius: [4,4,0,0] } },
-                    { name: '预算', type: 'bar', data: top10.map(r => r.budget), itemStyle: { color: '#3f3f46', borderRadius: [4,4,0,0] } }
-                ]
-            });
-            STATE.charts.deep = chart;
-        }
-
-        // ==================== 初始化 ====================
-        function recalculateAll() {
-            if (STATE.currentData) renderDashboard(STATE.currentData);
-        }
-
-        window.addEventListener('resize', () => {
-            Object.values(STATE.charts).forEach(c => c && c.resize());
-        });
-
-        // 页面加载时自动刷新数据
-        document.addEventListener('DOMContentLoaded', () => {
-            refreshFromGitHub();
-        });
+        window.addEventListener('resize', () => Object.values(STATE.charts).forEach(c => c?.resize()));
+        document.addEventListener('DOMContentLoaded', () => { if (STATE.sidebarCollapsed) document.getElementById('sidebar').classList.add('collapsed'); refreshFromGitHub(); });
     </script>
 </body>
 </html>
