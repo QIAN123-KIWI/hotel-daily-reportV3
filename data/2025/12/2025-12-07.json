@@ -1,11 +1,7 @@
 {
   "date": "2025-12-07",
   "weekday": "周日",
-  "uploadedAt": "2025-12-10T06:37:37.316Z",
-  "roomsSold": 154,
-  "adrYtd": 0,
-  "revparYtd": 0,
-  "occYtd": 0,
+  "uploadedAt": "2025-12-10T07:49:44.447Z",
   "totals": {
     "room": {
       "act": 359699.39,
@@ -230,5 +226,15 @@
       "budget": -4679.032258064516
     }
   ],
-  "aiAnalysis": "<div class=\"section-title\">📊 预算执行总览</div>\n<p><strong>整体完成率：121.2%</strong></p>\n<div class=\"progress-bar\"><div class=\"progress-fill\" style=\"width:121.2%;background:#22c55e\"></div></div>\n<div class=\"data-row\"><span>客房</span><span class=\"highlight-bad\">75.6%</span></div>\n<div class=\"data-row\"><span>餐饮</span><span class=\"highlight-good\">187.7%</span></div>\n<div class=\"data-row\"><span>其他</span><span class=\"highlight-bad\">68.5%</span></div>\n\n<div class=\"section-title\">🏨 客房分析</div>\n<p class=\"highlight-good\">✓ 表现优秀：<br>企业营销 (128%)<br>个人游 (263%)<br>公司合作客源收入 (105%)</p>\n<p class=\"highlight-bad\">✗ 需要改进：<br>本地合作客源收入 (22%)<br>散客门市价收入 (49%)<br>其它房费收入 (65%)<br>常住客收入 (46%)<br>客人洗衣 (18%)<br>宴会服务费 (-8%)</p>\n<div class=\"suggestion-item\">💡 建议：增加对本地合作和散客市场的推广力度，提高其入住率；优化宴会服务项目以吸引更多客户；针对低入住率的房间类型推出促销活动。</div>\n\n<div class=\"section-title\">🍽️ 餐饮分析</div>\n<p class=\"highlight-good\">✓ 表现优秀：<br>宴会食品酒水收入 (500%)<br>百味园 (113%)</p>\n<p class=\"highlight-bad\">✗ 需要改进：<br>廊吧 (35%)<br>蔚景阁 (20%)<br>羿庭 (48%)<br>浦江汇 (59%)<br>客房服务 (56%)<br>迷你吧 (77%)<br>宴会杂项收入 (41%)</p>\n<div class=\"suggestion-item\">💡 建议：加强廊吧、蔚景阁等表现不佳餐厅的市场宣传与特色菜品开发；考虑调整价格策略或提供套餐优惠吸引顾客；对于宴会杂项收入较低的情况，可尝试引入更多增值服务或促销活动来提升销售额。</div>\n\n<div class=\"section-title\">⚠️ 风险预警</div>\n<div class=\"risk-item\">🔴 风险点：<br>- 入住率远低于预算目标（实际59.2%，预算73.3%），需尽快采取措施提高。<br>- ADR及RevPAR均未达到预期水平，表明尽管有部分高价值客户的贡献，但总体上房价竞争力不足。<br>- 个别餐饮场所如廊吧、蔚景阁等表现极差，长期下去可能影响品牌形象。</div>\n\n<div class=\"section-title\">📈 月度进展</div>\n<p>本月第7天，时间进度22.6%。目前来看，虽然整体财务状况良好，但存在明显的结构性问题，特别是客房部门的表现欠佳以及某些餐饮设施利用率低下等问题亟待解决。</p>"
+  "roomsSold": 154,
+  "roomsBud": 191,
+  "occupancy": 0.5923076923076923,
+  "occBud": 0.7327543424317619,
+  "adr": 2335.710324675325,
+  "adrBud": 2496.217837792076,
+  "revpar": 1383.4591923076923,
+  "revparBud": 1829.114460297767,
+  "aiAnalysis": "<div class=\"section-title\">📊 预算执行总览</div>\n<p><strong>整体完成率：121.2%</strong></p>\n<div class=\"progress-bar\"><div class=\"progress-fill\" style=\"width:121.2%;background:#22c55e\"></div></div>\n<div class=\"data-row\"><span>客房</span><span class=\"highlight-bad\">75.6%</span></div>\n<div class=\"data-row\"><span>餐饮</span><span class=\"highlight-good\">187.7%</span></div>\n<div class=\"data-row\"><span>其他</span><span class=\"highlight-bad\">68.5%</span></div>\n\n<div class=\"section-title\">🏨 客房分析</div>\n<p class=\"highlight-good\">✓ 表现优秀：</p>\n<ul>\n  <li>企业营销：128%</li>\n  <li>个人游：263%</li>\n  <li>公司合作客源收入：105%</li>\n</ul>\n<p class=\"highlight-bad\">✗ 需要改进：</p>\n<ul>\n  <li>本地合作客源收入：22%</li>\n  <li>散客门市价收入：49%</li>\n  <li>常住客收入：46%</li>\n  <li>客人洗衣：18%</li>\n  <li>宴会服务费：-8%</li>\n</ul>\n<div class=\"suggestion-item\">💡 建议：针对本地合作客源和散客市场加强促销活动，提高其入住意愿；同时增加对长期住宿客户的优惠力度以吸引更多的长住客。对于宴会服务费出现负值的情况，建议审查相关成本控制措施。</div>\n\n<div class=\"section-title\">🍽️ 餐饮分析</div>\n<p class=\"highlight-good\">✓ 表现优秀：</p>\n<ul>\n  <li>宴会食品酒水收入：500%</li>\n  <li>百味园：113%</li>\n</ul>\n<p class=\"highlight-bad\">✗ 需要改进：</p>\n<ul>\n  <li>廊吧：35%</li>\n  <li>蔚景阁：20%</li>\n  <li>羿庭：48%</li>\n  <li>浦江汇：59%</li>\n  <li>客房服务：56%</li>\n  <li>迷你吧：77%</li>\n  <li>宴会杂项收入：41%</li>\n</ul>\n<div class=\"suggestion-item\">💡 建议：鉴于宴会食品酒水收入远超预期，可以考虑进一步优化宴会服务流程并扩大宣传力度。对于表现不佳的餐厅或服务项目，则需要调查具体原因，并采取针对性措施提升顾客满意度与消费频次。</div>\n\n<div class=\"section-title\">⚠️ 风险预警</div>\n<div class=\"risk-item\">🔴 风险点：尽管整体业绩超出预期，但客房部门特别是部分细分市场的表现欠佳可能影响未来收益稳定性。此外，宴会服务费用异常低甚至为负数也是一个值得关注的问题。</div>\n\n<div class=\"section-title\">📈 月度进展</div>\n<p>本月第7天，时间进度22.6%。</p>",
+  "aiAnalysisTime": "2025/12/10 15:49:25",
+  "savedAt": "2025-12-10T07:49:44.187Z"
 }
