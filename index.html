@@ -804,9 +804,11 @@
 
 注意：必须使用我提供的数据，整体完成率是{total_pct}%`;
 
+        // ========== 关键修改：添加 apiBaseUrl ==========
         const STATE = {
             currentData: null, historyIndex: [], historyData: {}, charts: {}, totalRooms: 260,
             webhookUrl: localStorage.getItem('nexus_webhook_url') || 'https://n8n-fzlhzvbn.ap-northeast-1.clawcloudrun.com/webhook/hotel-save',
+            apiBaseUrl: 'https://n8n-fzlhzvbn.ap-northeast-1.clawcloudrun.com/webhook',
             github: { owner: 'QIAN123-KIWI', repo: 'hotel-daily-reportV3', branch: 'main', dataPath: 'data' },
             qianwen: { apiKey: 'sk-d8f9d80c5d154e5fa8ce9413560ccfe8', model: 'qwen-max', endpoint: 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions' },
             aiPrompt: localStorage.getItem('nexus_ai_prompt') || DEFAULT_AI_PROMPT,
@@ -1006,10 +1008,12 @@
             finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-1"></i>保存到云端'; }
         }
         
+        // ========== 关键修改：从n8n API读取数据 ==========
         async function refreshFromGitHub() {
             try { 
-                const res = await fetch(`https://raw.githubusercontent.com/${STATE.github.owner}/${STATE.github.repo}/${STATE.github.branch}/${STATE.github.dataPath}/index.json?t=${Date.now()}`); 
-                if (!res.ok) throw new Error(); 
+                // 改为从n8n API读取，绕过GitHub被墙的问题
+                const res = await fetch(`${STATE.apiBaseUrl}/hotel-index?t=${Date.now()}`); 
+                if (!res.ok) throw new Error('API请求失败'); 
                 STATE.historyIndex = await res.json(); 
                 renderHistoryList(); 
                 if (STATE.historyIndex.length) { 
@@ -1017,10 +1021,13 @@
                     await loadDayData(s[0].date); 
                 } 
                 await loadTrendData(); 
-            } catch (e) { console.error(e); }
+            } catch (e) { 
+                console.error('刷新数据失败:', e);
+                showToast('加载数据失败，请检查网络', 'error');
+            }
         }
         
-        // 加载指定日期数据 - 修复：每个日期显示各自的AI分析
+        // ========== 关键修改：加载指定日期数据 ==========
         async function loadDayData(date) {
             // 清除之前的状态
             document.getElementById('ai-saved-badge').classList.add('hidden');
@@ -1037,9 +1044,9 @@
             }
             
             try { 
-                const [y, m] = date.split('-'); 
-                const res = await fetch(`https://raw.githubusercontent.com/${STATE.github.owner}/${STATE.github.repo}/${STATE.github.branch}/${STATE.github.dataPath}/${y}/${m}/${date}.json?t=${Date.now()}`); 
-                if (!res.ok) throw new Error(); 
+                // 改为从n8n API读取
+                const res = await fetch(`${STATE.apiBaseUrl}/hotel-data?date=${date}&t=${Date.now()}`); 
+                if (!res.ok) throw new Error('获取数据失败'); 
                 const d = await res.json(); 
                 STATE.historyData[date] = d; 
                 STATE.currentData = d; 
@@ -1048,7 +1055,9 @@
                 if (STATE.debugMode) updateDebugInfo(d);
                 document.querySelectorAll('.history-item').forEach(el => el.classList.toggle('active', el.dataset.date === date)); 
                 document.getElementById('save-btn').disabled = false; 
-            } catch {}
+            } catch (e) {
+                console.error('加载日期数据失败:', e);
+            }
         }
         
         // 显示特定日期的AI分析
@@ -1080,13 +1089,14 @@
             }
         }
         
+        // ========== 关键修改：加载趋势数据 ==========
         async function loadTrendData() {
             const s = [...STATE.historyIndex].sort((a, b) => a.date.localeCompare(b.date)).slice(-30), td = [];
             for (const i of s) { 
                 if (STATE.historyData[i.date]) td.push(STATE.historyData[i.date]); 
                 else try { 
-                    const [y, m] = i.date.split('-'); 
-                    const res = await fetch(`https://raw.githubusercontent.com/${STATE.github.owner}/${STATE.github.repo}/${STATE.github.branch}/${STATE.github.dataPath}/${y}/${m}/${i.date}.json`); 
+                    // 改为从n8n API读取
+                    const res = await fetch(`${STATE.apiBaseUrl}/hotel-data?date=${i.date}`); 
                     if (res.ok) { const d = await res.json(); STATE.historyData[i.date] = d; td.push(d); } 
                 } catch {} 
             }
