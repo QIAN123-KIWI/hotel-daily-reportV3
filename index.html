@@ -294,6 +294,39 @@
             font-size: 9px;
             margin-left: 6px;
         }
+        
+        /* 调试面板样式 */
+        .debug-panel {
+            background: #1a1a2e;
+            border: 1px solid #16213e;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 10px;
+        }
+        .debug-header {
+            padding: 8px 12px;
+            background: #16213e;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        .debug-body {
+            padding: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+        .debug-panel.expanded .debug-body { display: block; }
+        .debug-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .debug-label { color: #a1a1aa; }
+        .debug-value { color: #4ade80; font-family: 'JetBrains Mono', monospace; }
+        .debug-value.error { color: #f87171; }
     </style>
 </head>
 <body class="min-h-screen">
@@ -312,7 +345,7 @@
                     </div>
                     <div>
                         <span class="font-semibold text-white text-xs block">NEXUS</span>
-                        <span class="text-[9px] text-zinc-500">经营分析系统</span>
+                        <span class="text-[9px] text-zinc-500">经营分析系统 v2.1</span>
                     </div>
                 </div>
                 <label class="block mb-3">
@@ -338,8 +371,11 @@
                     <span id="data-status" class="tag tag-red">无数据</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button onclick="refreshFromGitHub()" class="btn-secondary px-2 py-1">
+                    <button onclick="refreshFromGitHub()" class="btn-secondary px-2 py-1" title="刷新数据">
                         <i class="fa-solid fa-sync"></i>
+                    </button>
+                    <button onclick="toggleDebugPanel()" class="btn-secondary px-2 py-1" title="调试信息">
+                        <i class="fa-solid fa-bug"></i>
                     </button>
                     <button id="save-btn" onclick="saveToGitHub()" disabled class="btn-primary px-3 py-1">
                         <i class="fa-solid fa-cloud-arrow-up mr-1"></i>保存到云端
@@ -406,6 +442,19 @@
                             <span class="text-zinc-500">差额</span>
                             <span id="kpi-revpar-diff" class="font-mono text-xs">--</span>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 调试面板 -->
+            <div id="debug-panel" class="debug-panel hidden mb-3">
+                <div class="debug-header" onclick="toggleDebugBody()">
+                    <span class="text-amber-400"><i class="fa-solid fa-bug mr-1"></i>运营指标调试信息</span>
+                    <i class="fa-solid fa-chevron-down text-zinc-500" id="debug-chevron"></i>
+                </div>
+                <div class="debug-body">
+                    <div id="debug-content">
+                        <p class="text-zinc-500">上传数据后显示解析结果</p>
                     </div>
                 </div>
             </div>
@@ -761,7 +810,8 @@
             github: { owner: 'QIAN123-KIWI', repo: 'hotel-daily-reportV3', branch: 'main', dataPath: 'data' },
             qianwen: { apiKey: 'sk-d8f9d80c5d154e5fa8ce9413560ccfe8', model: 'qwen-max', endpoint: 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions' },
             aiPrompt: localStorage.getItem('nexus_ai_prompt') || DEFAULT_AI_PROMPT,
-            sidebarCollapsed: localStorage.getItem('nexus_sidebar_collapsed') === 'true'
+            sidebarCollapsed: localStorage.getItem('nexus_sidebar_collapsed') === 'true',
+            debugMode: false
         };
 
         function toggleSidebar() {
@@ -777,6 +827,65 @@
             e.innerHTML = `<i class="fa-solid ${t === 'success' ? 'fa-check-circle' : t === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i><span>${m}</span>`; 
             c.appendChild(e); 
             setTimeout(() => { e.style.opacity = '0'; setTimeout(() => e.remove(), 200); }, 2500); 
+        }
+        
+        // 调试面板
+        function toggleDebugPanel() {
+            const panel = document.getElementById('debug-panel');
+            panel.classList.toggle('hidden');
+            STATE.debugMode = !panel.classList.contains('hidden');
+            if (STATE.debugMode && STATE.currentData) {
+                updateDebugInfo(STATE.currentData);
+            }
+        }
+        
+        function toggleDebugBody() {
+            const panel = document.getElementById('debug-panel');
+            const chevron = document.getElementById('debug-chevron');
+            panel.classList.toggle('expanded');
+            chevron.style.transform = panel.classList.contains('expanded') ? 'rotate(180deg)' : '';
+        }
+        
+        function updateDebugInfo(d) {
+            const content = document.getElementById('debug-content');
+            
+            // 检查数据完整性
+            const checks = [
+                { label: 'occupancy (出租率)', value: d.occupancy, expected: '应为小数如0.512' },
+                { label: 'occBud (出租率预算)', value: d.occBud, expected: '应为小数如0.733' },
+                { label: 'roomsSold (售房数)', value: d.roomsSold, expected: '应为整数如133' },
+                { label: 'roomsBud (售房预算)', value: d.roomsBud, expected: '应为整数如190' },
+                { label: 'adr (平均房价)', value: d.adr, expected: '应为数字如2444' },
+                { label: 'adrBud (ADR预算)', value: d.adrBud, expected: '应为数字如2496' },
+                { label: 'revpar (RevPAR)', value: d.revpar, expected: '应为数字如1250' },
+                { label: 'revparBud (RevPAR预算)', value: d.revparBud, expected: '应为数字如1829' },
+            ];
+            
+            content.innerHTML = `
+                <div style="margin-bottom:10px;padding:8px;background:#0f172a;border-radius:6px;">
+                    <p style="color:#60a5fa;font-weight:600;margin-bottom:6px;">📊 运营指标解析结果</p>
+                    ${checks.map(c => `
+                        <div class="debug-item">
+                            <span class="debug-label">${c.label}</span>
+                            <span class="debug-value ${c.value === 0 || c.value === undefined ? 'error' : ''}">${c.value !== undefined ? c.value : '❌ 未解析'}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                <div style="padding:8px;background:#1e1b4b;border-radius:6px;">
+                    <p style="color:#a78bfa;font-weight:600;margin-bottom:6px;">💾 将保存到云端的数据</p>
+                    <pre style="font-size:9px;color:#94a3b8;overflow-x:auto;white-space:pre-wrap;">${JSON.stringify({
+                        date: d.date,
+                        occupancy: d.occupancy,
+                        occBud: d.occBud,
+                        roomsSold: d.roomsSold,
+                        roomsBud: d.roomsBud,
+                        adr: d.adr,
+                        adrBud: d.adrBud,
+                        revpar: d.revpar,
+                        revparBud: d.revparBud
+                    }, null, 2)}</pre>
+                </div>
+            `;
         }
         
         function openSettingsModal() { 
@@ -823,7 +932,7 @@
             generateAIAnalysis();
         }
 
-        // 保存到云端
+        // ========== 核心修复：保存到云端 ==========
         async function saveToGitHub() {
             if (!STATE.currentData) return showToast('请先上传数据', 'error');
             const btn = document.getElementById('save-btn'); 
@@ -831,36 +940,69 @@
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>保存中...';
             
             try { 
+                // 【修复】确保所有运营指标字段都被正确包含
                 const dataToSave = {
-                    ...STATE.currentData,
-                    occupancy: STATE.currentData.occupancy || 0,
-                    occBud: STATE.currentData.occBud || 0,
-                    adr: STATE.currentData.adr || 0,
-                    adrBud: STATE.currentData.adrBud || 0,
-                    revpar: STATE.currentData.revpar || 0,
-                    revparBud: STATE.currentData.revparBud || 0,
-                    roomsSold: STATE.currentData.roomsSold || 0,
-                    roomsBud: STATE.currentData.roomsBud || 0,
+                    // 基础信息
+                    date: STATE.currentData.date,
+                    weekday: STATE.currentData.weekday || '',
+                    
+                    // 收入汇总
+                    totals: STATE.currentData.totals || {},
+                    
+                    // 明细数据
+                    rows: STATE.currentData.rows || [],
+                    
+                    // ===== 运营指标 - 关键修复 =====
+                    // 出租率（保存为小数格式，如 0.512 表示 51.2%）
+                    occupancy: parseFloat(STATE.currentData.occupancy) || 0,
+                    occBud: parseFloat(STATE.currentData.occBud) || 0,
+                    
+                    // 售房数
+                    roomsSold: parseInt(STATE.currentData.roomsSold) || 0,
+                    roomsBud: parseInt(STATE.currentData.roomsBud) || 0,
+                    
+                    // ADR 平均房价
+                    adr: parseFloat(STATE.currentData.adr) || 0,
+                    adrBud: parseFloat(STATE.currentData.adrBud) || 0,
+                    
+                    // RevPAR
+                    revpar: parseFloat(STATE.currentData.revpar) || 0,
+                    revparBud: parseFloat(STATE.currentData.revparBud) || 0,
+                    
+                    // AI分析结果
                     aiAnalysis: STATE.currentData.aiAnalysis || null,
-                    aiAnalysisTime: STATE.currentData.aiAnalysisTime || null
+                    aiAnalysisTime: STATE.currentData.aiAnalysisTime || null,
+                    
+                    // 保存时间戳
+                    savedAt: new Date().toISOString()
                 };
                 
-                await fetch(STATE.webhookUrl, { 
+                // 在控制台输出保存的数据，方便调试
+                console.log('📤 保存到云端的数据:', JSON.stringify(dataToSave, null, 2));
+                
+                const response = await fetch(STATE.webhookUrl, { 
                     method: 'POST', 
                     headers: { 'Content-Type': 'application/json' }, 
                     body: JSON.stringify(dataToSave) 
                 }); 
                 
-                // 更新缓存
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                // 更新本地缓存
                 STATE.historyData[STATE.currentData.date] = dataToSave;
                 
-                showToast('数据已保存到云端', 'success'); 
+                showToast('数据已保存到云端（含运营指标）', 'success'); 
                 document.getElementById('ai-saved-badge').classList.remove('hidden');
                 document.getElementById('ai-status-dot').classList.add('saved');
                 
                 setTimeout(refreshFromGitHub, 2000); 
             }
-            catch { showToast('保存失败', 'error'); }
+            catch (e) { 
+                console.error('保存失败:', e);
+                showToast('保存失败: ' + e.message, 'error'); 
+            }
             finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-1"></i>保存到云端'; }
         }
         
@@ -888,6 +1030,7 @@
                 STATE.currentData = STATE.historyData[date]; 
                 renderDashboard(STATE.currentData);
                 displayAIAnalysisForDate(STATE.currentData);
+                if (STATE.debugMode) updateDebugInfo(STATE.currentData);
                 document.querySelectorAll('.history-item').forEach(el => el.classList.toggle('active', el.dataset.date === date));
                 document.getElementById('save-btn').disabled = false;
                 return; 
@@ -902,6 +1045,7 @@
                 STATE.currentData = d; 
                 renderDashboard(d);
                 displayAIAnalysisForDate(d);
+                if (STATE.debugMode) updateDebugInfo(d);
                 document.querySelectorAll('.history-item').forEach(el => el.classList.toggle('active', el.dataset.date === date)); 
                 document.getElementById('save-btn').disabled = false; 
             } catch {}
@@ -1007,6 +1151,10 @@
                 document.getElementById('save-btn').disabled = false;
                 document.getElementById('ai-saved-badge').classList.add('hidden');
                 document.getElementById('ai-status-dot').classList.remove('saved');
+                
+                // 更新调试信息
+                if (STATE.debugMode) updateDebugInfo(parsed);
+                
                 showToast(`已加载 ${parsed.date}`, 'success'); 
                 generateAIAnalysis();
             };
@@ -1014,18 +1162,48 @@
             e.target.value = '';
         }
 
+        // ========== 核心修复：Excel解析 ==========
         function parseExcelData(rows) {
             let d = { 
                 date: new Date().toISOString().split('T')[0], weekday: '', rows: [], 
                 roomsSold: 0, roomsBud: 0, occupancy: 0, occBud: 0, 
                 adr: 0, adrBud: 0, revpar: 0, revparBud: 0, totals: {} 
             };
-            const num = v => v ? parseFloat(String(v).replace(/[¥,%]/g, '')) || 0 : 0;
             
-            rows.forEach(r => {
+            // 数值解析函数 - 改进版
+            const num = v => {
+                if (v === null || v === undefined || v === '') return 0;
+                // 处理百分比格式
+                const str = String(v).trim();
+                // 移除货币符号、逗号等
+                const cleaned = str.replace(/[¥￥,$%]/g, '').trim();
+                const parsed = parseFloat(cleaned);
+                return isNaN(parsed) ? 0 : parsed;
+            };
+            
+            // 解析百分比（返回小数形式，如51.2% -> 0.512）
+            const pct = v => {
+                if (v === null || v === undefined || v === '') return 0;
+                const str = String(v).trim();
+                // 如果已经是小数形式（如0.512）
+                if (!str.includes('%') && parseFloat(str) <= 1) {
+                    return parseFloat(str);
+                }
+                // 如果是百分比形式（如51.2%或51.2）
+                const cleaned = str.replace('%', '').trim();
+                const parsed = parseFloat(cleaned);
+                if (isNaN(parsed)) return 0;
+                // 如果大于1，说明是百分比数值，需要除以100
+                return parsed > 1 ? parsed / 100 : parsed;
+            };
+            
+            console.log('📊 开始解析Excel数据，共', rows.length, '行');
+            
+            rows.forEach((r, rowIndex) => {
                 if (!r[0]) return; 
                 const n = String(r[0]).trim();
                 
+                // 解析日期
                 if (n.includes('Date') || n.includes('日期')) { 
                     const m = r.join(' ').match(/(\d{1,2})\/(\w+)\/(\d{4})/); 
                     if (m) { 
@@ -1035,17 +1213,43 @@
                     } 
                 }
                 
+                // 收入汇总
                 if (n.includes('Total room Revenue') || n.includes('总房收入')) d.totals.room = { act: num(r[6]), bud: num(r[7]) };
                 if (n.includes('F&B Total') || n.includes('餐饮收入合计')) d.totals.fb = { act: num(r[6]), bud: num(r[7]) };
                 if (n.includes('Total Hotel Revenue') || n.includes('酒店收入合计')) d.totals.hotel = { act: num(r[6]), bud: num(r[7]) };
                 if (n.includes('Total Other Operating') || n.includes('其他经营收入合计')) d.totals.other = { act: num(r[6]), bud: num(r[7]) };
                 
-                if (n.includes('Occupied Rooms') || n.includes('已出租房数')) { d.roomsSold = num(r[6]); d.roomsBud = num(r[7]); }
-                if (n.includes('Paid Occupancy') || n.includes('客房住房率')) { d.occupancy = num(r[6]); d.occBud = num(r[7]); }
-                if (n.includes('Paid Average Room Rate') || (n.includes('平均房价') && !n.includes('可出租') && !n.includes('Rev'))) { d.adr = num(r[6]); d.adrBud = num(r[7]); }
-                if (n.includes('Rev Par') || n.includes('可出租')) { d.revpar = num(r[6]); d.revparBud = num(r[7]); }
+                // ===== 运营指标解析 - 关键修复 =====
+                // 售房数
+                if (n.includes('Occupied Rooms') || n.includes('已出租房数') || n.includes('出租房间')) { 
+                    d.roomsSold = Math.round(num(r[6])); 
+                    d.roomsBud = Math.round(num(r[7])); 
+                    console.log(`✅ 行${rowIndex}: 解析售房数 - 实际:${d.roomsSold}, 预算:${d.roomsBud}`);
+                }
                 
-                // 排除汇总行，只保留明细
+                // 出租率（住房率）
+                if (n.includes('Paid Occupancy') || n.includes('客房住房率') || n.includes('出租率') || n.includes('Occupancy')) { 
+                    // 使用pct函数正确解析百分比
+                    d.occupancy = pct(r[6]); 
+                    d.occBud = pct(r[7]); 
+                    console.log(`✅ 行${rowIndex}: 解析出租率 - 实际:${d.occupancy}(${(d.occupancy*100).toFixed(1)}%), 预算:${d.occBud}(${(d.occBud*100).toFixed(1)}%)`);
+                }
+                
+                // ADR 平均房价
+                if (n.includes('Paid Average Room Rate') || n.includes('Average Rate') || (n.includes('平均房价') && !n.includes('可出租') && !n.includes('Rev'))) { 
+                    d.adr = num(r[6]); 
+                    d.adrBud = num(r[7]); 
+                    console.log(`✅ 行${rowIndex}: 解析ADR - 实际:${d.adr}, 预算:${d.adrBud}`);
+                }
+                
+                // RevPAR
+                if (n.includes('Rev Par') || n.includes('RevPAR') || n.includes('可出租房平均') || n.includes('每可用房收入')) { 
+                    d.revpar = num(r[6]); 
+                    d.revparBud = num(r[7]); 
+                    console.log(`✅ 行${rowIndex}: 解析RevPAR - 实际:${d.revpar}, 预算:${d.revparBud}`);
+                }
+                
+                // 收入明细行
                 const isTotal = /^Total|合计|小计|Subtotal/i.test(n);
                 if (r.length >= 7 && num(r[6]) !== 0 && !isTotal) {
                     let type = 'Other';
@@ -1055,6 +1259,18 @@
                     d.rows.push({ name: n, type, actual: num(r[6]), budget: num(r[7]) });
                 }
             });
+            
+            console.log('📊 解析完成，运营指标:', {
+                occupancy: d.occupancy,
+                occBud: d.occBud,
+                roomsSold: d.roomsSold,
+                roomsBud: d.roomsBud,
+                adr: d.adr,
+                adrBud: d.adrBud,
+                revpar: d.revpar,
+                revparBud: d.revparBud
+            });
+            
             return d;
         }
 
@@ -1089,9 +1305,12 @@
             document.getElementById('kpi-revenue-diff').innerText = (revDiff >= 0 ? '+' : '') + (revDiff / 10000).toFixed(1) + '万';
             document.getElementById('kpi-revenue-diff').className = `font-mono text-xs ${revDiff >= 0 ? 'text-green-400' : 'text-red-400'}`;
 
-            // 出租率
-            const occAct = (d.occupancy || 0) * 100;
-            const occBud = (d.occBud || 0) * 100;
+            // 出租率 - 修复：正确处理小数和百分比
+            let occAct = d.occupancy || 0;
+            let occBud = d.occBud || 0;
+            // 如果是小数形式，转换为百分比显示
+            if (occAct <= 1) occAct = occAct * 100;
+            if (occBud <= 1) occBud = occBud * 100;
             const occPct = occBud > 0 ? (occAct / occBud * 100) : 100;
             document.getElementById('kpi-occ').innerText = occAct.toFixed(1) + '%';
             document.getElementById('kpi-occ-bud').innerText = occBud.toFixed(1) + '%';
@@ -1208,11 +1427,13 @@
             STATE.charts.trend = chart;
         }
 
+        // ========== 修复：运营指标趋势图 ==========
         function renderOpsTrendChart(data) {
             const el = document.getElementById('ops-trend-chart');
             if (STATE.charts.opsTrend) STATE.charts.opsTrend.dispose();
             if (!data.length) return;
             
+            // 检查是否有运营数据
             const hasOpsData = data.some(d => d.revpar || d.adr || d.occupancy);
             if (!hasOpsData) {
                 el.innerHTML = '<div class="flex items-center justify-center h-full text-zinc-600 text-[10px]">暂无运营指标历史数据<br>保存新数据后将显示趋势</div>';
@@ -1222,7 +1443,20 @@
             const chart = echarts.init(el, 'dark');
             chart.setOption({
                 backgroundColor: 'transparent',
-                tooltip: { trigger: 'axis', formatter: p => p[0].name + '<br/>' + p.map(i => i.seriesName === '入住率' ? `${i.marker} ${i.seriesName}: ${i.value}%` : `${i.marker} ${i.seriesName}: ¥${i.value}`).join('<br/>') },
+                tooltip: { 
+                    trigger: 'axis', 
+                    formatter: p => {
+                        let result = p[0].name + '<br/>';
+                        p.forEach(i => {
+                            if (i.seriesName === '入住率') {
+                                result += `${i.marker} ${i.seriesName}: ${i.value}%<br/>`;
+                            } else {
+                                result += `${i.marker} ${i.seriesName}: ¥${i.value}<br/>`;
+                            }
+                        });
+                        return result;
+                    }
+                },
                 legend: { data: ['RevPAR', 'ADR', '入住率'], bottom: 0, textStyle: { color: '#71717a', fontSize: 9 } },
                 grid: { left: 5, right: 35, top: 10, bottom: 35, containLabel: true },
                 xAxis: { type: 'category', data: data.map(d => d.date.slice(5)), axisLabel: { fontSize: 8, color: '#71717a', rotate: 30 } },
@@ -1231,9 +1465,54 @@
                     { type: 'value', name: '', position: 'right', min: 0, max: 100, axisLabel: { fontSize: 8, formatter: v => v + '%' }, splitLine: { show: false } }
                 ],
                 series: [
-                    { name: 'RevPAR', type: 'line', yAxisIndex: 0, data: data.map(d => Math.floor(d.revpar || 0)), smooth: true, symbol: 'circle', symbolSize: 3, lineStyle: { color: '#a855f7', width: 2 }, itemStyle: { color: '#a855f7' } },
-                    { name: 'ADR', type: 'line', yAxisIndex: 0, data: data.map(d => Math.floor(d.adr || 0)), smooth: true, symbol: 'circle', symbolSize: 3, lineStyle: { color: '#f59e0b', width: 2 }, itemStyle: { color: '#f59e0b' } },
-                    { name: '入住率', type: 'line', yAxisIndex: 1, data: data.map(d => { const o = d.occupancy || 0; return o > 1 ? o : (o * 100).toFixed(1); }), smooth: true, symbol: 'circle', symbolSize: 3, lineStyle: { color: '#22c55e', width: 2 }, itemStyle: { color: '#22c55e' }, areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(34,197,94,0.2)' }, { offset: 1, color: 'rgba(34,197,94,0)' }] } } }
+                    { 
+                        name: 'RevPAR', 
+                        type: 'line', 
+                        yAxisIndex: 0, 
+                        data: data.map(d => Math.floor(d.revpar || 0)), 
+                        smooth: true, 
+                        symbol: 'circle', 
+                        symbolSize: 3, 
+                        lineStyle: { color: '#a855f7', width: 2 }, 
+                        itemStyle: { color: '#a855f7' } 
+                    },
+                    { 
+                        name: 'ADR', 
+                        type: 'line', 
+                        yAxisIndex: 0, 
+                        data: data.map(d => Math.floor(d.adr || 0)), 
+                        smooth: true, 
+                        symbol: 'circle', 
+                        symbolSize: 3, 
+                        lineStyle: { color: '#f59e0b', width: 2 }, 
+                        itemStyle: { color: '#f59e0b' } 
+                    },
+                    { 
+                        name: '入住率', 
+                        type: 'line', 
+                        yAxisIndex: 1, 
+                        // 修复：正确处理小数和百分比格式
+                        data: data.map(d => { 
+                            const o = d.occupancy || 0; 
+                            // 如果是小数形式（如0.512），转换为百分比显示
+                            return o <= 1 ? (o * 100).toFixed(1) : o.toFixed(1); 
+                        }), 
+                        smooth: true, 
+                        symbol: 'circle', 
+                        symbolSize: 3, 
+                        lineStyle: { color: '#22c55e', width: 2 }, 
+                        itemStyle: { color: '#22c55e' }, 
+                        areaStyle: { 
+                            color: { 
+                                type: 'linear', 
+                                x: 0, y: 0, x2: 0, y2: 1, 
+                                colorStops: [
+                                    { offset: 0, color: 'rgba(34,197,94,0.2)' }, 
+                                    { offset: 1, color: 'rgba(34,197,94,0)' }
+                                ] 
+                            } 
+                        } 
+                    }
                 ]
             });
             STATE.charts.opsTrend = chart;
@@ -1291,8 +1570,11 @@
                     return `${getChineseName(r.name)}: ¥${r.actual.toLocaleString()} / ¥${r.budget.toLocaleString()} (${pct}%)`;
                 }).join('\n');
                 
-                const occPct = ((d.occupancy || 0) * 100).toFixed(1);
-                const occBudPct = ((d.occBud || 0) * 100).toFixed(1);
+                // 修复：正确计算出租率百分比
+                let occPct = d.occupancy || 0;
+                let occBudPct = d.occBud || 0;
+                if (occPct <= 1) occPct = occPct * 100;
+                if (occBudPct <= 1) occBudPct = occBudPct * 100;
                 
                 const prompt = STATE.aiPrompt
                     .replace(/{date}/g, d.date)
@@ -1321,9 +1603,9 @@
                     .replace(/{other_diff}/g, fmtDiff(otherDiff))
                     .replace(/{other_status}/g, otherDiff >= 0 ? '超额' : '缺口')
                     .replace(/{other_class}/g, otherDiff >= 0 ? 'highlight-good' : 'highlight-bad')
-                    .replace(/{occupancy}/g, occPct)
-                    .replace(/{occ_bud}/g, occBudPct)
-                    .replace(/{occ_status}/g, parseFloat(occPct) >= parseFloat(occBudPct) ? '达标' : '未达标')
+                    .replace(/{occupancy}/g, occPct.toFixed(1))
+                    .replace(/{occ_bud}/g, occBudPct.toFixed(1))
+                    .replace(/{occ_status}/g, occPct >= occBudPct ? '达标' : '未达标')
                     .replace(/{adr}/g, Math.floor(d.adr || 0))
                     .replace(/{adr_bud}/g, Math.floor(d.adrBud || 0))
                     .replace(/{adr_pct}/g, adrPct)
