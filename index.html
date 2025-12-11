@@ -546,19 +546,28 @@ async function saveToGitHub() {
     const btn = document.getElementById('save-btn');
     btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>保存中';
     try {
-        const data = { ...STATE.currentData, savedAt: new Date().toISOString() };
+        // 深拷贝确保数据完整
+        const data = JSON.parse(JSON.stringify(STATE.currentData));
+        data.savedAt = new Date().toISOString();
         
         // 详细调试信息
         console.log('========= 保存数据调试 =========');
         console.log('日期:', data.date);
+        console.log('totals:', JSON.stringify(data.totals));
+        console.log('totals.banquet:', JSON.stringify(data.totals?.banquet));
+        console.log('mtd:', JSON.stringify(data.mtd));
+        console.log('mtd.banquet:', JSON.stringify(data.mtd?.banquet));
         console.log('aiAnalysisDaily长度:', data.aiAnalysisDaily ? data.aiAnalysisDaily.length : 0);
-        console.log('aiAnalysisMonthly长度:', data.aiAnalysisMonthly ? data.aiAnalysisMonthly.length : 0);
-        console.log('aiAnalysisTime:', data.aiAnalysisTime);
-        console.log('STATE.currentData.aiAnalysisDaily长度:', STATE.currentData.aiAnalysisDaily ? STATE.currentData.aiAnalysisDaily.length : 0);
         console.log('================================');
         
         const hasAI = data.aiAnalysisDaily ? '（含AI分析）' : '（无AI分析）';
-        const res = await fetch(STATE.webhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        const hasBanquet = data.totals?.banquet?.act > 0 ? '（含宴会）' : '';
+        
+        const res = await fetch(STATE.webhookUrl, { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify(data) 
+        });
         
         if (!res.ok) {
             const errText = await res.text();
@@ -568,7 +577,7 @@ async function saveToGitHub() {
         
         const result = await res.json();
         console.log('保存成功响应:', result);
-        showToast('保存成功' + hasAI + '！请等待1-2分钟后刷新', 'success');
+        showToast('保存成功' + hasAI + hasBanquet + '！请等待1-2分钟后刷新', 'success');
     } catch (e) { 
         console.error('保存错误:', e);
         showToast('保存失败: ' + e.message, 'error'); 
@@ -654,7 +663,13 @@ function parseExcelData(rows) {
         occupancy: 0, occBud: 0, 
         adr: 0, adrBud: 0, 
         revpar: 0, revparBud: 0, 
-        totals: {},
+        totals: {
+            room: { act: 0, bud: 0 },
+            fb: { act: 0, bud: 0 },
+            banquet: { act: 0, bud: 0 },
+            other: { act: 0, bud: 0 },
+            hotel: { act: 0, bud: 0 }
+        },
         mtd: {
             room: { act: 0, bud: 0 },
             fb: { act: 0, bud: 0 },
@@ -782,17 +797,17 @@ function parseExcelData(rows) {
     
     // 注意：宴会是餐饮的子项，已包含在餐饮合计中
     // 其他收入应该直接从Excel读取"Total Other Operating Revenue"
-    // 如果没读到，才用公式计算（不扣除宴会，因为宴会已在餐饮内）
-    if (d.totals.hotel && d.totals.room && d.totals.fb) {
-        if (!d.totals.other || d.totals.other.act === 0) {
+    // 如果没读到或为0，才用公式计算
+    if (d.totals.hotel.act > 0 && d.totals.room.act > 0 && d.totals.fb.act > 0) {
+        if (d.totals.other.act === 0) {
             d.totals.other = {
                 act: d.totals.hotel.act - d.totals.room.act - d.totals.fb.act,
                 bud: d.totals.hotel.bud - d.totals.room.bud - d.totals.fb.bud
             };
         }
     }
-    if (d.mtd.hotel && d.mtd.room && d.mtd.fb) {
-        if (!d.mtd.other || d.mtd.other.act === 0) {
+    if (d.mtd.hotel.act > 0 && d.mtd.room.act > 0 && d.mtd.fb.act > 0) {
+        if (d.mtd.other.act === 0) {
             d.mtd.other = {
                 act: d.mtd.hotel.act - d.mtd.room.act - d.mtd.fb.act,
                 bud: d.mtd.hotel.bud - d.mtd.room.bud - d.mtd.fb.bud
@@ -802,23 +817,25 @@ function parseExcelData(rows) {
     
     console.log('===== 解析完成 =====');
     console.log('今日数据:', JSON.stringify(d.totals));
+    console.log('宴会数据:', JSON.stringify(d.totals.banquet));
     console.log('月累计数据:', JSON.stringify(d.mtd));
     return d;
 }
 
 function renderDashboard(d) {
-    let room=d.totals.room||{act:0,bud:0}, fb=d.totals.fb||{act:0,bud:0}, banquet=d.totals.banquet||{act:0,bud:0}, other=d.totals.other||{act:0,bud:0}, grand=d.totals.hotel||{act:0,bud:0};
+    let room=d.totals?.room||{act:0,bud:0}, fb=d.totals?.fb||{act:0,bud:0}, banquet=d.totals?.banquet||{act:0,bud:0}, other=d.totals?.other||{act:0,bud:0}, grand=d.totals?.hotel||{act:0,bud:0};
     
-    // 注意：宴会是餐饮的子项，已包含在餐饮合计中
-    // 其他收入 = 酒店总计 - 客房 - 餐饮（不再扣除宴会）
-    if(d.totals.hotel && d.totals.room && d.totals.fb && (!d.totals.other || d.totals.other.act === 0)){
-        other.act = grand.act - room.act - fb.act;
-        other.bud = grand.bud - room.bud - fb.bud;
+    // 如果其他收入为0，计算它（宴会已包含在餐饮中，不需要扣除）
+    if(grand.act > 0 && room.act > 0 && fb.act > 0 && other.act === 0){
+        other = {
+            act: grand.act - room.act - fb.act,
+            bud: grand.bud - room.bud - fb.bud
+        };
     }
     
     // 优先使用Excel中的月累计数据d.mtd
     const mtd = d.mtd || STATE.mtdData;
-    console.log('渲染使用的MTD数据:', mtd);
+    console.log('渲染使用的数据 - banquet:', banquet, 'other:', other);
     
     document.getElementById('current-date').textContent = d.date + ' ' + (d.weekday||'');
     document.getElementById('data-status').textContent = '已加载';
