@@ -522,11 +522,32 @@ async function saveToGitHub() {
     btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>保存中';
     try {
         const data = { ...STATE.currentData, savedAt: new Date().toISOString() };
-        const hasAI = data.aiAnalysisDaily ? '（含AI分析）' : '';
+        
+        // 详细调试信息
+        console.log('========= 保存数据调试 =========');
+        console.log('日期:', data.date);
+        console.log('aiAnalysisDaily长度:', data.aiAnalysisDaily ? data.aiAnalysisDaily.length : 0);
+        console.log('aiAnalysisMonthly长度:', data.aiAnalysisMonthly ? data.aiAnalysisMonthly.length : 0);
+        console.log('aiAnalysisTime:', data.aiAnalysisTime);
+        console.log('STATE.currentData.aiAnalysisDaily长度:', STATE.currentData.aiAnalysisDaily ? STATE.currentData.aiAnalysisDaily.length : 0);
+        console.log('================================');
+        
+        const hasAI = data.aiAnalysisDaily ? '（含AI分析）' : '（无AI分析）';
         const res = await fetch(STATE.webhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
+        
+        if (!res.ok) {
+            const errText = await res.text();
+            console.error('保存失败响应:', errText);
+            throw new Error('HTTP ' + res.status);
+        }
+        
+        const result = await res.json();
+        console.log('保存成功响应:', result);
         showToast('保存成功' + hasAI + '！请等待1-2分钟后刷新', 'success');
-    } catch (e) { showToast('保存失败: ' + e.message, 'error'); }
+    } catch (e) { 
+        console.error('保存错误:', e);
+        showToast('保存失败: ' + e.message, 'error'); 
+    }
     finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-1"></i>保存'; }
 }
 
@@ -570,18 +591,28 @@ function handleFileUpload(e) {
         document.getElementById('save-btn').disabled = false;
         showToast('已加载 ' + parsed.date, 'success');
         
-        // 检查该日期是否已有保存的AI分析
-        const savedData = STATE.historyData[parsed.date];
-        if (savedData && savedData.aiAnalysisDaily) {
-            // 使用已保存的AI分析
-            parsed.aiAnalysisDaily = savedData.aiAnalysisDaily;
-            parsed.aiAnalysisMonthly = savedData.aiAnalysisMonthly;
-            parsed.aiAnalysisTime = savedData.aiAnalysisTime;
-            STATE.currentData = parsed;
-            displayAI(parsed);
-            showToast('已加载保存的AI分析', 'success');
-        } else {
-            // 没有保存的分析，显示占位符
+        // 先尝试从GitHub加载该日期已保存的数据（包含AI分析）
+        try {
+            const [y, m] = parsed.date.split('-');
+            const res = await fetch(REMOTE_BASE + '/' + y + '/' + m + '/' + parsed.date + '.json?t=' + Date.now());
+            if (res.ok) {
+                const savedData = await res.json();
+                if (savedData.aiAnalysisDaily) {
+                    // 使用已保存的AI分析
+                    parsed.aiAnalysisDaily = savedData.aiAnalysisDaily;
+                    parsed.aiAnalysisMonthly = savedData.aiAnalysisMonthly;
+                    parsed.aiAnalysisTime = savedData.aiAnalysisTime;
+                    STATE.currentData = parsed;
+                    displayAI(parsed);
+                    showToast('已加载保存的AI分析', 'success');
+                } else {
+                    displayAI(parsed);
+                }
+            } else {
+                displayAI(parsed);
+            }
+        } catch(e) {
+            console.log('未找到已保存的AI分析');
             displayAI(parsed);
         }
     };
@@ -956,6 +987,13 @@ async function generateAIAnalysis() {
         STATE.currentData.aiAnalysisMonthly = monthlyContent;
         STATE.currentData.aiAnalysisTime = new Date().toLocaleString('zh-CN');
         document.getElementById('ai-update-time').textContent = STATE.currentData.aiAnalysisTime;
+        
+        // 调试信息
+        console.log('========= AI分析生成完成 =========');
+        console.log('aiAnalysisDaily已保存，长度:', STATE.currentData.aiAnalysisDaily.length);
+        console.log('aiAnalysisMonthly已保存，长度:', STATE.currentData.aiAnalysisMonthly.length);
+        console.log('aiAnalysisTime:', STATE.currentData.aiAnalysisTime);
+        console.log('==================================');
         
         showToast('AI分析完成，请点击保存按钮保存分析结果', 'success');
         
