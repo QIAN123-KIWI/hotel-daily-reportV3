@@ -66,6 +66,9 @@
         .ai-tab:not(.active):hover { background: rgba(255,255,255,0.05); }
         .ai-panel { display: none; }
         .ai-panel.active { display: block; }
+        /* 宴会行样式 - 缩进显示为餐饮子项 */
+        .banquet-row { background: rgba(34,197,94,0.03); }
+        .banquet-row td:first-child { padding-left: 20px; }
     </style>
 </head>
 <body class="min-h-screen">
@@ -76,7 +79,7 @@
         <div class="sidebar-content flex flex-col flex-1">
             <div class="flex items-center gap-2 mb-4">
                 <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"><i class="fa-solid fa-chart-line text-white text-sm"></i></div>
-                <div><span class="font-semibold text-white text-sm">NEXUS</span><span class="text-[9px] text-zinc-500 block">v2.6 月累计版</span></div>
+                <div><span class="font-semibold text-white text-sm">NEXUS</span><span class="text-[9px] text-zinc-500 block">v2.7 宴会版</span></div>
             </div>
             <label class="block mb-4">
                 <div class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 rounded cursor-pointer text-center text-xs font-medium"><i class="fa-solid fa-upload mr-1"></i>上传报表</div>
@@ -197,7 +200,7 @@
 <div id="deep-modal" class="fixed inset-0 z-50 hidden modal-backdrop flex flex-col">
     <div class="h-12 px-4 border-b border-zinc-800 flex items-center justify-between bg-[#0c0c0e]">
         <button onclick="closeModal('deep-modal')" class="text-zinc-400 hover:text-white text-sm"><i class="fa-solid fa-arrow-left mr-2"></i>返回</button>
-        <div class="flex gap-2"><button id="deep-tab-room" onclick="switchDeepTab('room')" class="px-4 py-1 rounded text-xs bg-zinc-700">客房</button><button id="deep-tab-fb" onclick="switchDeepTab('fb')" class="px-4 py-1 rounded text-xs text-zinc-400">餐饮</button><button id="deep-tab-other" onclick="switchDeepTab('other')" class="px-4 py-1 rounded text-xs text-zinc-400">其他</button></div>
+        <div class="flex gap-2"><button id="deep-tab-room" onclick="switchDeepTab('room')" class="px-4 py-1 rounded text-xs bg-zinc-700">客房</button><button id="deep-tab-fb" onclick="switchDeepTab('fb')" class="px-4 py-1 rounded text-xs text-zinc-400">餐饮</button><button id="deep-tab-banquet" onclick="switchDeepTab('banquet')" class="px-4 py-1 rounded text-xs text-zinc-400">宴会</button><button id="deep-tab-other" onclick="switchDeepTab('other')" class="px-4 py-1 rounded text-xs text-zinc-400">其他</button></div>
     </div>
     <div class="flex-1 overflow-y-auto p-4 bg-[#09090b]">
         <div class="max-w-5xl mx-auto grid grid-cols-2 gap-4">
@@ -219,6 +222,7 @@ const DEFAULT_PROMPT_DAILY = `你是五星级酒店的资深经营分析师。�
 整体完成率: {total_pct}%
 客房收入完成率: {room_pct}%
 餐饮收入完成率: {fb_pct}%
+宴会收入完成率: {banquet_pct}%
 其他收入完成率: {other_pct}%
 出租率: {occupancy}% (预算: {occ_bud}%)
 ADR: ¥{adr} (预算: ¥{adr_bud})
@@ -230,6 +234,9 @@ RevPAR: ¥{revpar} (预算: ¥{revpar_bud})
 【餐饮细分数据】
 {fb_details}
 
+【宴会细分数据】
+{banquet_details}
+
 【其他细分数据】
 {other_details}
 
@@ -237,7 +244,7 @@ RevPAR: ¥{revpar} (预算: ¥{revpar_bud})
 
 <div class="section-title">📊 今日预算执行总览</div>
 <p><strong>整体完成率：<span class="highlight-xxx">XX%</span></strong></p>
-<p>客房<span class="highlight-xxx">XX%</span> 餐饮<span class="highlight-xxx">XX%</span> 其他<span class="highlight-xxx">XX%</span></p>
+<p>客房<span class="highlight-xxx">XX%</span> 餐饮<span class="highlight-xxx">XX%</span> 宴会<span class="highlight-xxx">XX%</span> 其他<span class="highlight-xxx">XX%</span></p>
 
 <div class="section-title">🏨 客房分析</div>
 <p>✓ 表现优秀：</p>
@@ -254,6 +261,10 @@ RevPAR: ¥{revpar} (预算: ¥{revpar_bud})
 <p>✗ 需要改进：</p>
 <p>• 餐厅/项目名：<span class="highlight-bad">XX%</span></p>
 <p>💡 建议：具体餐厅改进措施</p>
+
+<div class="section-title">🎉 宴会分析</div>
+<p>完成率：<span class="highlight-xxx">XX%</span></p>
+<p>💡 建议：宴会销售改进措施</p>
 
 <div class="section-title">⚠️ 风险预警</div>
 <div class="risk-item">🔴 风险点：
@@ -279,6 +290,7 @@ const DEFAULT_PROMPT_MONTHLY = `你是五星级酒店的资深经营分析师。
 月累计整体完成率: {mtd_total_pct}%
 月累计客房完成率: {mtd_room_pct}%
 月累计餐饮完成率: {mtd_fb_pct}%
+月累计宴会完成率: {mtd_banquet_pct}%
 月累计其他完成率: {mtd_other_pct}%
 月累计实际营收: ¥{mtd_total_act}万
 月累计预算营收: ¥{mtd_total_bud}万
@@ -290,6 +302,9 @@ const DEFAULT_PROMPT_MONTHLY = `你是五星级酒店的资深经营分析师。
 【餐饮细分月累计】
 {mtd_fb_details}
 
+【宴会细分月累计】
+{mtd_banquet_details}
+
 【其他细分月累计】
 {mtd_other_details}
 
@@ -297,7 +312,7 @@ const DEFAULT_PROMPT_MONTHLY = `你是五星级酒店的资深经营分析师。
 
 <div class="section-title">📊 月度预算执行总览</div>
 <p><strong>月累计完成率：<span class="highlight-xxx">{mtd_total_pct}%</span></strong>（时间进度{time_progress}%）</p>
-<p>客房<span class="highlight-xxx">XX%</span> 餐饮<span class="highlight-xxx">XX%</span> 其他<span class="highlight-xxx">XX%</span></p>
+<p>客房<span class="highlight-xxx">XX%</span> 餐饮<span class="highlight-xxx">XX%</span> 宴会<span class="highlight-xxx">XX%</span> 其他<span class="highlight-xxx">XX%</span></p>
 <p>收入进度 vs 时间进度：<span class="highlight-xxx">落后/领先X个百分点</span></p>
 
 <div class="section-title">🏨 客房月度分析</div>
@@ -313,6 +328,10 @@ const DEFAULT_PROMPT_MONTHLY = `你是五星级酒店的资深经营分析师。
 <p>✗ 需要改进：</p>
 <p>• 餐厅/项目名：<span class="highlight-bad">XX%</span></p>
 <p>💡 月度策略：餐厅改进措施</p>
+
+<div class="section-title">🎉 宴会月度分析</div>
+<p>月累计完成率：<span class="highlight-xxx">XX%</span></p>
+<p>💡 月度策略：宴会销售策略</p>
 
 <div class="section-title">⚠️ 月度风险预警</div>
 <div class="risk-item">🔴 关键风险：
@@ -342,7 +361,7 @@ const STATE = {
     historyIndex: [], 
     historyData: {}, 
     charts: {},
-    mtdData: { room: {act:0, bud:0}, fb: {act:0, bud:0}, other: {act:0, bud:0}, hotel: {act:0, bud:0} },
+    mtdData: { room: {act:0, bud:0}, fb: {act:0, bud:0}, banquet: {act:0, bud:0}, other: {act:0, bud:0}, hotel: {act:0, bud:0} },
     webhookUrl: localStorage.getItem('nexus_webhook_url') || 'https://n8n-fzlhzvbn.ap-northeast-1.clawcloudrun.com/webhook/hotel-save',
     qianwen: { apiKey: 'sk-d8f9d80c5d154e5fa8ce9413560ccfe8', model: 'qwen-max', endpoint: 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions' },
     aiPromptDaily: localStorage.getItem('nexus_ai_prompt_daily') || DEFAULT_PROMPT_DAILY,
@@ -442,6 +461,7 @@ async function calculateMTD(currentDate) {
     STATE.mtdData = { 
         room: {act:0, bud:0}, 
         fb: {act:0, bud:0}, 
+        banquet: {act:0, bud:0},
         other: {act:0, bud:0}, 
         hotel: {act:0, bud:0} 
     };
@@ -469,13 +489,19 @@ async function calculateMTD(currentDate) {
                 STATE.mtdData.fb.act += t.fb.act || 0;
                 STATE.mtdData.fb.bud += t.fb.bud || 0;
             }
+            if (t.banquet) {
+                STATE.mtdData.banquet.act += t.banquet.act || 0;
+                STATE.mtdData.banquet.bud += t.banquet.bud || 0;
+            }
             if (t.hotel) {
                 STATE.mtdData.hotel.act += t.hotel.act || 0;
                 STATE.mtdData.hotel.bud += t.hotel.bud || 0;
             }
             if (t.hotel && t.room && t.fb) {
-                STATE.mtdData.other.act += (t.hotel.act || 0) - (t.room.act || 0) - (t.fb.act || 0);
-                STATE.mtdData.other.bud += (t.hotel.bud || 0) - (t.room.bud || 0) - (t.fb.bud || 0);
+                const banquetAct = t.banquet?.act || 0;
+                const banquetBud = t.banquet?.bud || 0;
+                STATE.mtdData.other.act += (t.hotel.act || 0) - (t.room.act || 0) - (t.fb.act || 0) - banquetAct;
+                STATE.mtdData.other.bud += (t.hotel.bud || 0) - (t.room.bud || 0) - (t.fb.bud || 0) - banquetBud;
             }
         }
     }
@@ -633,6 +659,7 @@ function parseExcelData(rows) {
         mtd: {
             room: { act: 0, bud: 0 },
             fb: { act: 0, bud: 0 },
+            banquet: { act: 0, bud: 0 },
             hotel: { act: 0, bud: 0 },
             other: { act: 0, bud: 0 }
         }
@@ -641,6 +668,7 @@ function parseExcelData(rows) {
     const pct = v => { if(v==null||v==='')return 0; const n=parseFloat(String(v).replace('%',''));return isNaN(n)?0:(n>1?n/100:n); };
     
     let subTotalCount = 0; // 计数小计行
+    let inBanquetSection = false; // 标记是否在宴会区域
     
     rows.forEach((r, rowIdx) => {
         if (!r[0]) return;
@@ -663,20 +691,25 @@ function parseExcelData(rows) {
             console.log('解析总房收入:', d.totals.room, 'MTD:', d.mtd.room);
         }
         
-        // ===== 小计处理 =====
-        if (n.includes('Sub') && n.includes('Total') && n.includes('小计')) {
+        // ===== 检测宴会区域开始 =====
+        if (/Banquet|宴会/.test(n) && !n.includes('Total') && !n.includes('合计')) {
+            inBanquetSection = true;
+        }
+        
+        // ===== 小计处理 - 宴会小计 =====
+        // 匹配 "Sub - Total 小计" 或 "Sub-Total 小计" 等格式
+        if (/Sub[\s\-]*Total/i.test(n) && n.includes('小计')) {
             subTotalCount++;
+            console.log('发现小计行 #' + subTotalCount + ':', n, '数据:', num(r[6]), num(r[8]));
+            
+            // 第二个小计 = 宴会小计
             if (subTotalCount === 2) {
-                // 第二个小计 = 宴会小计，添加到餐饮明细
-                d.rows.push({
-                    name: '宴会收入',
-                    type: 'F&B',
-                    actual: num(r[6]),
-                    budget: num(r[7]),
-                    mtdActual: num(r[8]),
-                    mtdBudget: num(r[10])
-                });
-                console.log('添加宴会收入到餐饮明细:', num(r[6]), num(r[8]));
+                d.totals.banquet = {act: num(r[6]), bud: num(r[7])};
+                d.mtd.banquet = {act: num(r[8]), bud: num(r[10])};
+                console.log('===== 解析宴会小计 =====');
+                console.log('今日宴会:', d.totals.banquet);
+                console.log('月累计宴会:', d.mtd.banquet);
+                inBanquetSection = false;
             }
             return;
         }
@@ -722,15 +755,17 @@ function parseExcelData(rows) {
         // ===== 细分项目数据 =====
         const isTotal = /^Total|^Sub.*Total|合计$/i.test(n);
         const isHeader = /^Revenue|^Statistics|^Actual|^Budget|^Forecast|^Food & Beverage|^Other Operating|^ROOM STAT/i.test(n);
-        const isBanquetItem = /Banquet|宴会|会议室租金|设备租金/i.test(n);
         
-        // 排除宴会细项（宴会小计已单独处理）
-        if (isBanquetItem) return;
+        // 宴会细项（添加到Banquet类型）
+        const isBanquetItem = /Banquet|宴会|会议室租金|设备租金/i.test(n);
         
         if (r.length>=10 && (num(r[6])!==0 || num(r[8])!==0) && !isTotal && !isHeader) {
             let type='Other';
             if(/Rate|Tour|Discount|Corporate|Individual|Convention|Permanent|Negotiated|Consortia|SMRF|Meeting|Government|客源/i.test(n)) {
                 type='Room';
+            } else if(isBanquetItem || inBanquetSection) {
+                // 宴会相关项目归类为Banquet
+                type='Banquet';
             } else if(/Kok|Brasserie|Bar|Service|Mini|羿庭|百味园|廊吧|浦江汇|蔚景阁|客房服务|迷你吧|Ling Long|Peacock|Grand|Long Bar|Salon|Room Service/i.test(n)) {
                 type='F&B';
             }
@@ -746,18 +781,26 @@ function parseExcelData(rows) {
         }
     });
     
-    // 计算其他收入
-    if (d.totals.hotel && d.totals.room && d.totals.fb && (!d.totals.other || d.totals.other.act === 0)) {
-        d.totals.other = {
-            act: d.totals.hotel.act - d.totals.room.act - d.totals.fb.act,
-            bud: d.totals.hotel.bud - d.totals.room.bud - d.totals.fb.bud
-        };
+    // 计算其他收入（排除宴会）
+    if (d.totals.hotel && d.totals.room && d.totals.fb) {
+        const banquetAct = d.totals.banquet?.act || 0;
+        const banquetBud = d.totals.banquet?.bud || 0;
+        if (!d.totals.other || d.totals.other.act === 0) {
+            d.totals.other = {
+                act: d.totals.hotel.act - d.totals.room.act - d.totals.fb.act - banquetAct,
+                bud: d.totals.hotel.bud - d.totals.room.bud - d.totals.fb.bud - banquetBud
+            };
+        }
     }
-    if (d.mtd.hotel && d.mtd.room && d.mtd.fb && (!d.mtd.other || d.mtd.other.act === 0)) {
-        d.mtd.other = {
-            act: d.mtd.hotel.act - d.mtd.room.act - d.mtd.fb.act,
-            bud: d.mtd.hotel.bud - d.mtd.room.bud - d.mtd.fb.bud
-        };
+    if (d.mtd.hotel && d.mtd.room && d.mtd.fb) {
+        const banquetMtdAct = d.mtd.banquet?.act || 0;
+        const banquetMtdBud = d.mtd.banquet?.bud || 0;
+        if (!d.mtd.other || d.mtd.other.act === 0) {
+            d.mtd.other = {
+                act: d.mtd.hotel.act - d.mtd.room.act - d.mtd.fb.act - banquetMtdAct,
+                bud: d.mtd.hotel.bud - d.mtd.room.bud - d.mtd.fb.bud - banquetMtdBud
+            };
+        }
     }
     
     console.log('===== 解析完成 =====');
@@ -767,8 +810,15 @@ function parseExcelData(rows) {
 }
 
 function renderDashboard(d) {
-    let room=d.totals.room||{act:0,bud:0}, fb=d.totals.fb||{act:0,bud:0}, other=d.totals.other||{act:0,bud:0}, grand=d.totals.hotel||{act:0,bud:0};
-    if(d.totals.hotel&&d.totals.room&&d.totals.fb){other.act=grand.act-room.act-fb.act;other.bud=grand.bud-room.bud-fb.bud;}
+    let room=d.totals.room||{act:0,bud:0}, fb=d.totals.fb||{act:0,bud:0}, banquet=d.totals.banquet||{act:0,bud:0}, other=d.totals.other||{act:0,bud:0}, grand=d.totals.hotel||{act:0,bud:0};
+    
+    // 计算其他收入（排除宴会）
+    if(d.totals.hotel && d.totals.room && d.totals.fb){
+        const banquetAct = banquet.act || 0;
+        const banquetBud = banquet.bud || 0;
+        other.act = grand.act - room.act - fb.act - banquetAct;
+        other.bud = grand.bud - room.bud - fb.bud - banquetBud;
+    }
     
     // 优先使用Excel中的月累计数据d.mtd
     const mtd = d.mtd || STATE.mtdData;
@@ -802,19 +852,23 @@ function renderDashboard(d) {
     document.getElementById('kpi-revpar-pct').textContent = revparPct.toFixed(1)+'%';
     document.getElementById('kpi-revpar-pct').className = revparPct>=100?'text-green-400 font-semibold':'text-red-400 font-semibold';
     
+    // 部门列表 - 添加宴会行（在餐饮下面）
     const depts = [
-        {name:'客房',act:room.act,bud:room.bud,icon:'🏨', mtdAct:mtd.room?.act||0, mtdBud:mtd.room?.bud||0},
-        {name:'餐饮',act:fb.act,bud:fb.bud,icon:'🍽️', mtdAct:mtd.fb?.act||0, mtdBud:mtd.fb?.bud||0},
-        {name:'其他',act:other.act,bud:other.bud,icon:'📦', mtdAct:mtd.other?.act||0, mtdBud:mtd.other?.bud||0},
-        {name:'合计',act:grand.act,bud:grand.bud,icon:'🏢', mtdAct:mtd.hotel?.act||0, mtdBud:mtd.hotel?.bud||0}
+        {name:'客房',act:room.act,bud:room.bud,icon:'🏨', mtdAct:mtd.room?.act||0, mtdBud:mtd.room?.bud||0, isSub:false},
+        {name:'餐饮',act:fb.act,bud:fb.bud,icon:'🍽️', mtdAct:mtd.fb?.act||0, mtdBud:mtd.fb?.bud||0, isSub:false},
+        {name:'宴会',act:banquet.act,bud:banquet.bud,icon:'🎉', mtdAct:mtd.banquet?.act||0, mtdBud:mtd.banquet?.bud||0, isSub:true},
+        {name:'其他',act:other.act,bud:other.bud,icon:'📦', mtdAct:mtd.other?.act||0, mtdBud:mtd.other?.bud||0, isSub:false},
+        {name:'合计',act:grand.act,bud:grand.bud,icon:'🏢', mtdAct:mtd.hotel?.act||0, mtdBud:mtd.hotel?.bud||0, isSub:false}
     ];
     
     document.getElementById('dept-table-body').innerHTML = depts.map(dep => {
         const diff=dep.act-dep.bud, pct=dep.bud>0?(dep.act/dep.bud*100):100;
         const mtdPct = dep.mtdBud>0?(dep.mtdAct/dep.mtdBud*100):100;
         const isTotal = dep.name==='合计';
-        return `<tr class="${isTotal?'bg-zinc-800/30 font-medium':''}">
-            <td>${dep.icon} ${dep.name}</td>
+        const isBanquet = dep.name==='宴会';
+        const rowClass = isTotal ? 'bg-zinc-800/30 font-medium' : (isBanquet ? 'banquet-row' : '');
+        return `<tr class="${rowClass}">
+            <td>${dep.isSub ? '↳ ' : ''}${dep.icon} ${dep.name}</td>
             <td class="font-mono">${fmt(dep.act)}</td>
             <td class="text-zinc-500 font-mono">${fmt(dep.bud)}</td>
             <td class="${diff>=0?'text-green-400':'text-red-400'} font-mono">${diff>=0?'+':''}${fmtWan(diff)}</td>
@@ -825,8 +879,10 @@ function renderDashboard(d) {
         </tr>`;
     }).join('');
     
-    renderMainChart(depts.slice(0,3));
-    renderPieChart(depts.slice(0,3));
+    // 图表数据（不包含宴会子项）
+    const chartDepts = depts.filter(d => !d.isSub && d.name !== '合计');
+    renderMainChart(chartDepts);
+    renderPieChart(chartDepts);
 }
 
 function renderMainChart(depts) {
@@ -841,7 +897,8 @@ function renderPieChart(depts) {
     const el=document.getElementById('pie-chart');
     if(STATE.charts.pie)STATE.charts.pie.dispose();
     const chart=echarts.init(el,'dark');
-    chart.setOption({backgroundColor:'transparent',tooltip:{trigger:'item',formatter:'{b}: ¥{c} ({d}%)'},series:[{type:'pie',radius:['40%','70%'],center:['50%','50%'],itemStyle:{borderRadius:4,borderColor:'#16161a',borderWidth:2},label:{show:true,fontSize:10,color:'#a1a1aa',formatter:'{b}\n{d}%'},data:[{value:depts[0].act,name:'客房',itemStyle:{color:'#3b82f6'}},{value:depts[1].act,name:'餐饮',itemStyle:{color:'#22c55e'}},{value:depts[2].act,name:'其他',itemStyle:{color:'#f59e0b'}}]}]});
+    const colors = ['#3b82f6', '#22c55e', '#f59e0b', '#a855f7'];
+    chart.setOption({backgroundColor:'transparent',tooltip:{trigger:'item',formatter:'{b}: ¥{c} ({d}%)'},series:[{type:'pie',radius:['40%','70%'],center:['50%','50%'],itemStyle:{borderRadius:4,borderColor:'#16161a',borderWidth:2},label:{show:true,fontSize:10,color:'#a1a1aa',formatter:'{b}\n{d}%'},data:depts.map((d, i) => ({value:d.act,name:d.name,itemStyle:{color:colors[i % colors.length]}}))}]});
     STATE.charts.pie=chart;
 }
 
@@ -874,11 +931,12 @@ async function generateAIAnalysis() {
     
     try {
         const d = STATE.currentData;
-        const room=d.totals?.room||{act:0,bud:0}, fb=d.totals?.fb||{act:0,bud:0}, other=d.totals?.other||{act:0,bud:0}, hotel=d.totals?.hotel||{act:0,bud:0};
+        const room=d.totals?.room||{act:0,bud:0}, fb=d.totals?.fb||{act:0,bud:0}, banquet=d.totals?.banquet||{act:0,bud:0}, other=d.totals?.other||{act:0,bud:0}, hotel=d.totals?.hotel||{act:0,bud:0};
         
         const totalPct=hotel.bud>0?(hotel.act/hotel.bud*100).toFixed(1):'100';
         const roomPct=room.bud>0?(room.act/room.bud*100).toFixed(1):'100';
         const fbPct=fb.bud>0?(fb.act/fb.bud*100).toFixed(1):'100';
+        const banquetPct=banquet.bud>0?(banquet.act/banquet.bud*100).toFixed(1):'100';
         const otherPct=other.bud>0?(other.act/other.bud*100).toFixed(1):'100';
         let occ=d.occupancy||0; if(occ<=1) occ*=100;
         let occBud=d.occBud||0; if(occBud<=1) occBud*=100;
@@ -906,10 +964,12 @@ async function generateAIAnalysis() {
         
         const roomDetails = formatDetails(['Room']);
         const fbDetails = formatDetails(['F&B']);
+        const banquetDetails = formatDetails(['Banquet']);
         const otherDetails = formatDetails(['Other']);
         
         const mtdRoomDetails = formatMtdDetails(['Room']);
         const mtdFbDetails = formatMtdDetails(['F&B']);
+        const mtdBanquetDetails = formatMtdDetails(['Banquet']);
         const mtdOtherDetails = formatMtdDetails(['Other']);
         
         // 优先使用Excel中的月累计数据d.mtd
@@ -917,6 +977,7 @@ async function generateAIAnalysis() {
         const mtdTotalPct = mtd.hotel?.bud>0?(mtd.hotel.act/mtd.hotel.bud*100).toFixed(1):'100';
         const mtdRoomPct = mtd.room?.bud>0?(mtd.room.act/mtd.room.bud*100).toFixed(1):'100';
         const mtdFbPct = mtd.fb?.bud>0?(mtd.fb.act/mtd.fb.bud*100).toFixed(1):'100';
+        const mtdBanquetPct = mtd.banquet?.bud>0?(mtd.banquet.act/mtd.banquet.bud*100).toFixed(1):'100';
         const mtdOtherPct = mtd.other?.bud>0?(mtd.other.act/mtd.other.bud*100).toFixed(1):'100';
         
         const dayOfMonth = parseInt(d.date.split('-')[2]);
@@ -929,6 +990,7 @@ async function generateAIAnalysis() {
             .replace(/{total_pct}/g, totalPct)
             .replace(/{room_pct}/g, roomPct)
             .replace(/{fb_pct}/g, fbPct)
+            .replace(/{banquet_pct}/g, banquetPct)
             .replace(/{other_pct}/g, otherPct)
             .replace(/{occupancy}/g, occ.toFixed(1))
             .replace(/{occ_bud}/g, occBud.toFixed(1))
@@ -938,6 +1000,7 @@ async function generateAIAnalysis() {
             .replace(/{revpar_bud}/g, Math.floor(d.revparBud||0))
             .replace(/{room_details}/g, roomDetails)
             .replace(/{fb_details}/g, fbDetails)
+            .replace(/{banquet_details}/g, banquetDetails)
             .replace(/{other_details}/g, otherDetails);
         
         // 月度分析提示词
@@ -948,12 +1011,14 @@ async function generateAIAnalysis() {
             .replace(/{mtd_total_pct}/g, mtdTotalPct)
             .replace(/{mtd_room_pct}/g, mtdRoomPct)
             .replace(/{mtd_fb_pct}/g, mtdFbPct)
+            .replace(/{mtd_banquet_pct}/g, mtdBanquetPct)
             .replace(/{mtd_other_pct}/g, mtdOtherPct)
             .replace(/{mtd_total_act}/g, ((mtd.hotel?.act||0)/10000).toFixed(1))
             .replace(/{mtd_total_bud}/g, ((mtd.hotel?.bud||0)/10000).toFixed(1))
             .replace(/{mtd_variance}/g, (((mtd.hotel?.act||0) - (mtd.hotel?.bud||0))/10000).toFixed(1))
             .replace(/{mtd_room_details}/g, mtdRoomDetails)
             .replace(/{mtd_fb_details}/g, mtdFbDetails)
+            .replace(/{mtd_banquet_details}/g, mtdBanquetDetails)
             .replace(/{mtd_other_details}/g, mtdOtherDetails);
         
         const [dailyRes, monthlyRes] = await Promise.all([
@@ -1008,9 +1073,9 @@ async function generateAIAnalysis() {
 
 function openDeepDive(){document.getElementById('deep-modal').classList.remove('hidden');switchDeepTab('room');}
 function switchDeepTab(tab) {
-    ['room','fb','other'].forEach(t=>{const b=document.getElementById('deep-tab-'+t);if(b){b.classList.toggle('bg-zinc-700',t===tab);b.classList.toggle('text-zinc-400',t!==tab);}});
+    ['room','fb','banquet','other'].forEach(t=>{const b=document.getElementById('deep-tab-'+t);if(b){b.classList.toggle('bg-zinc-700',t===tab);b.classList.toggle('text-zinc-400',t!==tab);}});
     if(!STATE.currentData)return;
-    const typeMap={room:['Room'],fb:['F&B'],other:['Other']};
+    const typeMap={room:['Room'],fb:['F&B'],banquet:['Banquet'],other:['Other']};
     let rows=STATE.currentData.rows.filter(r=>typeMap[tab].includes(r.type));
     rows=rows.filter(r=>!/Total|合计/i.test(r.name)).sort((a,b)=>b.actual-a.actual);
     document.getElementById('deep-table-head').innerHTML='<tr><th>项目</th><th>实际</th><th>预算</th><th>完成率</th></tr>';
@@ -1051,7 +1116,7 @@ function switchDeepTab(tab) {
 }
 
 window.addEventListener('resize',()=>Object.values(STATE.charts).forEach(c=>c?.resize()));
-document.addEventListener('DOMContentLoaded',()=>{console.log('🚀 NEXUS v2.6 月累计版启动');refreshData();});
+document.addEventListener('DOMContentLoaded',()=>{console.log('🚀 NEXUS v2.7 宴会版启动');refreshData();});
 </script>
 </body>
 </html>
