@@ -152,7 +152,7 @@
                             <div class="w-7 h-7 rounded bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center"><i class="fa-solid fa-robot text-white text-xs"></i></div>
                             <div><span class="text-sm font-medium">AI 经营分析</span><div class="text-[9px] text-zinc-500" id="ai-update-time">--</div></div>
                         </div>
-                        <button onclick="generateAIAnalysis()" class="btn-secondary px-3 text-[10px]"><i class="fa-solid fa-rotate mr-1"></i>分析</button>
+                        <button onclick="generateAIAnalysis()" class="btn-secondary px-3 text-[10px]"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>生成分析</button>
                     </div>
                     <!-- AI分析双板块切换 -->
                     <div class="flex gap-2 mb-3">
@@ -163,13 +163,13 @@
                         <div id="ai-panel-daily" class="ai-panel active">
                             <div class="flex flex-col items-center justify-center py-12 text-zinc-600">
                                 <i class="fa-solid fa-wand-magic-sparkles text-2xl mb-3"></i>
-                                <span class="text-xs">上传数据后自动生成今日分析</span>
+                                <span class="text-xs">点击"生成分析"按钮生成今日报告</span>
                             </div>
                         </div>
                         <div id="ai-panel-monthly" class="ai-panel">
                             <div class="flex flex-col items-center justify-center py-12 text-zinc-600">
                                 <i class="fa-solid fa-calendar-days text-2xl mb-3"></i>
-                                <span class="text-xs">上传数据后自动生成月度分析</span>
+                                <span class="text-xs">点击"生成分析"按钮生成月度报告</span>
                             </div>
                         </div>
                     </div>
@@ -489,13 +489,13 @@ function displayAI(data) {
     if (data.aiAnalysisDaily) { 
         dailyPanel.innerHTML = data.aiAnalysisDaily; 
     } else { 
-        dailyPanel.innerHTML = '<div class="text-center py-12 text-zinc-600"><i class="fa-solid fa-wand-magic-sparkles text-2xl mb-3"></i><p class="text-xs">点击"分析"生成今日报告</p></div>'; 
+        dailyPanel.innerHTML = '<div class="text-center py-12 text-zinc-600"><i class="fa-solid fa-wand-magic-sparkles text-2xl mb-3"></i><p class="text-xs">点击"生成分析"按钮生成今日报告</p></div>'; 
     }
     
     if (data.aiAnalysisMonthly) { 
         monthlyPanel.innerHTML = data.aiAnalysisMonthly; 
     } else { 
-        monthlyPanel.innerHTML = '<div class="text-center py-12 text-zinc-600"><i class="fa-solid fa-calendar-days text-2xl mb-3"></i><p class="text-xs">点击"分析"生成月度报告</p></div>'; 
+        monthlyPanel.innerHTML = '<div class="text-center py-12 text-zinc-600"><i class="fa-solid fa-calendar-days text-2xl mb-3"></i><p class="text-xs">点击"生成分析"按钮生成月度报告</p></div>'; 
     }
     
     document.getElementById('ai-update-time').textContent = data.aiAnalysisTime || '--';
@@ -522,9 +522,10 @@ async function saveToGitHub() {
     btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>保存中';
     try {
         const data = { ...STATE.currentData, savedAt: new Date().toISOString() };
+        const hasAI = data.aiAnalysisDaily ? '（含AI分析）' : '';
         const res = await fetch(STATE.webhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         if (!res.ok) throw new Error('HTTP ' + res.status);
-        showToast('保存成功！请等待1-2分钟后刷新', 'success');
+        showToast('保存成功' + hasAI + '！请等待1-2分钟后刷新', 'success');
     } catch (e) { showToast('保存失败: ' + e.message, 'error'); }
     finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up mr-1"></i>保存'; }
 }
@@ -568,7 +569,21 @@ function handleFileUpload(e) {
         renderDashboard(parsed);
         document.getElementById('save-btn').disabled = false;
         showToast('已加载 ' + parsed.date, 'success');
-        generateAIAnalysis();
+        
+        // 检查该日期是否已有保存的AI分析
+        const savedData = STATE.historyData[parsed.date];
+        if (savedData && savedData.aiAnalysisDaily) {
+            // 使用已保存的AI分析
+            parsed.aiAnalysisDaily = savedData.aiAnalysisDaily;
+            parsed.aiAnalysisMonthly = savedData.aiAnalysisMonthly;
+            parsed.aiAnalysisTime = savedData.aiAnalysisTime;
+            STATE.currentData = parsed;
+            displayAI(parsed);
+            showToast('已加载保存的AI分析', 'success');
+        } else {
+            // 没有保存的分析，显示占位符
+            displayAI(parsed);
+        }
     };
     reader.readAsArrayBuffer(f);
     e.target.value = '';
@@ -942,7 +957,7 @@ async function generateAIAnalysis() {
         STATE.currentData.aiAnalysisTime = new Date().toLocaleString('zh-CN');
         document.getElementById('ai-update-time').textContent = STATE.currentData.aiAnalysisTime;
         
-        showToast('AI分析完成', 'success');
+        showToast('AI分析完成，请点击保存按钮保存分析结果', 'success');
         
     } catch(e) { 
         console.error(e); 
