@@ -1,7 +1,7 @@
 {
   "date": "2025-12-10",
   "weekday": "周三",
-  "uploadedAt": "2025-12-11T05:11:39.662Z",
+  "uploadedAt": "2025-12-11T05:12:27.196Z",
   "totals": {
     "room": {
       "act": 367689.07,
@@ -336,5 +336,5 @@
   "revparBud": 1829.114460297767,
   "aiAnalysis": null,
   "aiAnalysisTime": "2025/12/11 13:10:54",
-  "savedAt": "2025-12-11T05:11:38.804Z"
+  "savedAt": "2025-12-11T05:12:27.027Z"
 }
