@@ -1,7 +1,7 @@
 {
   "date": "2025-12-07",
   "weekday": "周日",
-  "uploadedAt": "2025-12-10T07:49:44.447Z",
+  "uploadedAt": "2025-12-11T04:27:11.092Z",
   "totals": {
     "room": {
       "act": 359699.39,
@@ -235,6 +235,6 @@
   "revpar": 1383.4591923076923,
   "revparBud": 1829.114460297767,
   "aiAnalysis": "<div class=\"section-title\">📊 预算执行总览</div>\n<p><strong>整体完成率：121.2%</strong></p>\n<div class=\"progress-bar\"><div class=\"progress-fill\" style=\"width:121.2%;background:#22c55e\"></div></div>\n<div class=\"data-row\"><span>客房</span><span class=\"highlight-bad\">75.6%</span></div>\n<div class=\"data-row\"><span>餐饮</span><span class=\"highlight-good\">187.7%</span></div>\n<div class=\"data-row\"><span>其他</span><span class=\"highlight-bad\">68.5%</span></div>\n\n<div class=\"section-title\">🏨 客房分析</div>\n<p class=\"highlight-good\">✓ 表现优秀：</p>\n<ul>\n  <li>企业营销：128%</li>\n  <li>个人游：263%</li>\n  <li>公司合作客源收入：105%</li>\n</ul>\n<p class=\"highlight-bad\">✗ 需要改进：</p>\n<ul>\n  <li>本地合作客源收入：22%</li>\n  <li>散客门市价收入：49%</li>\n  <li>常住客收入：46%</li>\n  <li>客人洗衣：18%</li>\n  <li>宴会服务费：-8%</li>\n</ul>\n<div class=\"suggestion-item\">💡 建议：针对本地合作客源和散客市场加强促销活动，提高其入住意愿；同时增加对长期住宿客户的优惠力度以吸引更多的长住客。对于宴会服务费出现负值的情况，建议审查相关成本控制措施。</div>\n\n<div class=\"section-title\">🍽️ 餐饮分析</div>\n<p class=\"highlight-good\">✓ 表现优秀：</p>\n<ul>\n  <li>宴会食品酒水收入：500%</li>\n  <li>百味园：113%</li>\n</ul>\n<p class=\"highlight-bad\">✗ 需要改进：</p>\n<ul>\n  <li>廊吧：35%</li>\n  <li>蔚景阁：20%</li>\n  <li>羿庭：48%</li>\n  <li>浦江汇：59%</li>\n  <li>客房服务：56%</li>\n  <li>迷你吧：77%</li>\n  <li>宴会杂项收入：41%</li>\n</ul>\n<div class=\"suggestion-item\">💡 建议：鉴于宴会食品酒水收入远超预期，可以考虑进一步优化宴会服务流程并扩大宣传力度。对于表现不佳的餐厅或服务项目，则需要调查具体原因，并采取针对性措施提升顾客满意度与消费频次。</div>\n\n<div class=\"section-title\">⚠️ 风险预警</div>\n<div class=\"risk-item\">🔴 风险点：尽管整体业绩超出预期，但客房部门特别是部分细分市场的表现欠佳可能影响未来收益稳定性。此外，宴会服务费用异常低甚至为负数也是一个值得关注的问题。</div>\n\n<div class=\"section-title\">📈 月度进展</div>\n<p>本月第7天，时间进度22.6%。</p>",
-  "aiAnalysisTime": "2025/12/10 15:49:25",
-  "savedAt": "2025-12-10T07:49:44.187Z"
+  "aiAnalysisTime": "2025/12/11 12:27:05",
+  "savedAt": "2025-12-11T04:27:10.823Z"
 }
