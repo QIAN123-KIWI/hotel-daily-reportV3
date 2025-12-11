@@ -1,7 +1,7 @@
 {
   "date": "2025-12-09",
   "weekday": "周二",
-  "uploadedAt": "2025-12-10T07:44:49.584Z",
+  "uploadedAt": "2025-12-11T00:52:27.517Z",
   "totals": {
     "room": {
       "act": 324853.81999999995,
@@ -242,5 +242,5 @@
   "revparBud": 1829.114460297767,
   "aiAnalysis": "<div class=\"section-title\">📊 预算执行总览</div>\n<p><strong>整体完成率：74.6%</strong></p>\n<div class=\"progress-bar\"><div class=\"progress-fill\" style=\"width:74.6%;background:#ef4444\"></div></div>\n<div class=\"data-row\"><span>客房</span><span class=\"highlight-bad\">68.3%</span></div>\n<div class=\"data-row\"><span>餐饮</span><span class=\"highlight-bad\">83.8%</span></div>\n<div class=\"data-row\"><span>其他</span><span class=\"highlight-bad\">68.6%</span></div>\n\n<div class=\"section-title\">🏨 客房分析</div>\n<p class=\"highlight-good\">✓ 表现优秀：</p>\n<ul>\n  <li>企业营销：120%</li>\n  <li>个人游：358%</li>\n  <li>公司合作客源收入：155%</li>\n  <li>迷你吧：172%</li>\n</ul>\n<p class=\"highlight-bad\">✗ 需要改进：</p>\n<ul>\n  <li>净房费收入：67%</li>\n  <li>其他折扣客源收入：64%</li>\n  <li>本地合作客源收入：30%</li>\n  <li>散客门市价收入：38%</li>\n  <li>常住客收入：46%</li>\n  <li>客人洗衣：35%</li>\n</ul>\n<div class=\"suggestion-item\">💡 建议：针对表现不佳的项目，如净房费收入、其他折扣客源收入等，考虑调整价格策略或增加促销活动以吸引更多客户。同时，对于表现优秀的项目，如个人游和企业营销，可以进一步加大投入力度，扩大市场份额。</div>\n\n<div class=\"section-title\">🍽️ 餐饮分析</div>\n<p class=\"highlight-good\">✓ 表现优秀：</p>\n<ul>\n  <li>羿庭：909%</li>\n  <li>宴会杂项收入：257%</li>\n</ul>\n<p class=\"highlight-bad\">✗ 需要改进：</p>\n<ul>\n  <li>宴会食品酒水收入：46%</li>\n  <li>百味园：55%</li>\n  <li>蔚景阁：47%</li>\n  <li>廊吧：50%</li>\n  <li>浦江汇：34%</li>\n  <li>客房服务：48%</li>\n</ul>\n<div class=\"suggestion-item\">💡 建议：对于表现不佳的餐厅如百味园、蔚景阁等，建议进行菜品和服务质量的提升，并通过社交媒体等渠道加强宣传推广。同时，对于表现异常突出的羿庭，应保持其优势并探索更多增长机会。</div>\n\n<div class=\"section-title\">⚠️ 风险预警</div>\n<div class=\"risk-item\">🔴 风险点：当前入住率为56.2%，远低于预算目标73.3%。此外，今日亏损达21.2万元，表明成本控制可能存在较大问题。需立即采取措施提高入住率及优化成本结构。</div>\n\n<div class=\"section-title\">📈 月度进展</div>\n<p>本月第9天，时间进度29.0%。</p>\n<div class=\"note\">注：尽管目前处于月初阶段，但鉴于现有数据反映出的问题较为严重，建议管理层尽快召开会议讨论应对方案。</div>\n</div>",
   "aiAnalysisTime": "2025/12/10 15:25:56",
-  "savedAt": "2025-12-10T07:44:49.332Z"
+  "savedAt": "2025-12-11T00:52:26.796Z"
 }
