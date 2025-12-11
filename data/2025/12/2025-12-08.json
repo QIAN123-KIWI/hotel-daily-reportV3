@@ -1,7 +1,7 @@
 {
   "date": "2025-12-08",
   "weekday": "周一",
-  "uploadedAt": "2025-12-10T07:48:48.884Z",
+  "uploadedAt": "2025-12-11T04:40:31.710Z",
   "totals": {
     "room": {
       "act": 325069.41,
@@ -229,6 +229,6 @@
   "revpar": 1250.2669615384614,
   "revparBud": 1829.114460297767,
   "aiAnalysis": "<div class=\"section-title\">📊 预算执行总览</div>\n<p><strong>整体完成率：49.9%</strong></p>\n<div class=\"progress-bar\"><div class=\"progress-fill\" style=\"width:49.9%;background:#ef4444\"></div></div>\n<div class=\"data-row\"><span>客房</span><span class=\"highlight-bad\">68.4%</span></div>\n<div class=\"data-row\"><span>餐饮</span><span class=\"highlight-bad\">23.3%</span></div>\n<div class=\"data-row\"><span>其他</span><span class=\"highlight-bad\">63.6%</span></div>\n\n<div class=\"section-title\">🏨 客房分析</div>\n<p class=\"highlight-good\">✓ 表现优秀：<br>企业营销 (113%)<br>个人游 (252%)<br>公司合作客源收入 (124%)<br>客人洗衣 (121%)</p>\n<p class=\"highlight-bad\">✗ 需要改进：<br>净房费收入 (70%)<br>国外预订门市价收入 (78%)<br>服务费 (70%)<br>本地合作客源收入 (23%)<br>常住客收入 (46%)<br>其它房费收入 (27%)</p>\n<div class=\"suggestion-item\">💡 建议：加强与本地合作伙伴的关系，提高本地合作客源的入住率。同时，增加对常住客的服务和优惠，以提升其入住频率。对于国外预订门市价较低的情况，可以考虑调整价格策略或增加促销活动来吸引更多国际游客。</div>\n\n<div class=\"section-title\">🍽️ 餐饮分析</div>\n<p class=\"highlight-good\">无项目超过预算完成率</p>\n<p class=\"highlight-bad\">✗ 需要改进：<br>百味园 (57%)<br>廊吧 (44%)<br>蔚景阁 (34%)<br>羿庭 (40%)<br>客房服务 (22%)<br>浦江汇 (15%)<br>迷你吧 (54%)<br>宴会食品酒水收入 (-0.23%)</p>\n<div class=\"suggestion-item\">💡 建议：针对餐饮部门表现不佳的问题，建议进行市场调研，了解顾客需求，并据此调整菜单和服务内容。特别是对于宴会食品酒水收入几乎为零的情况，可能需要重新评估该部分业务的运营模式或寻找新的销售渠道。</div>\n\n<div class=\"section-title\">⚠️ 风险预警</div>\n<div class=\"risk-item\">🔴 今日亏损达到41.9万元，若持续下去将严重影响本月乃至全年的财务状况。<br>🔴 入住率远低于预期（实际51.2% vs 预算73.3%），需立即采取措施提升。<br>🔴 RevPAR仅为预算值的68.4%，表明每间可用房间产生的平均收益显著下降。</div>\n\n<div class=\"section-title\">📈 月度进展</div>\n<p>本月第8天，时间进度25.8%。</p>\n</div>",
-  "aiAnalysisTime": "2025/12/10 15:48:46",
-  "savedAt": "2025-12-10T07:48:48.462Z"
+  "aiAnalysisTime": "2025/12/11 12:40:27",
+  "savedAt": "2025-12-11T04:40:31.175Z"
 }
