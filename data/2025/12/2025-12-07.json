@@ -1,7 +1,7 @@
 {
   "date": "2025-12-07",
   "weekday": "周日",
-  "uploadedAt": "2025-12-11T05:28:30.596Z",
+  "uploadedAt": "2025-12-11T06:26:59.009Z",
   "totals": {
     "room": {
       "act": 359699.39,
@@ -334,7 +334,26 @@
   "adrBud": 2496.217837792076,
   "revpar": 1383.4591923076923,
   "revparBud": 1829.114460297767,
-  "aiAnalysis": null,
-  "aiAnalysisTime": "2025/12/11 13:28:21",
-  "savedAt": "2025-12-11T05:28:30.875Z"
+  "mtd": {
+    "room": {
+      "act": 3330900.44,
+      "bud": 3328988.317741936
+    },
+    "fb": {
+      "act": 2380378.95,
+      "bud": 2387188.5856867093
+    },
+    "hotel": {
+      "act": 5825197.48,
+      "bud": 5856517.8508480005
+    },
+    "other": {
+      "act": 113918.08999999997,
+      "bud": 140340.9474193549
+    }
+  },
+  "aiAnalysisDaily": "<div class=\"section-title\">📊 今日预算执行总览</div>\n<p><strong>整体完成率：<span class=\"highlight-good\">121.2%</span></strong></p>\n<p>客房<span class=\"highlight-bad\">75.6%</span> 餐饮<span class=\"highlight-good\">187.7%</span> 其他<span class=\"highlight-bad\">68.5%</span></p>\n\n<div class=\"section-title\">🏨 客房分析</div>\n<p>✓ 表现优秀：</p>\n<p>• 个人游：<span class=\"highlight-good\">263%</span>（可能是由于近期促销活动吸引了大量个人游客）</p>\n<p>• 企业营销：<span class=\"highlight-good\">128%</span>（表明企业客户对酒店服务的认可度较高，可能与最近的商务会议有关）</p>\n<p>✗ 需要改进：</p>\n<p>• 散客门市价收入：<span class=\"highlight-bad\">49%</span>（可能是因为竞争对手的价格策略更加吸引人或市场推广力度不够）</p>\n<p>• 本地合作客源收入：<span class=\"highlight-bad\">22%</span>（需要加强与本地合作伙伴的关系维护及宣传）</p>\n<p>💡 建议：</p>\n<p>1. 对散客推出更多优惠套餐以提高吸引力。</p>\n<p>2. 加强与本地企业的联系，提供定制化服务方案。</p>\n\n<div class=\"section-title\">🍽️ 餐饮分析</div>\n<p>✓ 表现优秀：</p>\n<p>• 宴会收入：<span class=\"highlight-good\">338%</span></p>\n<p>• 百味园：<span class=\"highlight-good\">113%</span></p>\n<p>✗ 需要改进：</p>\n<p>• 蔚景阁：<span class=\"highlight-bad\">20%</span></p>\n<p>• 廊吧：<span class=\"highlight-bad\">35%</span></p>\n<p>💡 建议：具体餐厅改进措施如增加特色菜品、优化就餐环境等来吸引更多顾客。</p>\n\n<div class=\"section-title\">⚠️ 风险预警</div>\n<div class=\"risk-item\">🔴 风险点：\n• 入住率59.2%低于预算73.3%，需关注\n• 今日收入缺口主要来源于客房部分，尤其是散客和本地合作客源表现不佳\n</div>\n\n<div class=\"section-title\">📈 今日小结</div>\n<p>重点关注：1)提高散客入住率 2)增强本地合作 3)维持并扩大宴会业务优势</p>\n<p>明日行动：1)推出针对散客的新优惠政策 2)组织一次面向本地企业的推介会 3)继续跟进大型宴会预订情况</p>",
+  "aiAnalysisMonthly": "<div class=\"section-title\">📊 月度预算执行总览</div>\n<p><strong>月累计完成率：<span class=\"highlight-xxx\">99.5%</span></strong>（时间进度22.6%）</p>\n<p>客房<span class=\"highlight-good\">100.1%</span> 餐饮<span class=\"highlight-xxx\">99.7%</span> 其他<span class=\"highlight-bad\">81.2%</span></p>\n<p>收入进度 vs 时间进度：<span class=\"highlight-xxx\">领先76.9个百分点</span></p>\n\n<div class=\"section-title\">🏨 客房月度分析</div>\n<p>✓ 表现优秀：</p>\n<p>• 个人游：<span class=\"highlight-good\">306%</span></p>\n<p>• 公司合作客源收入：<span class=\"highlight-good\">143%</span></p>\n<p>• 其他折扣客源收入：<span class=\"highlight-good\">118%</span></p>\n<p>• 企业营销：<span class=\"highlight-good\">131%</span></p>\n<p>✗ 需要改进：</p>\n<p>• 本地合作客源收入：<span class=\"highlight-bad\">34%</span></p>\n<p>• 常住客收入：<span class=\"highlight-bad\">46%</span></p>\n<p>💡 月度策略：加强本地合作客源开发，优化常住客优惠政策。</p>\n\n<div class=\"section-title\">🍽️ 餐饮月度分析</div>\n<p>✓ 表现优秀：</p>\n<p>• 宴会收入：<span class=\"highlight-good\">139%</span></p>\n<p>• 迷你吧：<span class=\"highlight-good\">101%</span></p>\n<p>✗ 需要改进：</p>\n<p>• 蔚景阁：<span class=\"highlight-bad\">66%</span></p>\n<p>• 羿庭：<span class=\"highlight-bad\">52%</span></p>\n<p>• 浦江汇：<span class=\"highlight-bad\">49%</span></p>\n<p>💡 月度策略：提升蔚景阁、羿庭和浦江汇的菜品和服务质量，增加促销活动。</p>\n\n<div class=\"section-title\">⚠️ 月度风险预警</div>\n<div class=\"risk-item\">🔴 关键风险：\n• 收入进度99.5% vs 时间进度22.6%\n• 按当前趋势预计月底完成率\n• 主要拖累板块分析\n</div>\n\n<div class=\"section-title\">📈 月度进展与预测</div>\n<p>本月第7天，剩余24天</p>\n<p>🎯 要完成月度目标，剩余每日需达成目标</p>\n<p>💡 重点行动：</p>\n<p>1. 立即行动：加大本地合作客源推广力度，推出更多优惠套餐。</p>\n<p>2. 本周重点：优化宴会服务流程，提高客户满意度。</p>\n<p>3. 月底冲刺：开展客房和餐饮联合促销活动，吸引散客和团队预订。</p>",
+  "aiAnalysisTime": "2025/12/11 14:26:55",
+  "savedAt": "2025-12-11T06:26:59.085Z"
 }
