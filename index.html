@@ -3,15 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>酒店经营日报 | NEXUS (代理版)</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <title>酒店经营日报 | NEXUS (国内加速版)</title>
+    <!-- 国内CDN加速 -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/tailwindcss/3.4.1/tailwind.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- 备用：如果bootcdn不行，用staticfile -->
+    <!-- <script src="https://cdn.staticfile.org/echarts/5.5.0/echarts.min.js"></script> -->
+    <!-- <script src="https://cdn.staticfile.org/xlsx/0.18.5/xlsx.full.min.js"></script> -->
+    <!-- <link href="https://cdn.staticfile.org/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"> -->
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         :root { --bg-primary: #0a0a0c; --bg-card: #16161a; --border-color: #232329; --text-primary: #f4f4f5; --text-secondary: #a1a1aa; --text-muted: #71717a; }
-        body { background: var(--bg-primary); color: var(--text-primary); font-family: system-ui, sans-serif; font-size: 13px; }
+        body { background: var(--bg-primary); color: var(--text-primary); font-family: system-ui, -apple-system, sans-serif; font-size: 13px; }
         .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; }
         .kpi-card { padding: 12px; position: relative; }
         .kpi-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
@@ -56,36 +61,131 @@
         .deep-summary { background: #111; border-radius: 8px; padding: 16px; margin-top: 16px; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
-        /* 新增：月累计数据样式 */
         .mtd-header { background: rgba(59,130,246,0.1); }
         .mtd-cell { background: rgba(59,130,246,0.05); }
-        /* AI分析双板块样式 */
         .ai-tab { padding: 6px 12px; border-radius: 6px; font-size: 11px; cursor: pointer; transition: all 0.2s; }
         .ai-tab.active { background: #3b82f6; color: white; }
         .ai-tab:not(.active) { background: transparent; color: var(--text-muted); }
         .ai-tab:not(.active):hover { background: rgba(255,255,255,0.05); }
         .ai-panel { display: none; }
         .ai-panel.active { display: block; }
-        /* 宴会行样式 - 缩进显示为餐饮子项 */
         .banquet-row { background: rgba(34,197,94,0.03); }
         .banquet-row td:first-child { padding-left: 20px; }
+        /* Tailwind替代样式 */
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .flex-1 { flex: 1; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .justify-center { justify-content: center; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-3 { gap: 0.75rem; }
+        .gap-4 { gap: 1rem; }
+        .grid { display: grid; }
+        .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+        .grid-cols-12 { grid-template-columns: repeat(12, 1fr); }
+        .col-span-5 { grid-column: span 5; }
+        .col-span-7 { grid-column: span 7; }
+        .min-h-screen { min-height: 100vh; }
+        .h-full { height: 100%; }
+        .w-full { width: 100%; }
+        .w-7 { width: 1.75rem; }
+        .w-8 { width: 2rem; }
+        .h-7 { height: 1.75rem; }
+        .h-8 { height: 2rem; }
+        .p-2 { padding: 0.5rem; }
+        .p-3 { padding: 0.75rem; }
+        .p-4 { padding: 1rem; }
+        .p-5 { padding: 1.25rem; }
+        .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+        .px-4 { padding-left: 1rem; padding-right: 1rem; }
+        .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+        .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+        .py-8 { padding-top: 2rem; padding-bottom: 2rem; }
+        .py-12 { padding-top: 3rem; padding-bottom: 3rem; }
+        .pt-2 { padding-top: 0.5rem; }
+        .pb-3 { padding-bottom: 0.75rem; }
+        .mb-1 { margin-bottom: 0.25rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-3 { margin-bottom: 0.75rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mt-1 { margin-top: 0.25rem; }
+        .mt-2 { margin-top: 0.5rem; }
+        .mt-3 { margin-top: 0.75rem; }
+        .mt-4 { margin-top: 1rem; }
+        .mr-1 { margin-right: 0.25rem; }
+        .mr-2 { margin-right: 0.5rem; }
+        .text-center { text-align: center; }
+        .text-xs { font-size: 0.75rem; }
+        .text-sm { font-size: 0.875rem; }
+        .text-lg { font-size: 1.125rem; }
+        .text-2xl { font-size: 1.5rem; }
+        .font-medium { font-weight: 500; }
+        .font-semibold { font-weight: 600; }
+        .font-mono { font-family: monospace; }
+        .text-white { color: white; }
+        .text-zinc-400 { color: #a1a1aa; }
+        .text-zinc-500 { color: #71717a; }
+        .text-zinc-600 { color: #52525b; }
+        .text-blue-400 { color: #60a5fa; }
+        .text-green-400 { color: #4ade80; }
+        .text-amber-400 { color: #fbbf24; }
+        .text-purple-400 { color: #c084fc; }
+        .text-red-400 { color: #f87171; }
+        .bg-zinc-700 { background-color: #3f3f46; }
+        .bg-zinc-800 { background-color: #27272a; }
+        .bg-zinc-900 { background-color: #18181b; }
+        .bg-blue-600 { background-color: #2563eb; }
+        .hover\:bg-blue-500:hover { background-color: #3b82f6; }
+        .hover\:bg-zinc-800:hover { background-color: #27272a; }
+        .hover\:text-white:hover { color: white; }
+        .border { border-width: 1px; }
+        .border-t { border-top-width: 1px; }
+        .border-b { border-bottom-width: 1px; }
+        .border-r { border-right-width: 1px; }
+        .border-zinc-700 { border-color: #3f3f46; }
+        .border-zinc-800 { border-color: #27272a; }
+        .rounded { border-radius: 0.25rem; }
+        .rounded-lg { border-radius: 0.5rem; }
+        .rounded-xl { border-radius: 0.75rem; }
+        .overflow-y-auto { overflow-y: auto; }
+        .overflow-x-auto { overflow-x: auto; }
+        .hidden { display: none; }
+        .fixed { position: fixed; }
+        .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+        .z-50 { z-index: 50; }
+        .cursor-pointer { cursor: pointer; }
+        .transition-transform { transition: transform 0.2s; }
+        .rotate-90 { transform: rotate(90deg); }
+        .max-w-lg { max-width: 32rem; }
+        .max-w-5xl { max-width: 64rem; }
+        .mx-auto { margin-left: auto; margin-right: auto; }
+        .max-h-80 { max-height: 20rem; }
+        .uppercase { text-transform: uppercase; }
+        .align-bottom { vertical-align: bottom; }
+        .bg-gradient-to-br { background: linear-gradient(to bottom right, var(--tw-gradient-from), var(--tw-gradient-to)); }
+        .from-blue-500 { --tw-gradient-from: #3b82f6; }
+        .to-purple-600 { --tw-gradient-to: #9333ea; }
+        .from-purple-500 { --tw-gradient-from: #a855f7; }
+        .to-pink-500 { --tw-gradient-to: #ec4899; }
     </style>
 </head>
 <body class="min-h-screen">
 <div id="toast-container"></div>
 <div class="flex min-h-screen">
-    <aside id="sidebar" class="sidebar border-r border-zinc-800 p-3 flex flex-col bg-[#0c0c0e]">
+    <aside id="sidebar" class="sidebar border-r border-zinc-800 p-3 flex flex-col" style="background:#0c0c0e;">
         <button onclick="toggleSidebar()" class="w-full py-2 mb-3 text-zinc-500 hover:text-white text-xs rounded hover:bg-zinc-800"><i class="fa-solid fa-chevron-left"></i></button>
         <div class="sidebar-content flex flex-col flex-1">
             <div class="flex items-center gap-2 mb-4">
-                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"><i class="fa-solid fa-chart-line text-white text-sm"></i></div>
-                <div><span class="font-semibold text-white text-sm">NEXUS</span><span class="text-[9px] text-zinc-500 block">v2.7 宴会版</span></div>
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:linear-gradient(to bottom right,#3b82f6,#9333ea);"><i class="fa-solid fa-chart-line text-white text-sm"></i></div>
+                <div><span class="font-semibold text-white text-sm">NEXUS</span><span class="text-zinc-500 block" style="font-size:9px;">v2.7 国内加速版</span></div>
             </div>
             <label class="block mb-4">
-                <div class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 rounded cursor-pointer text-center text-xs font-medium"><i class="fa-solid fa-upload mr-1"></i>上传报表</div>
+                <div class="w-full py-2 bg-blue-600 hover:bg-blue-500 rounded cursor-pointer text-center text-xs font-medium" style="padding:10px 0;"><i class="fa-solid fa-upload mr-1"></i>上传报表</div>
                 <input type="file" accept=".xlsx,.xls,.csv" onchange="handleFileUpload(event)" class="hidden">
             </label>
-            <div class="flex items-center justify-between mb-2"><span class="text-[10px] text-zinc-500 uppercase">历史记录</span><span id="history-count" class="text-[10px] text-zinc-600 bg-zinc-800 px-2 rounded">0</span></div>
+            <div class="flex items-center justify-between mb-2"><span class="text-zinc-500 uppercase" style="font-size:10px;">历史记录</span><span id="history-count" class="text-zinc-600 bg-zinc-800 px-3 rounded" style="font-size:10px;">0</span></div>
             <div id="history-list" class="flex-1 overflow-y-auto"></div>
         </div>
     </aside>
@@ -94,7 +194,7 @@
             <div class="flex items-center gap-3">
                 <span id="current-date" class="text-lg font-semibold">--</span>
                 <span id="data-status" class="tag tag-red">无数据</span>
-                <span class="tag tag-blue">🌐 代理模式</span>
+                <span class="tag tag-green">🚀 国内加速</span>
             </div>
             <div class="flex items-center gap-2">
                 <button onclick="refreshData()" class="btn-secondary px-3" title="刷新"><i class="fa-solid fa-sync"></i></button>
@@ -103,17 +203,17 @@
             </div>
         </div>
         <div class="grid grid-cols-4 gap-3 mb-4">
-            <div class="card kpi-card blue"><p class="text-[10px] text-zinc-500 mb-1">总营收</p><p id="kpi-revenue" class="kpi-value">--</p><div class="mt-2 pt-2 border-t border-zinc-800 text-[10px]"><div class="flex justify-between"><span class="text-zinc-500">预算</span><span id="kpi-revenue-bud" class="text-zinc-400">--</span></div><div class="flex justify-between mt-1"><span class="text-zinc-500">完成率</span><span id="kpi-revenue-pct" class="font-semibold">--</span></div></div></div>
-            <div class="card kpi-card green"><p class="text-[10px] text-zinc-500 mb-1">出租率</p><p id="kpi-occ" class="kpi-value">--</p><div class="mt-2 pt-2 border-t border-zinc-800 text-[10px]"><div class="flex justify-between"><span class="text-zinc-500">预算</span><span id="kpi-occ-bud" class="text-zinc-400">--</span></div><div class="flex justify-between mt-1"><span class="text-zinc-500">实际售出VS预算</span><span id="kpi-sold">--</span></div></div></div>
-            <div class="card kpi-card amber"><p class="text-[10px] text-zinc-500 mb-1">ADR</p><p id="kpi-adr" class="kpi-value">--</p><div class="mt-2 pt-2 border-t border-zinc-800 text-[10px]"><div class="flex justify-between"><span class="text-zinc-500">预算</span><span id="kpi-adr-bud" class="text-zinc-400">--</span></div><div class="flex justify-between mt-1"><span class="text-zinc-500">完成率</span><span id="kpi-adr-pct" class="font-semibold">--</span></div></div></div>
-            <div class="card kpi-card purple"><p class="text-[10px] text-zinc-500 mb-1">RevPAR</p><p id="kpi-revpar" class="kpi-value">--</p><div class="mt-2 pt-2 border-t border-zinc-800 text-[10px]"><div class="flex justify-between"><span class="text-zinc-500">预算</span><span id="kpi-revpar-bud" class="text-zinc-400">--</span></div><div class="flex justify-between mt-1"><span class="text-zinc-500">完成率</span><span id="kpi-revpar-pct" class="font-semibold">--</span></div></div></div>
+            <div class="card kpi-card blue"><p class="text-zinc-500 mb-1" style="font-size:10px;">总营收</p><p id="kpi-revenue" class="kpi-value">--</p><div class="mt-2 pt-2 border-t border-zinc-800" style="font-size:10px;"><div class="flex justify-between"><span class="text-zinc-500">预算</span><span id="kpi-revenue-bud" class="text-zinc-400">--</span></div><div class="flex justify-between mt-1"><span class="text-zinc-500">完成率</span><span id="kpi-revenue-pct" class="font-semibold">--</span></div></div></div>
+            <div class="card kpi-card green"><p class="text-zinc-500 mb-1" style="font-size:10px;">出租率</p><p id="kpi-occ" class="kpi-value">--</p><div class="mt-2 pt-2 border-t border-zinc-800" style="font-size:10px;"><div class="flex justify-between"><span class="text-zinc-500">预算</span><span id="kpi-occ-bud" class="text-zinc-400">--</span></div><div class="flex justify-between mt-1"><span class="text-zinc-500">实际售出VS预算</span><span id="kpi-sold">--</span></div></div></div>
+            <div class="card kpi-card amber"><p class="text-zinc-500 mb-1" style="font-size:10px;">ADR</p><p id="kpi-adr" class="kpi-value">--</p><div class="mt-2 pt-2 border-t border-zinc-800" style="font-size:10px;"><div class="flex justify-between"><span class="text-zinc-500">预算</span><span id="kpi-adr-bud" class="text-zinc-400">--</span></div><div class="flex justify-between mt-1"><span class="text-zinc-500">完成率</span><span id="kpi-adr-pct" class="font-semibold">--</span></div></div></div>
+            <div class="card kpi-card purple"><p class="text-zinc-500 mb-1" style="font-size:10px;">RevPAR</p><p id="kpi-revpar" class="kpi-value">--</p><div class="mt-2 pt-2 border-t border-zinc-800" style="font-size:10px;"><div class="flex justify-between"><span class="text-zinc-500">预算</span><span id="kpi-revpar-bud" class="text-zinc-400">--</span></div><div class="flex justify-between mt-1"><span class="text-zinc-500">完成率</span><span id="kpi-revpar-pct" class="font-semibold">--</span></div></div></div>
         </div>
         <div class="grid grid-cols-12 gap-4">
             <div class="col-span-7 flex flex-col gap-4">
                 <div class="card p-4">
                     <div class="flex justify-between mb-3">
                         <span class="text-sm font-medium"><i class="fa-solid fa-layer-group text-blue-400 mr-2"></i>部门概览</span>
-                        <button onclick="openDeepDive()" class="text-[10px] text-blue-400 hover:text-blue-300"><i class="fa-solid fa-table-list mr-1"></i>详细</button>
+                        <button onclick="openDeepDive()" class="text-blue-400 hover:text-blue-300" style="font-size:10px;"><i class="fa-solid fa-table-list mr-1"></i>详细</button>
                     </div>
                     <div class="overflow-x-auto">
                         <table>
@@ -152,12 +252,11 @@
                 <div class="card p-4 h-full flex flex-col">
                     <div class="flex justify-between mb-3 pb-3 border-b border-zinc-800">
                         <div class="flex items-center gap-2">
-                            <div class="w-7 h-7 rounded bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center"><i class="fa-solid fa-robot text-white text-xs"></i></div>
-                            <div><span class="text-sm font-medium">AI 经营分析</span><div class="text-[9px] text-zinc-500" id="ai-update-time">--</div></div>
+                            <div class="w-7 h-7 rounded flex items-center justify-center" style="background:linear-gradient(to bottom right,#a855f7,#ec4899);"><i class="fa-solid fa-robot text-white text-xs"></i></div>
+                            <div><span class="text-sm font-medium">AI 经营分析</span><div class="text-zinc-500" style="font-size:9px;" id="ai-update-time">--</div></div>
                         </div>
-                        <button onclick="generateAIAnalysis()" class="btn-secondary px-3 text-[10px]"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>生成分析</button>
+                        <button onclick="generateAIAnalysis()" class="btn-secondary px-3" style="font-size:10px;"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>生成分析</button>
                     </div>
-                    <!-- AI分析双板块切换 -->
                     <div class="flex gap-2 mb-3">
                         <button id="ai-tab-daily" onclick="switchAITab('daily')" class="ai-tab active">📅 今日分析</button>
                         <button id="ai-tab-monthly" onclick="switchAITab('monthly')" class="ai-tab">📊 月度分析</button>
@@ -184,25 +283,25 @@
 <div id="settings-modal" class="fixed inset-0 z-50 hidden modal-backdrop flex items-center justify-center">
     <div class="bg-zinc-900 rounded-xl p-5 w-full max-w-lg border border-zinc-700">
         <div class="flex justify-between mb-4"><h3 class="font-semibold"><i class="fa-solid fa-gear text-blue-400 mr-2"></i>设置</h3><button onclick="closeModal('settings-modal')" class="text-zinc-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button></div>
-        <div class="mb-4 p-3 bg-blue-900/30 border border-blue-700/50 rounded text-xs text-blue-300"><i class="fa-solid fa-shield-alt mr-1"></i>代理模式 - 使用 ghproxy.net 加速访问</div>
-        <div class="mb-4"><label class="text-[10px] text-zinc-500">Webhook URL</label><input type="text" id="settings-webhook" class="w-full mt-1 bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-xs"></div>
+        <div class="mb-4 p-3 rounded text-xs" style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:#4ade80;"><i class="fa-solid fa-rocket mr-1"></i>国内加速版 - 使用 jsDelivr CDN</div>
+        <div class="mb-4"><label class="text-zinc-500" style="font-size:10px;">Webhook URL</label><input type="text" id="settings-webhook" class="w-full mt-1 bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-xs"></div>
         <div class="mb-4">
-            <label class="text-[10px] text-zinc-500">今日分析提示词</label>
+            <label class="text-zinc-500" style="font-size:10px;">今日分析提示词</label>
             <textarea id="settings-ai-prompt-daily" rows="5" class="w-full mt-1 bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-xs"></textarea>
         </div>
         <div class="mb-4">
-            <label class="text-[10px] text-zinc-500">月度分析提示词</label>
+            <label class="text-zinc-500" style="font-size:10px;">月度分析提示词</label>
             <textarea id="settings-ai-prompt-monthly" rows="5" class="w-full mt-1 bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-xs"></textarea>
         </div>
         <div class="flex justify-end gap-2"><button onclick="closeModal('settings-modal')" class="btn-secondary">取消</button><button onclick="saveSettings()" class="btn-primary">保存</button></div>
     </div>
 </div>
 <div id="deep-modal" class="fixed inset-0 z-50 hidden modal-backdrop flex flex-col">
-    <div class="h-12 px-4 border-b border-zinc-800 flex items-center justify-between bg-[#0c0c0e]">
+    <div class="h-12 px-4 border-b border-zinc-800 flex items-center justify-between" style="background:#0c0c0e;">
         <button onclick="closeModal('deep-modal')" class="text-zinc-400 hover:text-white text-sm"><i class="fa-solid fa-arrow-left mr-2"></i>返回</button>
         <div class="flex gap-2"><button id="deep-tab-room" onclick="switchDeepTab('room')" class="px-4 py-1 rounded text-xs bg-zinc-700">客房</button><button id="deep-tab-fb" onclick="switchDeepTab('fb')" class="px-4 py-1 rounded text-xs text-zinc-400">餐饮</button><button id="deep-tab-banquet" onclick="switchDeepTab('banquet')" class="px-4 py-1 rounded text-xs text-zinc-400">宴会</button><button id="deep-tab-other" onclick="switchDeepTab('other')" class="px-4 py-1 rounded text-xs text-zinc-400">其他</button></div>
     </div>
-    <div class="flex-1 overflow-y-auto p-4 bg-[#09090b]">
+    <div class="flex-1 overflow-y-auto p-4" style="background:#09090b;">
         <div class="max-w-5xl mx-auto grid grid-cols-2 gap-4">
             <div class="card p-4"><h4 class="text-sm font-medium mb-3">收入明细</h4><div class="overflow-auto max-h-80"><table><thead id="deep-table-head"></thead><tbody id="deep-table-body"></tbody></table></div></div>
             <div class="card p-4"><h4 class="text-sm font-medium mb-3">TOP10</h4><div id="deep-chart" style="height:280px;"></div></div>
@@ -354,7 +453,11 @@ const DEFAULT_PROMPT_MONTHLY = `你是五星级酒店的资深经营分析师。
 - 建议要具体可执行
 - 直接输出纯HTML，禁止输出任何解释说明`;
 
-const REMOTE_BASE = 'https://ghproxy.net/https://raw.githubusercontent.com/QIAN123-KIWI/hotel-daily-reportV3/main/data';
+// ===== 国内加速：使用 jsDelivr CDN =====
+const REMOTE_BASE = 'https://cdn.jsdelivr.net/gh/QIAN123-KIWI/hotel-daily-reportV3@main/data';
+// 备用线路
+const REMOTE_BASE_BACKUP = 'https://fastly.jsdelivr.net/gh/QIAN123-KIWI/hotel-daily-reportV3@main/data';
+const REMOTE_BASE_BACKUP2 = 'https://raw.gitmirror.com/QIAN123-KIWI/hotel-daily-reportV3/main/data';
 
 const STATE = {
     currentData: null, 
@@ -365,7 +468,8 @@ const STATE = {
     webhookUrl: localStorage.getItem('nexus_webhook_url') || 'https://n8n-fzlhzvbn.ap-northeast-1.clawcloudrun.com/webhook/hotel-save',
     qianwen: { apiKey: 'sk-d8f9d80c5d154e5fa8ce9413560ccfe8', model: 'qwen-max', endpoint: 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions' },
     aiPromptDaily: localStorage.getItem('nexus_ai_prompt_daily') || DEFAULT_PROMPT_DAILY,
-    aiPromptMonthly: localStorage.getItem('nexus_ai_prompt_monthly') || DEFAULT_PROMPT_MONTHLY
+    aiPromptMonthly: localStorage.getItem('nexus_ai_prompt_monthly') || DEFAULT_PROMPT_MONTHLY,
+    currentCDN: REMOTE_BASE
 };
 
 function showToast(m, t='info') {
@@ -405,13 +509,30 @@ function switchAITab(tab) {
     document.getElementById('ai-panel-monthly').classList.toggle('active', tab === 'monthly');
 }
 
+// 带自动切换CDN的fetch
+async function fetchWithFallback(path) {
+    const cdns = [REMOTE_BASE, REMOTE_BASE_BACKUP, REMOTE_BASE_BACKUP2];
+    for (const cdn of cdns) {
+        try {
+            const url = cdn + path + '?t=' + Date.now();
+            const res = await fetch(url, { timeout: 8000 });
+            if (res.ok) {
+                STATE.currentCDN = cdn;
+                return res;
+            }
+        } catch (e) {
+            console.log('CDN失败:', cdn, e.message);
+        }
+    }
+    throw new Error('所有CDN都无法访问');
+}
+
 async function refreshData() {
-    showToast('正在加载数据(代理模式)...', 'info');
+    showToast('正在加载数据(国内加速)...', 'info');
     try {
-        const res = await fetch(REMOTE_BASE + '/index.json?t=' + Date.now());
-        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const res = await fetchWithFallback('/index.json');
         STATE.historyIndex = await res.json();
-        showToast('已加载 ' + STATE.historyIndex.length + ' 条记录', 'success');
+        showToast('已加载 ' + STATE.historyIndex.length + ' 条记录 (via ' + new URL(STATE.currentCDN).hostname + ')', 'success');
         renderHistoryList();
         if (STATE.historyIndex.length) {
             const sorted = [...STATE.historyIndex].sort((a,b) => b.date.localeCompare(a.date));
@@ -420,7 +541,7 @@ async function refreshData() {
         await loadTrendData();
     } catch (e) {
         console.error('加载失败:', e);
-        showToast('代理连接失败，请检查网络', 'error');
+        showToast('加载失败，请检查网络: ' + e.message, 'error');
     }
 }
 
@@ -436,8 +557,7 @@ async function loadDayData(date) {
     }
     try {
         const [y, m] = date.split('-');
-        const res = await fetch(REMOTE_BASE + '/' + y + '/' + m + '/' + date + '.json?t=' + Date.now());
-        if (!res.ok) throw new Error();
+        const res = await fetchWithFallback('/' + y + '/' + m + '/' + date + '.json');
         const d = await res.json();
         STATE.historyData[date] = d;
         STATE.currentData = d;
@@ -471,11 +591,9 @@ async function calculateMTD(currentDate) {
         if (!dayData) {
             try {
                 const [y, m] = date.split('-');
-                const res = await fetch(REMOTE_BASE + '/' + y + '/' + m + '/' + date + '.json');
-                if (res.ok) {
-                    dayData = await res.json();
-                    STATE.historyData[date] = dayData;
-                }
+                const res = await fetchWithFallback('/' + y + '/' + m + '/' + date + '.json');
+                dayData = await res.json();
+                STATE.historyData[date] = dayData;
             } catch {}
         }
         
@@ -497,7 +615,6 @@ async function calculateMTD(currentDate) {
                 STATE.mtdData.hotel.act += t.hotel.act || 0;
                 STATE.mtdData.hotel.bud += t.hotel.bud || 0;
             }
-            // 注意：宴会是餐饮子项，其他收入 = 酒店总计 - 客房 - 餐饮
             if (t.hotel && t.room && t.fb) {
                 STATE.mtdData.other.act += (t.hotel.act || 0) - (t.room.act || 0) - (t.fb.act || 0);
                 STATE.mtdData.other.bud += (t.hotel.bud || 0) - (t.room.bud || 0) - (t.fb.bud || 0);
@@ -533,8 +650,10 @@ async function loadTrendData() {
         if (STATE.historyData[i.date]) data.push(STATE.historyData[i.date]);
         else try {
             const [y,m] = i.date.split('-');
-            const res = await fetch(REMOTE_BASE + '/' + y + '/' + m + '/' + i.date + '.json');
-            if (res.ok) { const d = await res.json(); STATE.historyData[i.date] = d; data.push(d); }
+            const res = await fetchWithFallback('/' + y + '/' + m + '/' + i.date + '.json');
+            const d = await res.json();
+            STATE.historyData[i.date] = d;
+            data.push(d);
         } catch {}
     }
     renderTrendChart(data);
@@ -546,18 +665,12 @@ async function saveToGitHub() {
     const btn = document.getElementById('save-btn');
     btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i>保存中';
     try {
-        // 深拷贝确保数据完整
         const data = JSON.parse(JSON.stringify(STATE.currentData));
         data.savedAt = new Date().toISOString();
         
-        // 详细调试信息
         console.log('========= 保存数据调试 =========');
         console.log('日期:', data.date);
         console.log('totals:', JSON.stringify(data.totals));
-        console.log('totals.banquet:', JSON.stringify(data.totals?.banquet));
-        console.log('mtd:', JSON.stringify(data.mtd));
-        console.log('mtd.banquet:', JSON.stringify(data.mtd?.banquet));
-        console.log('aiAnalysisDaily长度:', data.aiAnalysisDaily ? data.aiAnalysisDaily.length : 0);
         console.log('================================');
         
         const hasAI = data.aiAnalysisDaily ? '（含AI分析）' : '（无AI分析）';
@@ -569,15 +682,9 @@ async function saveToGitHub() {
             body: JSON.stringify(data) 
         });
         
-        if (!res.ok) {
-            const errText = await res.text();
-            console.error('保存失败响应:', errText);
-            throw new Error('HTTP ' + res.status);
-        }
+        if (!res.ok) throw new Error('HTTP ' + res.status);
         
-        const result = await res.json();
-        console.log('保存成功响应:', result);
-        showToast('保存成功' + hasAI + hasBanquet + '！请等待1-2分钟后刷新', 'success');
+        showToast('保存成功' + hasAI + hasBanquet + '！CDN缓存约5分钟后更新', 'success');
     } catch (e) { 
         console.error('保存错误:', e);
         showToast('保存失败: ' + e.message, 'error'); 
@@ -594,7 +701,7 @@ function renderHistoryList() {
     let html = '';
     Object.entries(groups).sort((a,b) => b[0].localeCompare(a[0])).forEach(([m, items], idx) => {
         items.sort((a,b) => b.date.localeCompare(a.date));
-        html += '<div class="mb-2"><div onclick="this.nextElementSibling.classList.toggle(\'expanded\');this.querySelector(\'i\').classList.toggle(\'rotate-90\')" class="flex justify-between p-2 rounded cursor-pointer hover:bg-zinc-800 text-xs text-zinc-400"><span><i class="fa-solid fa-chevron-right mr-1 transition-transform ' + (idx===0?'rotate-90':'') + '" style="font-size:8px"></i>' + m + '</span><span class="text-zinc-600">' + items.length + '</span></div><div class="month-content ' + (idx===0?'expanded':'') + '">' + items.map(i => '<div class="history-item flex justify-between" data-date="' + i.date + '" onclick="loadDayData(\'' + i.date + '\')"><span>' + i.date.slice(8) + '日</span><span class="' + ((i.variance||0)>=0?'text-green-400':'text-red-400') + ' font-mono text-[10px]">' + ((i.variance||0)>=0?'+':'') + ((i.variance||0)*100).toFixed(1) + '%</span></div>').join('') + '</div></div>';
+        html += '<div class="mb-2"><div onclick="this.nextElementSibling.classList.toggle(\'expanded\');this.querySelector(\'i\').classList.toggle(\'rotate-90\')" class="flex justify-between p-2 rounded cursor-pointer hover:bg-zinc-800 text-xs text-zinc-400"><span><i class="fa-solid fa-chevron-right mr-1 transition-transform ' + (idx===0?'rotate-90':'') + '" style="font-size:8px"></i>' + m + '</span><span class="text-zinc-600">' + items.length + '</span></div><div class="month-content ' + (idx===0?'expanded':'') + '">' + items.map(i => '<div class="history-item flex justify-between" data-date="' + i.date + '" onclick="loadDayData(\'' + i.date + '\')"><span>' + i.date.slice(8) + '日</span><span class="' + ((i.variance||0)>=0?'text-green-400':'text-red-400') + ' font-mono" style="font-size:10px;">' + ((i.variance||0)>=0?'+':'') + ((i.variance||0)*100).toFixed(1) + '%</span></div>').join('') + '</div></div>';
     });
     c.innerHTML = html;
 }
@@ -614,7 +721,6 @@ function handleFileUpload(e) {
         STATE.currentData = parsed;
         STATE.historyData[parsed.date] = parsed;
         
-        // 如果Excel中有月累计数据，直接使用；否则计算
         if (parsed.mtd && parsed.mtd.hotel && parsed.mtd.hotel.act > 0) {
             console.log('使用Excel中的月累计数据:', parsed.mtd);
         } else {
@@ -625,23 +731,17 @@ function handleFileUpload(e) {
         document.getElementById('save-btn').disabled = false;
         showToast('已加载 ' + parsed.date, 'success');
         
-        // 先尝试从GitHub加载该日期已保存的数据（包含AI分析）
         try {
             const [y, m] = parsed.date.split('-');
-            const res = await fetch(REMOTE_BASE + '/' + y + '/' + m + '/' + parsed.date + '.json?t=' + Date.now());
-            if (res.ok) {
-                const savedData = await res.json();
-                if (savedData.aiAnalysisDaily) {
-                    // 使用已保存的AI分析
-                    parsed.aiAnalysisDaily = savedData.aiAnalysisDaily;
-                    parsed.aiAnalysisMonthly = savedData.aiAnalysisMonthly;
-                    parsed.aiAnalysisTime = savedData.aiAnalysisTime;
-                    STATE.currentData = parsed;
-                    displayAI(parsed);
-                    showToast('已加载保存的AI分析', 'success');
-                } else {
-                    displayAI(parsed);
-                }
+            const res = await fetchWithFallback('/' + y + '/' + m + '/' + parsed.date + '.json');
+            const savedData = await res.json();
+            if (savedData.aiAnalysisDaily) {
+                parsed.aiAnalysisDaily = savedData.aiAnalysisDaily;
+                parsed.aiAnalysisMonthly = savedData.aiAnalysisMonthly;
+                parsed.aiAnalysisTime = savedData.aiAnalysisTime;
+                STATE.currentData = parsed;
+                displayAI(parsed);
+                showToast('已加载保存的AI分析', 'success');
             } else {
                 displayAI(parsed);
             }
@@ -681,14 +781,13 @@ function parseExcelData(rows) {
     const num = v => { if(v==null||v==='')return 0; return parseFloat(String(v).replace(/[¥,$%]/g,''))||0; };
     const pct = v => { if(v==null||v==='')return 0; const n=parseFloat(String(v).replace('%',''));return isNaN(n)?0:(n>1?n/100:n); };
     
-    let subTotalCount = 0; // 计数小计行
-    let inBanquetSection = false; // 标记是否在宴会区域
+    let subTotalCount = 0;
+    let inBanquetSection = false;
     
     rows.forEach((r, rowIdx) => {
         if (!r[0]) return;
         const n = String(r[0]).trim();
         
-        // 日期解析
         if (n.includes('Date')||n.includes('日期')) { 
             const m=r.join(' ').match(/(\d{1,2})\/(\w+)\/(\d{4})/);
             if(m){
@@ -698,57 +797,40 @@ function parseExcelData(rows) {
             }
         }
         
-        // ===== 总房收入 =====
         if (n.includes('Total room Revenue')||n.includes('总房收入')) {
             d.totals.room={act:num(r[6]),bud:num(r[7])};
             d.mtd.room={act:num(r[8]),bud:num(r[10])};
-            console.log('解析总房收入:', d.totals.room, 'MTD:', d.mtd.room);
         }
         
-        // ===== 检测宴会区域开始 =====
         if (/Banquet|宴会/.test(n) && !n.includes('Total') && !n.includes('合计')) {
             inBanquetSection = true;
         }
         
-        // ===== 小计处理 - 宴会小计 =====
-        // 匹配 "Sub - Total 小计" 或 "Sub-Total 小计" 等格式
         if (/Sub[\s\-]*Total/i.test(n) && n.includes('小计')) {
             subTotalCount++;
-            console.log('发现小计行 #' + subTotalCount + ':', n, '数据:', num(r[6]), num(r[8]));
-            
-            // 第二个小计 = 宴会小计
             if (subTotalCount === 2) {
                 d.totals.banquet = {act: num(r[6]), bud: num(r[7])};
                 d.mtd.banquet = {act: num(r[8]), bud: num(r[10])};
-                console.log('===== 解析宴会小计 =====');
-                console.log('今日宴会:', d.totals.banquet);
-                console.log('月累计宴会:', d.mtd.banquet);
                 inBanquetSection = false;
             }
             return;
         }
         
-        // ===== 餐饮总计 =====
         if (n.includes('F&B Total')||n.includes('餐饮收入合计')) {
             d.totals.fb={act:num(r[6]),bud:num(r[7])};
             d.mtd.fb={act:num(r[8]),bud:num(r[10])};
-            console.log('解析餐饮总计:', d.totals.fb, 'MTD:', d.mtd.fb);
         }
         
-        // ===== 酒店总收入 =====
         if (n.includes('Total Hotel Revenue')||n.includes('酒店收入合计')) {
             d.totals.hotel={act:num(r[6]),bud:num(r[7])};
             d.mtd.hotel={act:num(r[8]),bud:num(r[10])};
-            console.log('解析酒店总收入:', d.totals.hotel, 'MTD:', d.mtd.hotel);
         }
         
-        // ===== 其他经营收入合计 =====
         if (n.includes('Total Other Operating')||n.includes('其他经营收入合计')) {
             d.totals.other={act:num(r[6]),bud:num(r[7])};
             d.mtd.other={act:num(r[8]),bud:num(r[10])};
         }
         
-        // 运营指标
         if (n.includes('Occupied Rooms')||n.includes('已出租房数')) { 
             d.roomsSold=Math.round(num(r[6]));
             d.roomsBud=Math.round(num(r[7])); 
@@ -766,11 +848,8 @@ function parseExcelData(rows) {
             d.revparBud=num(r[7]); 
         }
         
-        // ===== 细分项目数据 =====
         const isTotal = /^Total|^Sub.*Total|合计$/i.test(n);
         const isHeader = /^Revenue|^Statistics|^Actual|^Budget|^Forecast|^Food & Beverage|^Other Operating|^ROOM STAT/i.test(n);
-        
-        // 宴会细项（添加到Banquet类型）
         const isBanquetItem = /Banquet|宴会|会议室租金|设备租金/i.test(n);
         
         if (r.length>=10 && (num(r[6])!==0 || num(r[8])!==0) && !isTotal && !isHeader) {
@@ -778,7 +857,6 @@ function parseExcelData(rows) {
             if(/Rate|Tour|Discount|Corporate|Individual|Convention|Permanent|Negotiated|Consortia|SMRF|Meeting|Government|客源/i.test(n)) {
                 type='Room';
             } else if(isBanquetItem || inBanquetSection) {
-                // 宴会相关项目归类为Banquet
                 type='Banquet';
             } else if(/Kok|Brasserie|Bar|Service|Mini|羿庭|百味园|廊吧|浦江汇|蔚景阁|客房服务|迷你吧|Ling Long|Peacock|Grand|Long Bar|Salon|Room Service/i.test(n)) {
                 type='F&B';
@@ -795,9 +873,6 @@ function parseExcelData(rows) {
         }
     });
     
-    // 注意：宴会是餐饮的子项，已包含在餐饮合计中
-    // 其他收入应该直接从Excel读取"Total Other Operating Revenue"
-    // 如果没读到或为0，才用公式计算
     if (d.totals.hotel.act > 0 && d.totals.room.act > 0 && d.totals.fb.act > 0) {
         if (d.totals.other.act === 0) {
             d.totals.other = {
@@ -815,17 +890,12 @@ function parseExcelData(rows) {
         }
     }
     
-    console.log('===== 解析完成 =====');
-    console.log('今日数据:', JSON.stringify(d.totals));
-    console.log('宴会数据:', JSON.stringify(d.totals.banquet));
-    console.log('月累计数据:', JSON.stringify(d.mtd));
     return d;
 }
 
 function renderDashboard(d) {
     let room=d.totals?.room||{act:0,bud:0}, fb=d.totals?.fb||{act:0,bud:0}, banquet=d.totals?.banquet||{act:0,bud:0}, other=d.totals?.other||{act:0,bud:0}, grand=d.totals?.hotel||{act:0,bud:0};
     
-    // 如果其他收入为0，计算它（宴会已包含在餐饮中，不需要扣除）
     if(grand.act > 0 && room.act > 0 && fb.act > 0 && other.act === 0){
         other = {
             act: grand.act - room.act - fb.act,
@@ -833,9 +903,7 @@ function renderDashboard(d) {
         };
     }
     
-    // 优先使用Excel中的月累计数据d.mtd
     const mtd = d.mtd || STATE.mtdData;
-    console.log('渲染使用的数据 - banquet:', banquet, 'other:', other);
     
     document.getElementById('current-date').textContent = d.date + ' ' + (d.weekday||'');
     document.getElementById('data-status').textContent = '已加载';
@@ -865,7 +933,6 @@ function renderDashboard(d) {
     document.getElementById('kpi-revpar-pct').textContent = revparPct.toFixed(1)+'%';
     document.getElementById('kpi-revpar-pct').className = revparPct>=100?'text-green-400 font-semibold':'text-red-400 font-semibold';
     
-    // 部门列表 - 添加宴会行（在餐饮下面）
     const depts = [
         {name:'客房',act:room.act,bud:room.bud,icon:'🏨', mtdAct:mtd.room?.act||0, mtdBud:mtd.room?.bud||0, isSub:false},
         {name:'餐饮',act:fb.act,bud:fb.bud,icon:'🍽️', mtdAct:mtd.fb?.act||0, mtdBud:mtd.fb?.bud||0, isSub:false},
@@ -879,8 +946,9 @@ function renderDashboard(d) {
         const mtdPct = dep.mtdBud>0?(dep.mtdAct/dep.mtdBud*100):100;
         const isTotal = dep.name==='合计';
         const isBanquet = dep.name==='宴会';
-        const rowClass = isTotal ? 'bg-zinc-800/30 font-medium' : (isBanquet ? 'banquet-row' : '');
-        return `<tr class="${rowClass}">
+        const rowClass = isTotal ? 'font-medium' : (isBanquet ? 'banquet-row' : '');
+        const rowStyle = isTotal ? 'background:rgba(39,39,42,0.3);' : '';
+        return `<tr class="${rowClass}" style="${rowStyle}">
             <td>${dep.isSub ? '↳ ' : ''}${dep.icon} ${dep.name}</td>
             <td class="font-mono">${fmt(dep.act)}</td>
             <td class="text-zinc-500 font-mono">${fmt(dep.bud)}</td>
@@ -892,7 +960,6 @@ function renderDashboard(d) {
         </tr>`;
     }).join('');
     
-    // 图表数据（不包含宴会子项）
     const chartDepts = depts.filter(d => !d.isSub && d.name !== '合计');
     renderMainChart(chartDepts);
     renderPieChart(chartDepts);
@@ -954,7 +1021,6 @@ async function generateAIAnalysis() {
         let occ=d.occupancy||0; if(occ<=1) occ*=100;
         let occBud=d.occBud||0; if(occBud<=1) occBud*=100;
         
-        // 整理今日细分项目数据
         const rows = d.rows || [];
         const formatDetails = (types) => {
             const items = rows.filter(r => types.includes(r.type));
@@ -965,7 +1031,6 @@ async function generateAIAnalysis() {
             }).join('\n');
         };
         
-        // 整理月累计细分项目数据
         const formatMtdDetails = (types) => {
             const items = rows.filter(r => types.includes(r.type) && r.mtdActual !== undefined);
             if (items.length === 0) return '暂无数据';
@@ -985,7 +1050,6 @@ async function generateAIAnalysis() {
         const mtdBanquetDetails = formatMtdDetails(['Banquet']);
         const mtdOtherDetails = formatMtdDetails(['Other']);
         
-        // 优先使用Excel中的月累计数据d.mtd
         const mtd = d.mtd || STATE.mtdData;
         const mtdTotalPct = mtd.hotel?.bud>0?(mtd.hotel.act/mtd.hotel.bud*100).toFixed(1):'100';
         const mtdRoomPct = mtd.room?.bud>0?(mtd.room.act/mtd.room.bud*100).toFixed(1):'100';
@@ -997,7 +1061,6 @@ async function generateAIAnalysis() {
         const daysInMonth = new Date(d.date.split('-')[0], d.date.split('-')[1], 0).getDate();
         const timeProgress = (dayOfMonth / daysInMonth * 100).toFixed(1);
         
-        // 今日分析提示词
         const dailyPrompt = STATE.aiPromptDaily
             .replace(/{date}/g, d.date)
             .replace(/{total_pct}/g, totalPct)
@@ -1016,7 +1079,6 @@ async function generateAIAnalysis() {
             .replace(/{banquet_details}/g, banquetDetails)
             .replace(/{other_details}/g, otherDetails);
         
-        // 月度分析提示词
         const monthlyPrompt = STATE.aiPromptMonthly
             .replace(/{date}/g, d.date)
             .replace(/{day_of_month}/g, dayOfMonth)
@@ -1066,13 +1128,6 @@ async function generateAIAnalysis() {
         STATE.currentData.aiAnalysisTime = new Date().toLocaleString('zh-CN');
         document.getElementById('ai-update-time').textContent = STATE.currentData.aiAnalysisTime;
         
-        // 调试信息
-        console.log('========= AI分析生成完成 =========');
-        console.log('aiAnalysisDaily已保存，长度:', STATE.currentData.aiAnalysisDaily.length);
-        console.log('aiAnalysisMonthly已保存，长度:', STATE.currentData.aiAnalysisMonthly.length);
-        console.log('aiAnalysisTime:', STATE.currentData.aiAnalysisTime);
-        console.log('==================================');
-        
         showToast('AI分析完成，请点击保存按钮保存分析结果', 'success');
         
     } catch(e) { 
@@ -1101,7 +1156,6 @@ function switchDeepTab(tab) {
     const totalAct=rows.reduce((s,r)=>s+r.actual,0),totalBud=rows.reduce((s,r)=>s+r.budget,0);
     const totalPct=totalBud>0?(totalAct/totalBud*100).toFixed(1):100;
     
-    // 分析完成好的和完成不好的项目
     const goodItems = rows.filter(r => r.budget > 0 && (r.actual / r.budget * 100) >= 100).sort((a,b) => (b.actual/b.budget) - (a.actual/a.budget));
     const badItems = rows.filter(r => r.budget > 0 && (r.actual / r.budget * 100) < 80).sort((a,b) => (a.actual/a.budget) - (b.actual/b.budget));
     
@@ -1129,7 +1183,7 @@ function switchDeepTab(tab) {
 }
 
 window.addEventListener('resize',()=>Object.values(STATE.charts).forEach(c=>c?.resize()));
-document.addEventListener('DOMContentLoaded',()=>{console.log('🚀 NEXUS v2.7 宴会版启动');refreshData();});
+document.addEventListener('DOMContentLoaded',()=>{console.log('🚀 NEXUS v2.7 国内加速版启动');refreshData();});
 </script>
 </body>
 </html>
