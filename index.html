@@ -497,11 +497,10 @@ async function calculateMTD(currentDate) {
                 STATE.mtdData.hotel.act += t.hotel.act || 0;
                 STATE.mtdData.hotel.bud += t.hotel.bud || 0;
             }
+            // 注意：宴会是餐饮子项，其他收入 = 酒店总计 - 客房 - 餐饮
             if (t.hotel && t.room && t.fb) {
-                const banquetAct = t.banquet?.act || 0;
-                const banquetBud = t.banquet?.bud || 0;
-                STATE.mtdData.other.act += (t.hotel.act || 0) - (t.room.act || 0) - (t.fb.act || 0) - banquetAct;
-                STATE.mtdData.other.bud += (t.hotel.bud || 0) - (t.room.bud || 0) - (t.fb.bud || 0) - banquetBud;
+                STATE.mtdData.other.act += (t.hotel.act || 0) - (t.room.act || 0) - (t.fb.act || 0);
+                STATE.mtdData.other.bud += (t.hotel.bud || 0) - (t.room.bud || 0) - (t.fb.bud || 0);
             }
         }
     }
@@ -781,24 +780,22 @@ function parseExcelData(rows) {
         }
     });
     
-    // 计算其他收入（排除宴会）
+    // 注意：宴会是餐饮的子项，已包含在餐饮合计中
+    // 其他收入应该直接从Excel读取"Total Other Operating Revenue"
+    // 如果没读到，才用公式计算（不扣除宴会，因为宴会已在餐饮内）
     if (d.totals.hotel && d.totals.room && d.totals.fb) {
-        const banquetAct = d.totals.banquet?.act || 0;
-        const banquetBud = d.totals.banquet?.bud || 0;
         if (!d.totals.other || d.totals.other.act === 0) {
             d.totals.other = {
-                act: d.totals.hotel.act - d.totals.room.act - d.totals.fb.act - banquetAct,
-                bud: d.totals.hotel.bud - d.totals.room.bud - d.totals.fb.bud - banquetBud
+                act: d.totals.hotel.act - d.totals.room.act - d.totals.fb.act,
+                bud: d.totals.hotel.bud - d.totals.room.bud - d.totals.fb.bud
             };
         }
     }
     if (d.mtd.hotel && d.mtd.room && d.mtd.fb) {
-        const banquetMtdAct = d.mtd.banquet?.act || 0;
-        const banquetMtdBud = d.mtd.banquet?.bud || 0;
         if (!d.mtd.other || d.mtd.other.act === 0) {
             d.mtd.other = {
-                act: d.mtd.hotel.act - d.mtd.room.act - d.mtd.fb.act - banquetMtdAct,
-                bud: d.mtd.hotel.bud - d.mtd.room.bud - d.mtd.fb.bud - banquetMtdBud
+                act: d.mtd.hotel.act - d.mtd.room.act - d.mtd.fb.act,
+                bud: d.mtd.hotel.bud - d.mtd.room.bud - d.mtd.fb.bud
             };
         }
     }
@@ -812,12 +809,11 @@ function parseExcelData(rows) {
 function renderDashboard(d) {
     let room=d.totals.room||{act:0,bud:0}, fb=d.totals.fb||{act:0,bud:0}, banquet=d.totals.banquet||{act:0,bud:0}, other=d.totals.other||{act:0,bud:0}, grand=d.totals.hotel||{act:0,bud:0};
     
-    // 计算其他收入（排除宴会）
-    if(d.totals.hotel && d.totals.room && d.totals.fb){
-        const banquetAct = banquet.act || 0;
-        const banquetBud = banquet.bud || 0;
-        other.act = grand.act - room.act - fb.act - banquetAct;
-        other.bud = grand.bud - room.bud - fb.bud - banquetBud;
+    // 注意：宴会是餐饮的子项，已包含在餐饮合计中
+    // 其他收入 = 酒店总计 - 客房 - 餐饮（不再扣除宴会）
+    if(d.totals.hotel && d.totals.room && d.totals.fb && (!d.totals.other || d.totals.other.act === 0)){
+        other.act = grand.act - room.act - fb.act;
+        other.bud = grand.bud - room.bud - fb.bud;
     }
     
     // 优先使用Excel中的月累计数据d.mtd
