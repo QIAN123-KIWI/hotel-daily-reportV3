@@ -56,6 +56,16 @@
         .deep-summary { background: #111; border-radius: 8px; padding: 16px; margin-top: 16px; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 3px; }
+        /* 新增：月累计数据样式 */
+        .mtd-header { background: rgba(59,130,246,0.1); }
+        .mtd-cell { background: rgba(59,130,246,0.05); }
+        /* AI分析双板块样式 */
+        .ai-tab { padding: 6px 12px; border-radius: 6px; font-size: 11px; cursor: pointer; transition: all 0.2s; }
+        .ai-tab.active { background: #3b82f6; color: white; }
+        .ai-tab:not(.active) { background: transparent; color: var(--text-muted); }
+        .ai-tab:not(.active):hover { background: rgba(255,255,255,0.05); }
+        .ai-panel { display: none; }
+        .ai-panel.active { display: block; }
     </style>
 </head>
 <body class="min-h-screen">
@@ -66,7 +76,7 @@
         <div class="sidebar-content flex flex-col flex-1">
             <div class="flex items-center gap-2 mb-4">
                 <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"><i class="fa-solid fa-chart-line text-white text-sm"></i></div>
-                <div><span class="font-semibold text-white text-sm">NEXUS</span><span class="text-[9px] text-zinc-500 block">v2.5 Proxy版</span></div>
+                <div><span class="font-semibold text-white text-sm">NEXUS</span><span class="text-[9px] text-zinc-500 block">v2.6 月累计版</span></div>
             </div>
             <label class="block mb-4">
                 <div class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 rounded cursor-pointer text-center text-xs font-medium"><i class="fa-solid fa-upload mr-1"></i>上传报表</div>
@@ -97,7 +107,35 @@
         </div>
         <div class="grid grid-cols-12 gap-4">
             <div class="col-span-7 flex flex-col gap-4">
-                <div class="card p-4"><div class="flex justify-between mb-3"><span class="text-sm font-medium"><i class="fa-solid fa-layer-group text-blue-400 mr-2"></i>部门概览</span><button onclick="openDeepDive()" class="text-[10px] text-blue-400 hover:text-blue-300"><i class="fa-solid fa-table-list mr-1"></i>详细</button></div><table><thead><tr><th>部门</th><th>实际</th><th>预算</th><th>差额</th><th>完成率</th></tr></thead><tbody id="dept-table-body"><tr><td colspan="5" class="text-center text-zinc-600 py-4">--</td></tr></tbody></table></div>
+                <div class="card p-4">
+                    <div class="flex justify-between mb-3">
+                        <span class="text-sm font-medium"><i class="fa-solid fa-layer-group text-blue-400 mr-2"></i>部门概览</span>
+                        <button onclick="openDeepDive()" class="text-[10px] text-blue-400 hover:text-blue-300"><i class="fa-solid fa-table-list mr-1"></i>详细</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" class="align-bottom">部门</th>
+                                    <th colspan="4" class="text-center border-b border-zinc-700">今日</th>
+                                    <th colspan="3" class="text-center mtd-header">月累计 (MTD)</th>
+                                </tr>
+                                <tr>
+                                    <th>实际</th>
+                                    <th>预算</th>
+                                    <th>差额</th>
+                                    <th>完成率</th>
+                                    <th class="mtd-header">实际</th>
+                                    <th class="mtd-header">预算</th>
+                                    <th class="mtd-header">完成率</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dept-table-body">
+                                <tr><td colspan="8" class="text-center text-zinc-600 py-4">--</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div class="card p-4"><span class="text-sm font-medium"><i class="fa-solid fa-chart-bar text-blue-400 mr-2"></i>营收对比</span><div id="main-chart" style="height:150px;"></div></div>
                     <div class="card p-4"><span class="text-sm font-medium"><i class="fa-solid fa-chart-pie text-amber-400 mr-2"></i>收入构成</span><div id="pie-chart" style="height:150px;"></div></div>
@@ -110,10 +148,31 @@
             <div class="col-span-5">
                 <div class="card p-4 h-full flex flex-col">
                     <div class="flex justify-between mb-3 pb-3 border-b border-zinc-800">
-                        <div class="flex items-center gap-2"><div class="w-7 h-7 rounded bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center"><i class="fa-solid fa-robot text-white text-xs"></i></div><div><span class="text-sm font-medium">AI 经营分析</span><div class="text-[9px] text-zinc-500" id="ai-update-time">--</div></div></div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-7 h-7 rounded bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center"><i class="fa-solid fa-robot text-white text-xs"></i></div>
+                            <div><span class="text-sm font-medium">AI 经营分析</span><div class="text-[9px] text-zinc-500" id="ai-update-time">--</div></div>
+                        </div>
                         <button onclick="generateAIAnalysis()" class="btn-secondary px-3 text-[10px]"><i class="fa-solid fa-rotate mr-1"></i>分析</button>
                     </div>
-                    <div id="ai-analysis" class="flex-1 overflow-y-auto" style="max-height:600px;"><div class="flex flex-col items-center justify-center py-12 text-zinc-600"><i class="fa-solid fa-wand-magic-sparkles text-2xl mb-3"></i><span class="text-xs">上传数据后自动生成分析</span></div></div>
+                    <!-- AI分析双板块切换 -->
+                    <div class="flex gap-2 mb-3">
+                        <button id="ai-tab-daily" onclick="switchAITab('daily')" class="ai-tab active">📅 今日分析</button>
+                        <button id="ai-tab-monthly" onclick="switchAITab('monthly')" class="ai-tab">📊 月度分析</button>
+                    </div>
+                    <div id="ai-analysis" class="flex-1 overflow-y-auto" style="max-height:600px;">
+                        <div id="ai-panel-daily" class="ai-panel active">
+                            <div class="flex flex-col items-center justify-center py-12 text-zinc-600">
+                                <i class="fa-solid fa-wand-magic-sparkles text-2xl mb-3"></i>
+                                <span class="text-xs">上传数据后自动生成今日分析</span>
+                            </div>
+                        </div>
+                        <div id="ai-panel-monthly" class="ai-panel">
+                            <div class="flex flex-col items-center justify-center py-12 text-zinc-600">
+                                <i class="fa-solid fa-calendar-days text-2xl mb-3"></i>
+                                <span class="text-xs">上传数据后自动生成月度分析</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -124,7 +183,14 @@
         <div class="flex justify-between mb-4"><h3 class="font-semibold"><i class="fa-solid fa-gear text-blue-400 mr-2"></i>设置</h3><button onclick="closeModal('settings-modal')" class="text-zinc-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button></div>
         <div class="mb-4 p-3 bg-blue-900/30 border border-blue-700/50 rounded text-xs text-blue-300"><i class="fa-solid fa-shield-alt mr-1"></i>代理模式 - 使用 ghproxy.net 加速访问</div>
         <div class="mb-4"><label class="text-[10px] text-zinc-500">Webhook URL</label><input type="text" id="settings-webhook" class="w-full mt-1 bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-xs"></div>
-        <div class="mb-4"><label class="text-[10px] text-zinc-500">AI提示词</label><textarea id="settings-ai-prompt" rows="8" class="w-full mt-1 bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-xs"></textarea></div>
+        <div class="mb-4">
+            <label class="text-[10px] text-zinc-500">今日分析提示词</label>
+            <textarea id="settings-ai-prompt-daily" rows="5" class="w-full mt-1 bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-xs"></textarea>
+        </div>
+        <div class="mb-4">
+            <label class="text-[10px] text-zinc-500">月度分析提示词</label>
+            <textarea id="settings-ai-prompt-monthly" rows="5" class="w-full mt-1 bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-xs"></textarea>
+        </div>
         <div class="flex justify-end gap-2"><button onclick="closeModal('settings-modal')" class="btn-secondary">取消</button><button onclick="saveSettings()" class="btn-primary">保存</button></div>
     </div>
 </div>
@@ -145,16 +211,142 @@
 const NAME_MAP = {'corporate':'协议公司','individual':'散客','tour':'旅行团','discount':'折扣','convention':'会议','permanent':'长住','kok thai':'泰餐厅','brasserie':'西餐厅','bar':'酒吧','mini bar':'迷你吧','room service':'送餐','banquet':'宴会','rental':'租赁','laundry':'洗衣','parking':'停车','spa':'水疗'};
 function getChineseName(n){if(!n)return'未知';if(/[\u4e00-\u9fa5]/.test(n)){const m=n.match(/[\u4e00-\u9fa5]+/);if(m)return m[0];}const l=n.toLowerCase();for(const k in NAME_MAP)if(l.includes(k))return NAME_MAP[k];return n.split(/[\s\-_]/)[0].slice(0,8);}
 
-const DEFAULT_PROMPT = `你是酒店经营分析师。分析数据生成HTML报告。日期:{date}，完成率:{total_pct}%，客房:{room_pct}%，餐饮:{fb_pct}%，其他:{other_pct}%，出租率:{occupancy}%，ADR:¥{adr}，RevPAR:¥{revpar}。用HTML输出含section-title、highlight-good/bad、risk-item等class。`;
+// 今日分析提示词
+const DEFAULT_PROMPT_DAILY = `你是五星级酒店的资深经营分析师。基于今日数据生成专业的HTML分析报告。
 
-// 🔥🔥🔥 核心修改：定义 ghproxy 代理前缀 + 你的 GitHub 仓库地址 🔥🔥🔥
+【今日总体数据】
+日期: {date}
+整体完成率: {total_pct}%
+客房收入完成率: {room_pct}%
+餐饮收入完成率: {fb_pct}%
+其他收入完成率: {other_pct}%
+出租率: {occupancy}% (预算: {occ_bud}%)
+ADR: ¥{adr} (预算: ¥{adr_bud})
+RevPAR: ¥{revpar} (预算: ¥{revpar_bud})
+
+【客房细分数据】
+{room_details}
+
+【餐饮细分数据】
+{fb_details}
+
+【其他细分数据】
+{other_details}
+
+请严格按以下格式生成HTML报告（直接输出HTML，不要任何解释）：
+
+<div class="section-title">📊 今日预算执行总览</div>
+<p><strong>整体完成率：<span class="highlight-xxx">XX%</span></strong></p>
+<p>客房<span class="highlight-xxx">XX%</span> 餐饮<span class="highlight-xxx">XX%</span> 其他<span class="highlight-xxx">XX%</span></p>
+
+<div class="section-title">🏨 客房分析</div>
+<p>✓ 表现优秀：</p>
+<p>• 项目名：<span class="highlight-good">XXX%</span>（分析原因）</p>
+<p>✗ 需要改进：</p>
+<p>• 项目名：<span class="highlight-bad">XX%</span>（分析原因）</p>
+<p>💡 建议：</p>
+<p>1. 具体可执行的建议</p>
+<p>2. 具体可执行的建议</p>
+
+<div class="section-title">🍽️ 餐饮分析</div>
+<p>✓ 表现优秀：</p>
+<p>• 餐厅/项目名：<span class="highlight-good">XXX%</span></p>
+<p>✗ 需要改进：</p>
+<p>• 餐厅/项目名：<span class="highlight-bad">XX%</span></p>
+<p>💡 建议：具体餐厅改进措施</p>
+
+<div class="section-title">⚠️ 风险预警</div>
+<div class="risk-item">🔴 风险点：
+• 入住率{occupancy}%低于预算{occ_bud}%，需关注
+• 今日收入缺口及主要来源分析
+</div>
+
+<div class="section-title">📈 今日小结</div>
+<p>重点关注：1)XX 2)XX 3)XX</p>
+<p>明日行动：1)XX 2)XX 3)XX</p>
+
+规则：
+- ≥100%用class="highlight-good"，<80%用class="highlight-bad"
+- 分析要具体，建议要可执行
+- 直接输出纯HTML，禁止输出任何解释说明`;
+
+// 月度分析提示词
+const DEFAULT_PROMPT_MONTHLY = `你是五星级酒店的资深经营分析师。基于月度累计数据生成专业的HTML分析报告。
+
+【月度总体数据】
+当前日期: {date}
+本月第{day_of_month}天，时间进度: {time_progress}%
+月累计整体完成率: {mtd_total_pct}%
+月累计客房完成率: {mtd_room_pct}%
+月累计餐饮完成率: {mtd_fb_pct}%
+月累计其他完成率: {mtd_other_pct}%
+月累计实际营收: ¥{mtd_total_act}万
+月累计预算营收: ¥{mtd_total_bud}万
+月累计差额: ¥{mtd_variance}万
+
+【客房细分月累计】
+{mtd_room_details}
+
+【餐饮细分月累计】
+{mtd_fb_details}
+
+【其他细分月累计】
+{mtd_other_details}
+
+请严格按以下格式生成HTML报告（直接输出HTML，不要任何解释）：
+
+<div class="section-title">📊 月度预算执行总览</div>
+<p><strong>月累计完成率：<span class="highlight-xxx">{mtd_total_pct}%</span></strong>（时间进度{time_progress}%）</p>
+<p>客房<span class="highlight-xxx">XX%</span> 餐饮<span class="highlight-xxx">XX%</span> 其他<span class="highlight-xxx">XX%</span></p>
+<p>收入进度 vs 时间进度：<span class="highlight-xxx">落后/领先X个百分点</span></p>
+
+<div class="section-title">🏨 客房月度分析</div>
+<p>✓ 表现优秀：</p>
+<p>• 项目名：<span class="highlight-good">XXX%</span></p>
+<p>✗ 需要改进：</p>
+<p>• 项目名：<span class="highlight-bad">XX%</span></p>
+<p>💡 月度策略：客源结构优化、价格策略等</p>
+
+<div class="section-title">🍽️ 餐饮月度分析</div>
+<p>✓ 表现优秀：</p>
+<p>• 餐厅/项目名：<span class="highlight-good">XXX%</span></p>
+<p>✗ 需要改进：</p>
+<p>• 餐厅/项目名：<span class="highlight-bad">XX%</span></p>
+<p>💡 月度策略：餐厅改进措施</p>
+
+<div class="section-title">⚠️ 月度风险预警</div>
+<div class="risk-item">🔴 关键风险：
+• 收入进度{mtd_total_pct}% vs 时间进度{time_progress}%
+• 按当前趋势预计月底完成率
+• 主要拖累板块分析
+</div>
+
+<div class="section-title">📈 月度进展与预测</div>
+<p>本月第{day_of_month}天，剩余XX天</p>
+<p>🎯 要完成月度目标，剩余每日需达成目标</p>
+<p>💡 重点行动：</p>
+<p>1. 立即行动：XX</p>
+<p>2. 本周重点：XX</p>
+<p>3. 月底冲刺：XX</p>
+
+规则：
+- ≥100%用class="highlight-good"，<80%用class="highlight-bad"
+- 分析收入进度与时间进度的差距
+- 建议要具体可执行
+- 直接输出纯HTML，禁止输出任何解释说明`;
+
 const REMOTE_BASE = 'https://ghproxy.net/https://raw.githubusercontent.com/QIAN123-KIWI/hotel-daily-reportV3/main/data';
 
 const STATE = {
-    currentData: null, historyIndex: [], historyData: {}, charts: {},
+    currentData: null, 
+    historyIndex: [], 
+    historyData: {}, 
+    charts: {},
+    mtdData: { room: {act:0, bud:0}, fb: {act:0, bud:0}, other: {act:0, bud:0}, hotel: {act:0, bud:0} },
     webhookUrl: localStorage.getItem('nexus_webhook_url') || 'https://n8n-fzlhzvbn.ap-northeast-1.clawcloudrun.com/webhook/hotel-save',
     qianwen: { apiKey: 'sk-d8f9d80c5d154e5fa8ce9413560ccfe8', model: 'qwen-max', endpoint: 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions' },
-    aiPrompt: localStorage.getItem('nexus_ai_prompt') || DEFAULT_PROMPT
+    aiPromptDaily: localStorage.getItem('nexus_ai_prompt_daily') || DEFAULT_PROMPT_DAILY,
+    aiPromptMonthly: localStorage.getItem('nexus_ai_prompt_monthly') || DEFAULT_PROMPT_MONTHLY
 };
 
 function showToast(m, t='info') {
@@ -166,15 +358,37 @@ function showToast(m, t='info') {
 }
 
 function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); setTimeout(() => Object.values(STATE.charts).forEach(c => c?.resize()), 300); }
-function openSettingsModal() { document.getElementById('settings-webhook').value = STATE.webhookUrl; document.getElementById('settings-ai-prompt').value = STATE.aiPrompt; document.getElementById('settings-modal').classList.remove('hidden'); }
-function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-function saveSettings() { STATE.webhookUrl = document.getElementById('settings-webhook').value.trim(); STATE.aiPrompt = document.getElementById('settings-ai-prompt').value.trim() || DEFAULT_PROMPT; localStorage.setItem('nexus_webhook_url', STATE.webhookUrl); localStorage.setItem('nexus_ai_prompt', STATE.aiPrompt); closeModal('settings-modal'); showToast('设置已保存', 'success'); }
 
-// ========== 核心：使用 GHPROXY 代理访问数据 ==========
+function openSettingsModal() { 
+    document.getElementById('settings-webhook').value = STATE.webhookUrl; 
+    document.getElementById('settings-ai-prompt-daily').value = STATE.aiPromptDaily; 
+    document.getElementById('settings-ai-prompt-monthly').value = STATE.aiPromptMonthly; 
+    document.getElementById('settings-modal').classList.remove('hidden'); 
+}
+
+function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+function saveSettings() { 
+    STATE.webhookUrl = document.getElementById('settings-webhook').value.trim(); 
+    STATE.aiPromptDaily = document.getElementById('settings-ai-prompt-daily').value.trim() || DEFAULT_PROMPT_DAILY; 
+    STATE.aiPromptMonthly = document.getElementById('settings-ai-prompt-monthly').value.trim() || DEFAULT_PROMPT_MONTHLY; 
+    localStorage.setItem('nexus_webhook_url', STATE.webhookUrl); 
+    localStorage.setItem('nexus_ai_prompt_daily', STATE.aiPromptDaily); 
+    localStorage.setItem('nexus_ai_prompt_monthly', STATE.aiPromptMonthly); 
+    closeModal('settings-modal'); 
+    showToast('设置已保存', 'success'); 
+}
+
+function switchAITab(tab) {
+    document.getElementById('ai-tab-daily').classList.toggle('active', tab === 'daily');
+    document.getElementById('ai-tab-monthly').classList.toggle('active', tab === 'monthly');
+    document.getElementById('ai-panel-daily').classList.toggle('active', tab === 'daily');
+    document.getElementById('ai-panel-monthly').classList.toggle('active', tab === 'monthly');
+}
+
 async function refreshData() {
     showToast('正在加载数据(代理模式)...', 'info');
     try {
-        // 修改1：使用远程代理地址
         const res = await fetch(REMOTE_BASE + '/index.json?t=' + Date.now());
         if (!res.ok) throw new Error('HTTP ' + res.status);
         STATE.historyIndex = await res.json();
@@ -194,6 +408,7 @@ async function refreshData() {
 async function loadDayData(date) {
     if (STATE.historyData[date]) {
         STATE.currentData = STATE.historyData[date];
+        await calculateMTD(date);
         renderDashboard(STATE.currentData);
         displayAI(STATE.currentData);
         document.querySelectorAll('.history-item').forEach(el => el.classList.toggle('active', el.dataset.date === date));
@@ -202,12 +417,12 @@ async function loadDayData(date) {
     }
     try {
         const [y, m] = date.split('-');
-        // 修改2：使用远程代理地址
         const res = await fetch(REMOTE_BASE + '/' + y + '/' + m + '/' + date + '.json?t=' + Date.now());
         if (!res.ok) throw new Error();
         const d = await res.json();
         STATE.historyData[date] = d;
         STATE.currentData = d;
+        await calculateMTD(date);
         renderDashboard(d);
         displayAI(d);
         document.querySelectorAll('.history-item').forEach(el => el.classList.toggle('active', el.dataset.date === date));
@@ -215,10 +430,75 @@ async function loadDayData(date) {
     } catch (e) { console.error('加载失败:', date, e); }
 }
 
+async function calculateMTD(currentDate) {
+    const [year, month] = currentDate.split('-');
+    const monthPrefix = `${year}-${month}`;
+    
+    const monthDates = STATE.historyIndex
+        .filter(i => i.date.startsWith(monthPrefix) && i.date <= currentDate)
+        .map(i => i.date)
+        .sort();
+    
+    STATE.mtdData = { 
+        room: {act:0, bud:0}, 
+        fb: {act:0, bud:0}, 
+        other: {act:0, bud:0}, 
+        hotel: {act:0, bud:0} 
+    };
+    
+    for (const date of monthDates) {
+        let dayData = STATE.historyData[date];
+        if (!dayData) {
+            try {
+                const [y, m] = date.split('-');
+                const res = await fetch(REMOTE_BASE + '/' + y + '/' + m + '/' + date + '.json');
+                if (res.ok) {
+                    dayData = await res.json();
+                    STATE.historyData[date] = dayData;
+                }
+            } catch {}
+        }
+        
+        if (dayData && dayData.totals) {
+            const t = dayData.totals;
+            if (t.room) {
+                STATE.mtdData.room.act += t.room.act || 0;
+                STATE.mtdData.room.bud += t.room.bud || 0;
+            }
+            if (t.fb) {
+                STATE.mtdData.fb.act += t.fb.act || 0;
+                STATE.mtdData.fb.bud += t.fb.bud || 0;
+            }
+            if (t.hotel) {
+                STATE.mtdData.hotel.act += t.hotel.act || 0;
+                STATE.mtdData.hotel.bud += t.hotel.bud || 0;
+            }
+            if (t.hotel && t.room && t.fb) {
+                STATE.mtdData.other.act += (t.hotel.act || 0) - (t.room.act || 0) - (t.fb.act || 0);
+                STATE.mtdData.other.bud += (t.hotel.bud || 0) - (t.room.bud || 0) - (t.fb.bud || 0);
+            }
+        }
+    }
+    console.log('月累计数据:', STATE.mtdData);
+}
+
 function displayAI(data) {
-    const c = document.getElementById('ai-analysis');
-    if (data.aiAnalysis) { c.innerHTML = data.aiAnalysis; document.getElementById('ai-update-time').textContent = data.aiAnalysisTime || '已保存'; }
-    else { c.innerHTML = '<div class="text-center py-12 text-zinc-600"><i class="fa-solid fa-wand-magic-sparkles text-2xl mb-3"></i><p class="text-xs">点击"分析"生成AI报告</p></div>'; }
+    const dailyPanel = document.getElementById('ai-panel-daily');
+    const monthlyPanel = document.getElementById('ai-panel-monthly');
+    
+    if (data.aiAnalysisDaily) { 
+        dailyPanel.innerHTML = data.aiAnalysisDaily; 
+    } else { 
+        dailyPanel.innerHTML = '<div class="text-center py-12 text-zinc-600"><i class="fa-solid fa-wand-magic-sparkles text-2xl mb-3"></i><p class="text-xs">点击"分析"生成今日报告</p></div>'; 
+    }
+    
+    if (data.aiAnalysisMonthly) { 
+        monthlyPanel.innerHTML = data.aiAnalysisMonthly; 
+    } else { 
+        monthlyPanel.innerHTML = '<div class="text-center py-12 text-zinc-600"><i class="fa-solid fa-calendar-days text-2xl mb-3"></i><p class="text-xs">点击"分析"生成月度报告</p></div>'; 
+    }
+    
+    document.getElementById('ai-update-time').textContent = data.aiAnalysisTime || '--';
 }
 
 async function loadTrendData() {
@@ -228,7 +508,6 @@ async function loadTrendData() {
         if (STATE.historyData[i.date]) data.push(STATE.historyData[i.date]);
         else try {
             const [y,m] = i.date.split('-');
-            // 修改3：使用远程代理地址
             const res = await fetch(REMOTE_BASE + '/' + y + '/' + m + '/' + i.date + '.json');
             if (res.ok) { const d = await res.json(); STATE.historyData[i.date] = d; data.push(d); }
         } catch {}
@@ -271,12 +550,21 @@ function handleFileUpload(e) {
     const m1 = fn.match(/(\d{4})[-._](\d{1,2})[-._](\d{1,2})/);
     if (m1) dateFromFn = m1[1] + '-' + m1[2].padStart(2,'0') + '-' + m1[3].padStart(2,'0');
     const reader = new FileReader();
-    reader.onload = ev => {
+    reader.onload = async ev => {
         const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' });
         const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
         const parsed = parseExcelData(rows);
         if (dateFromFn) { parsed.date = dateFromFn; parsed.weekday = ['周日','周一','周二','周三','周四','周五','周六'][new Date(dateFromFn).getDay()]; }
         STATE.currentData = parsed;
+        STATE.historyData[parsed.date] = parsed;
+        
+        // 如果Excel中有月累计数据，直接使用；否则计算
+        if (parsed.mtd && parsed.mtd.hotel && parsed.mtd.hotel.act > 0) {
+            console.log('使用Excel中的月累计数据:', parsed.mtd);
+        } else {
+            await calculateMTD(parsed.date);
+        }
+        
         renderDashboard(parsed);
         document.getElementById('save-btn').disabled = false;
         showToast('已加载 ' + parsed.date, 'success');
@@ -287,44 +575,171 @@ function handleFileUpload(e) {
 }
 
 function parseExcelData(rows) {
-    let d = { date: new Date().toISOString().split('T')[0], weekday: '', rows: [], roomsSold: 0, roomsBud: 0, occupancy: 0, occBud: 0, adr: 0, adrBud: 0, revpar: 0, revparBud: 0, totals: {} };
+    let d = { 
+        date: new Date().toISOString().split('T')[0], 
+        weekday: '', 
+        rows: [], 
+        roomsSold: 0, roomsBud: 0, 
+        occupancy: 0, occBud: 0, 
+        adr: 0, adrBud: 0, 
+        revpar: 0, revparBud: 0, 
+        totals: {},
+        mtd: {
+            room: { act: 0, bud: 0 },
+            fb: { act: 0, bud: 0 },
+            hotel: { act: 0, bud: 0 },
+            other: { act: 0, bud: 0 }
+        }
+    };
     const num = v => { if(v==null||v==='')return 0; return parseFloat(String(v).replace(/[¥,$%]/g,''))||0; };
     const pct = v => { if(v==null||v==='')return 0; const n=parseFloat(String(v).replace('%',''));return isNaN(n)?0:(n>1?n/100:n); };
-    rows.forEach(r => {
+    
+    let subTotalCount = 0; // 计数小计行
+    
+    rows.forEach((r, rowIdx) => {
         if (!r[0]) return;
         const n = String(r[0]).trim();
-        if (n.includes('Date')||n.includes('日期')) { const m=r.join(' ').match(/(\d{1,2})\/(\w+)\/(\d{4})/);if(m){const mm={Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};d.date=m[3]+'-'+(mm[m[2]]||m[2])+'-'+m[1].padStart(2,'0');d.weekday=['周日','周一','周二','周三','周四','周五','周六'][new Date(d.date).getDay()];}}
-        if (n.includes('Total room Revenue')||n.includes('总房收入')) d.totals.room={act:num(r[6]),bud:num(r[7])};
-        if (n.includes('F&B Total')||n.includes('餐饮收入合计')) d.totals.fb={act:num(r[6]),bud:num(r[7])};
-        if (n.includes('Total Hotel Revenue')||n.includes('酒店收入合计')) d.totals.hotel={act:num(r[6]),bud:num(r[7])};
-        if (n.includes('Total Other Operating')) d.totals.other={act:num(r[6]),bud:num(r[7])};
-        if (n.includes('Occupied Rooms')||n.includes('已出租房数')) { d.roomsSold=Math.round(num(r[6]));d.roomsBud=Math.round(num(r[7])); }
-        if (n.includes('Paid Occupancy')||n.includes('客房住房率')||n.includes('Occupancy')) { d.occupancy=pct(r[6]);d.occBud=pct(r[7]); }
-        if (n.includes('Paid Average Room Rate')||n.includes('Average Rate')||(n.includes('平均房价')&&!n.includes('Rev'))) { d.adr=num(r[6]);d.adrBud=num(r[7]); }
-        if (n.includes('Rev Par')||n.includes('RevPAR')||n.includes('可出租房平均')) { d.revpar=num(r[6]);d.revparBud=num(r[7]); }
-        const isTotal = /^Total|合计|小计/i.test(n);
-        if (r.length>=7 && num(r[6])!==0 && !isTotal) {
+        
+        // 日期解析
+        if (n.includes('Date')||n.includes('日期')) { 
+            const m=r.join(' ').match(/(\d{1,2})\/(\w+)\/(\d{4})/);
+            if(m){
+                const mm={Jan:'01',Feb:'02',Mar:'03',Apr:'04',May:'05',Jun:'06',Jul:'07',Aug:'08',Sep:'09',Oct:'10',Nov:'11',Dec:'12'};
+                d.date=m[3]+'-'+(mm[m[2]]||m[2])+'-'+m[1].padStart(2,'0');
+                d.weekday=['周日','周一','周二','周三','周四','周五','周六'][new Date(d.date).getDay()];
+            }
+        }
+        
+        // ===== 总房收入 =====
+        if (n.includes('Total room Revenue')||n.includes('总房收入')) {
+            d.totals.room={act:num(r[6]),bud:num(r[7])};
+            d.mtd.room={act:num(r[8]),bud:num(r[10])};
+            console.log('解析总房收入:', d.totals.room, 'MTD:', d.mtd.room);
+        }
+        
+        // ===== 小计处理 =====
+        if (n.includes('Sub') && n.includes('Total') && n.includes('小计')) {
+            subTotalCount++;
+            if (subTotalCount === 2) {
+                // 第二个小计 = 宴会小计，添加到餐饮明细
+                d.rows.push({
+                    name: '宴会收入',
+                    type: 'F&B',
+                    actual: num(r[6]),
+                    budget: num(r[7]),
+                    mtdActual: num(r[8]),
+                    mtdBudget: num(r[10])
+                });
+                console.log('添加宴会收入到餐饮明细:', num(r[6]), num(r[8]));
+            }
+            return;
+        }
+        
+        // ===== 餐饮总计 =====
+        if (n.includes('F&B Total')||n.includes('餐饮收入合计')) {
+            d.totals.fb={act:num(r[6]),bud:num(r[7])};
+            d.mtd.fb={act:num(r[8]),bud:num(r[10])};
+            console.log('解析餐饮总计:', d.totals.fb, 'MTD:', d.mtd.fb);
+        }
+        
+        // ===== 酒店总收入 =====
+        if (n.includes('Total Hotel Revenue')||n.includes('酒店收入合计')) {
+            d.totals.hotel={act:num(r[6]),bud:num(r[7])};
+            d.mtd.hotel={act:num(r[8]),bud:num(r[10])};
+            console.log('解析酒店总收入:', d.totals.hotel, 'MTD:', d.mtd.hotel);
+        }
+        
+        // ===== 其他经营收入合计 =====
+        if (n.includes('Total Other Operating')||n.includes('其他经营收入合计')) {
+            d.totals.other={act:num(r[6]),bud:num(r[7])};
+            d.mtd.other={act:num(r[8]),bud:num(r[10])};
+        }
+        
+        // 运营指标
+        if (n.includes('Occupied Rooms')||n.includes('已出租房数')) { 
+            d.roomsSold=Math.round(num(r[6]));
+            d.roomsBud=Math.round(num(r[7])); 
+        }
+        if ((n.includes('Paid Occupancy')||n.includes('客房住房率')) && !n.includes('Rate')) { 
+            d.occupancy=pct(r[6]);
+            d.occBud=pct(r[7]); 
+        }
+        if (n.includes('Paid Average Room Rate')||(n.includes('平均房价')&&!n.includes('Rev')&&!n.includes('可出租'))) { 
+            d.adr=num(r[6]);
+            d.adrBud=num(r[7]); 
+        }
+        if (n.includes('Rev Par')||n.includes('RevPAR')||n.includes('可出租平均房价')) { 
+            d.revpar=num(r[6]);
+            d.revparBud=num(r[7]); 
+        }
+        
+        // ===== 细分项目数据 =====
+        const isTotal = /^Total|^Sub.*Total|合计$/i.test(n);
+        const isHeader = /^Revenue|^Statistics|^Actual|^Budget|^Forecast|^Food & Beverage|^Other Operating|^ROOM STAT/i.test(n);
+        const isBanquetItem = /Banquet|宴会|会议室租金|设备租金/i.test(n);
+        
+        // 排除宴会细项（宴会小计已单独处理）
+        if (isBanquetItem) return;
+        
+        if (r.length>=10 && (num(r[6])!==0 || num(r[8])!==0) && !isTotal && !isHeader) {
             let type='Other';
-            if(/Rate|Tour|Discount|Corporate|Individual|Convention|Permanent/i.test(n))type='Room';
-            else if(/Kok|Brasserie|Bar|Service|Mini|Banquet|餐/i.test(n))type='F&B';
-            d.rows.push({name:n,type,actual:num(r[6]),budget:num(r[7])});
+            if(/Rate|Tour|Discount|Corporate|Individual|Convention|Permanent|Negotiated|Consortia|SMRF|Meeting|Government|客源/i.test(n)) {
+                type='Room';
+            } else if(/Kok|Brasserie|Bar|Service|Mini|羿庭|百味园|廊吧|浦江汇|蔚景阁|客房服务|迷你吧|Ling Long|Peacock|Grand|Long Bar|Salon|Room Service/i.test(n)) {
+                type='F&B';
+            }
+            
+            d.rows.push({
+                name: n,
+                type,
+                actual: num(r[6]),
+                budget: num(r[7]),
+                mtdActual: num(r[8]),
+                mtdBudget: num(r[10])
+            });
         }
     });
+    
+    // 计算其他收入
+    if (d.totals.hotel && d.totals.room && d.totals.fb && (!d.totals.other || d.totals.other.act === 0)) {
+        d.totals.other = {
+            act: d.totals.hotel.act - d.totals.room.act - d.totals.fb.act,
+            bud: d.totals.hotel.bud - d.totals.room.bud - d.totals.fb.bud
+        };
+    }
+    if (d.mtd.hotel && d.mtd.room && d.mtd.fb && (!d.mtd.other || d.mtd.other.act === 0)) {
+        d.mtd.other = {
+            act: d.mtd.hotel.act - d.mtd.room.act - d.mtd.fb.act,
+            bud: d.mtd.hotel.bud - d.mtd.room.bud - d.mtd.fb.bud
+        };
+    }
+    
+    console.log('===== 解析完成 =====');
+    console.log('今日数据:', JSON.stringify(d.totals));
+    console.log('月累计数据:', JSON.stringify(d.mtd));
     return d;
 }
 
 function renderDashboard(d) {
     let room=d.totals.room||{act:0,bud:0}, fb=d.totals.fb||{act:0,bud:0}, other=d.totals.other||{act:0,bud:0}, grand=d.totals.hotel||{act:0,bud:0};
     if(d.totals.hotel&&d.totals.room&&d.totals.fb){other.act=grand.act-room.act-fb.act;other.bud=grand.bud-room.bud-fb.bud;}
+    
+    // 优先使用Excel中的月累计数据d.mtd
+    const mtd = d.mtd || STATE.mtdData;
+    console.log('渲染使用的MTD数据:', mtd);
+    
     document.getElementById('current-date').textContent = d.date + ' ' + (d.weekday||'');
     document.getElementById('data-status').textContent = '已加载';
     document.getElementById('data-status').className = 'tag tag-green';
     const fmt = n => '¥' + Math.floor(n).toLocaleString();
+    const fmtWan = n => (n/10000).toFixed(1) + '万';
+    
     document.getElementById('kpi-revenue').textContent = fmt(grand.act);
     document.getElementById('kpi-revenue-bud').textContent = fmt(grand.bud);
     const revPct = grand.bud>0?(grand.act/grand.bud*100):100;
     document.getElementById('kpi-revenue-pct').textContent = revPct.toFixed(1)+'%';
     document.getElementById('kpi-revenue-pct').className = revPct>=100?'text-green-400 font-semibold':'text-red-400 font-semibold';
+    
     let occAct=d.occupancy||0,occBud=d.occBud||0;
     if(occAct<=1)occAct*=100;if(occBud<=1)occBud*=100;
     document.getElementById('kpi-occ').textContent = occAct.toFixed(1)+'%';
@@ -340,11 +755,30 @@ function renderDashboard(d) {
     const revparPct=d.revparBud>0?(d.revpar/d.revparBud*100):100;
     document.getElementById('kpi-revpar-pct').textContent = revparPct.toFixed(1)+'%';
     document.getElementById('kpi-revpar-pct').className = revparPct>=100?'text-green-400 font-semibold':'text-red-400 font-semibold';
-    const depts = [{name:'客房',act:room.act,bud:room.bud,icon:'🏨'},{name:'餐饮',act:fb.act,bud:fb.bud,icon:'🍽️'},{name:'其他',act:other.act,bud:other.bud,icon:'📦'},{name:'合计',act:grand.act,bud:grand.bud,icon:'🏢'}];
+    
+    const depts = [
+        {name:'客房',act:room.act,bud:room.bud,icon:'🏨', mtdAct:mtd.room?.act||0, mtdBud:mtd.room?.bud||0},
+        {name:'餐饮',act:fb.act,bud:fb.bud,icon:'🍽️', mtdAct:mtd.fb?.act||0, mtdBud:mtd.fb?.bud||0},
+        {name:'其他',act:other.act,bud:other.bud,icon:'📦', mtdAct:mtd.other?.act||0, mtdBud:mtd.other?.bud||0},
+        {name:'合计',act:grand.act,bud:grand.bud,icon:'🏢', mtdAct:mtd.hotel?.act||0, mtdBud:mtd.hotel?.bud||0}
+    ];
+    
     document.getElementById('dept-table-body').innerHTML = depts.map(dep => {
         const diff=dep.act-dep.bud, pct=dep.bud>0?(dep.act/dep.bud*100):100;
-        return '<tr class="' + (dep.name==='合计'?'bg-zinc-800/30 font-medium':'') + '"><td>' + dep.icon + ' ' + dep.name + '</td><td class="font-mono">' + fmt(dep.act) + '</td><td class="text-zinc-500 font-mono">' + fmt(dep.bud) + '</td><td class="' + (diff>=0?'text-green-400':'text-red-400') + ' font-mono">' + (diff>=0?'+':'') + (diff/10000).toFixed(1) + '万</td><td class="' + (pct>=100?'text-green-400':pct>=90?'text-amber-400':'text-red-400') + ' font-medium">' + pct.toFixed(1) + '%</td></tr>';
+        const mtdPct = dep.mtdBud>0?(dep.mtdAct/dep.mtdBud*100):100;
+        const isTotal = dep.name==='合计';
+        return `<tr class="${isTotal?'bg-zinc-800/30 font-medium':''}">
+            <td>${dep.icon} ${dep.name}</td>
+            <td class="font-mono">${fmt(dep.act)}</td>
+            <td class="text-zinc-500 font-mono">${fmt(dep.bud)}</td>
+            <td class="${diff>=0?'text-green-400':'text-red-400'} font-mono">${diff>=0?'+':''}${fmtWan(diff)}</td>
+            <td class="${pct>=100?'text-green-400':pct>=90?'text-amber-400':'text-red-400'} font-medium">${pct.toFixed(1)}%</td>
+            <td class="font-mono mtd-cell">¥${fmtWan(dep.mtdAct)}</td>
+            <td class="text-zinc-500 font-mono mtd-cell">¥${fmtWan(dep.mtdBud)}</td>
+            <td class="${mtdPct>=100?'text-green-400':mtdPct>=90?'text-amber-400':'text-red-400'} font-medium mtd-cell">${mtdPct.toFixed(1)}%</td>
+        </tr>`;
     }).join('');
+    
     renderMainChart(depts.slice(0,3));
     renderPieChart(depts.slice(0,3));
 }
@@ -377,8 +811,7 @@ function renderTrendChart(data) {
 function renderOpsTrendChart(data) {
     const el=document.getElementById('ops-trend-chart');
     if(STATE.charts.opsTrend)STATE.charts.opsTrend.dispose();
-    if(!data.length||!data.some(d=>d.revpar||d.adr||d.occupancy)){el.innerHTML='<div class="flex items-center justify-center h-full text-zinc-600 text-xs">暂无数据</div>';return;
-}
+    if(!data.length||!data.some(d=>d.revpar||d.adr||d.occupancy)){el.innerHTML='<div class="flex items-center justify-center h-full text-zinc-600 text-xs">暂无数据</div>';return;}
     const chart=echarts.init(el,'dark');
     chart.setOption({backgroundColor:'transparent',tooltip:{trigger:'axis'},legend:{data:['RevPAR','ADR','入住率'],bottom:0,textStyle:{color:'#71717a',fontSize:10}},grid:{left:5,right:35,top:10,bottom:35,containLabel:true},xAxis:{type:'category',data:data.map(d=>d.date.slice(5)),axisLabel:{fontSize:9,color:'#71717a',rotate:30}},yAxis:[{type:'value',position:'left',axisLabel:{fontSize:9,formatter:v=>'¥'+v},splitLine:{lineStyle:{color:'#27272a'}}},{type:'value',position:'right',min:0,max:100,axisLabel:{fontSize:9,formatter:v=>v+'%'},splitLine:{show:false}}],series:[{name:'RevPAR',type:'line',yAxisIndex:0,data:data.map(d=>Math.floor(d.revpar||0)),smooth:true,symbol:'circle',symbolSize:4,lineStyle:{color:'#a855f7',width:2},itemStyle:{color:'#a855f7'}},{name:'ADR',type:'line',yAxisIndex:0,data:data.map(d=>Math.floor(d.adr||0)),smooth:true,symbol:'circle',symbolSize:4,lineStyle:{color:'#f59e0b',width:2},itemStyle:{color:'#f59e0b'}},{name:'入住率',type:'line',yAxisIndex:1,data:data.map(d=>{const o=d.occupancy||0;return o<=1?(o*100).toFixed(1):o.toFixed(1);}),smooth:true,symbol:'circle',symbolSize:4,lineStyle:{color:'#22c55e',width:2},itemStyle:{color:'#22c55e'},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(34,197,94,0.2)'},{offset:1,color:'rgba(34,197,94,0)'}]}}}]});
     STATE.charts.opsTrend=chart;
@@ -386,32 +819,143 @@ function renderOpsTrendChart(data) {
 
 async function generateAIAnalysis() {
     if(!STATE.currentData)return;
-    const c=document.getElementById('ai-analysis');
-    c.innerHTML='<div class="flex flex-col items-center justify-center py-12"><div class="ai-loading"><div class="spinner"></div></div><p class="text-zinc-500 text-xs mt-3">AI分析中...</p></div>';
+    const dailyPanel = document.getElementById('ai-panel-daily');
+    const monthlyPanel = document.getElementById('ai-panel-monthly');
+    
+    const loadingHtml = '<div class="flex flex-col items-center justify-center py-12"><div class="ai-loading"><div class="spinner"></div></div><p class="text-zinc-500 text-xs mt-3">AI分析中...</p></div>';
+    dailyPanel.innerHTML = loadingHtml;
+    monthlyPanel.innerHTML = loadingHtml;
+    
     try {
-        const d=STATE.currentData;
-        const room=d.totals?.room||{act:0,bud:0},fb=d.totals?.fb||{act:0,bud:0},other=d.totals?.other||{act:0,bud:0},hotel=d.totals?.hotel||{act:0,bud:0};
+        const d = STATE.currentData;
+        const room=d.totals?.room||{act:0,bud:0}, fb=d.totals?.fb||{act:0,bud:0}, other=d.totals?.other||{act:0,bud:0}, hotel=d.totals?.hotel||{act:0,bud:0};
+        
         const totalPct=hotel.bud>0?(hotel.act/hotel.bud*100).toFixed(1):'100';
         const roomPct=room.bud>0?(room.act/room.bud*100).toFixed(1):'100';
         const fbPct=fb.bud>0?(fb.act/fb.bud*100).toFixed(1):'100';
         const otherPct=other.bud>0?(other.act/other.bud*100).toFixed(1):'100';
-        let occ=d.occupancy||0;if(occ<=1)occ*=100;
-        const prompt=STATE.aiPrompt.replace(/{date}/g,d.date).replace(/{total_pct}/g,totalPct).replace(/{room_pct}/g,roomPct).replace(/{fb_pct}/g,fbPct).replace(/{other_pct}/g,otherPct).replace(/{occupancy}/g,occ.toFixed(1)).replace(/{adr}/g,Math.floor(d.adr||0)).replace(/{revpar}/g,Math.floor(d.revpar||0));
-        const res=await fetch(STATE.qianwen.endpoint,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+STATE.qianwen.apiKey},body:JSON.stringify({model:STATE.qianwen.model,messages:[{role:'user',content:prompt}],temperature:0.5,max_tokens:1500})});
-        if(!res.ok)throw new Error();
-        const result=await res.json();
-        let content=result.choices[0].message.content;
-        content=content.replace(/```html\n?/gi,'').replace(/```\n?/g,'').trim();
-        c.innerHTML=content;
-        STATE.currentData.aiAnalysis=content;
-        STATE.currentData.aiAnalysisTime=new Date().toLocaleString('zh-CN');
-        document.getElementById('ai-update-time').textContent=STATE.currentData.aiAnalysisTime;
-    } catch(e) { console.error(e); c.innerHTML='<div class="text-center py-12 text-zinc-600"><i class="fa-solid fa-exclamation-circle text-2xl mb-3"></i><p class="text-xs">AI分析失败</p></div>'; }
+        let occ=d.occupancy||0; if(occ<=1) occ*=100;
+        let occBud=d.occBud||0; if(occBud<=1) occBud*=100;
+        
+        // 整理今日细分项目数据
+        const rows = d.rows || [];
+        const formatDetails = (types) => {
+            const items = rows.filter(r => types.includes(r.type));
+            if (items.length === 0) return '暂无数据';
+            return items.map(r => {
+                const pct = r.budget > 0 ? (r.actual / r.budget * 100).toFixed(0) : 100;
+                return `${getChineseName(r.name)}: 实际¥${r.actual.toLocaleString()} / 预算¥${r.budget.toLocaleString()} = ${pct}%`;
+            }).join('\n');
+        };
+        
+        // 整理月累计细分项目数据
+        const formatMtdDetails = (types) => {
+            const items = rows.filter(r => types.includes(r.type) && r.mtdActual !== undefined);
+            if (items.length === 0) return '暂无数据';
+            return items.map(r => {
+                const pct = r.mtdBudget > 0 ? (r.mtdActual / r.mtdBudget * 100).toFixed(0) : 100;
+                return `${getChineseName(r.name)}: 月累计实际¥${Math.round(r.mtdActual).toLocaleString()} / 预算¥${Math.round(r.mtdBudget).toLocaleString()} = ${pct}%`;
+            }).join('\n');
+        };
+        
+        const roomDetails = formatDetails(['Room']);
+        const fbDetails = formatDetails(['F&B']);
+        const otherDetails = formatDetails(['Other']);
+        
+        const mtdRoomDetails = formatMtdDetails(['Room']);
+        const mtdFbDetails = formatMtdDetails(['F&B']);
+        const mtdOtherDetails = formatMtdDetails(['Other']);
+        
+        // 优先使用Excel中的月累计数据d.mtd
+        const mtd = d.mtd || STATE.mtdData;
+        const mtdTotalPct = mtd.hotel?.bud>0?(mtd.hotel.act/mtd.hotel.bud*100).toFixed(1):'100';
+        const mtdRoomPct = mtd.room?.bud>0?(mtd.room.act/mtd.room.bud*100).toFixed(1):'100';
+        const mtdFbPct = mtd.fb?.bud>0?(mtd.fb.act/mtd.fb.bud*100).toFixed(1):'100';
+        const mtdOtherPct = mtd.other?.bud>0?(mtd.other.act/mtd.other.bud*100).toFixed(1):'100';
+        
+        const dayOfMonth = parseInt(d.date.split('-')[2]);
+        const daysInMonth = new Date(d.date.split('-')[0], d.date.split('-')[1], 0).getDate();
+        const timeProgress = (dayOfMonth / daysInMonth * 100).toFixed(1);
+        
+        // 今日分析提示词
+        const dailyPrompt = STATE.aiPromptDaily
+            .replace(/{date}/g, d.date)
+            .replace(/{total_pct}/g, totalPct)
+            .replace(/{room_pct}/g, roomPct)
+            .replace(/{fb_pct}/g, fbPct)
+            .replace(/{other_pct}/g, otherPct)
+            .replace(/{occupancy}/g, occ.toFixed(1))
+            .replace(/{occ_bud}/g, occBud.toFixed(1))
+            .replace(/{adr}/g, Math.floor(d.adr||0))
+            .replace(/{adr_bud}/g, Math.floor(d.adrBud||0))
+            .replace(/{revpar}/g, Math.floor(d.revpar||0))
+            .replace(/{revpar_bud}/g, Math.floor(d.revparBud||0))
+            .replace(/{room_details}/g, roomDetails)
+            .replace(/{fb_details}/g, fbDetails)
+            .replace(/{other_details}/g, otherDetails);
+        
+        // 月度分析提示词
+        const monthlyPrompt = STATE.aiPromptMonthly
+            .replace(/{date}/g, d.date)
+            .replace(/{day_of_month}/g, dayOfMonth)
+            .replace(/{time_progress}/g, timeProgress)
+            .replace(/{mtd_total_pct}/g, mtdTotalPct)
+            .replace(/{mtd_room_pct}/g, mtdRoomPct)
+            .replace(/{mtd_fb_pct}/g, mtdFbPct)
+            .replace(/{mtd_other_pct}/g, mtdOtherPct)
+            .replace(/{mtd_total_act}/g, ((mtd.hotel?.act||0)/10000).toFixed(1))
+            .replace(/{mtd_total_bud}/g, ((mtd.hotel?.bud||0)/10000).toFixed(1))
+            .replace(/{mtd_variance}/g, (((mtd.hotel?.act||0) - (mtd.hotel?.bud||0))/10000).toFixed(1))
+            .replace(/{mtd_room_details}/g, mtdRoomDetails)
+            .replace(/{mtd_fb_details}/g, mtdFbDetails)
+            .replace(/{mtd_other_details}/g, mtdOtherDetails);
+        
+        const [dailyRes, monthlyRes] = await Promise.all([
+            fetch(STATE.qianwen.endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + STATE.qianwen.apiKey },
+                body: JSON.stringify({ model: STATE.qianwen.model, messages: [{role:'user', content: dailyPrompt}], temperature: 0.5, max_tokens: 1500 })
+            }),
+            fetch(STATE.qianwen.endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + STATE.qianwen.apiKey },
+                body: JSON.stringify({ model: STATE.qianwen.model, messages: [{role:'user', content: monthlyPrompt}], temperature: 0.5, max_tokens: 1500 })
+            })
+        ]);
+        
+        if (!dailyRes.ok || !monthlyRes.ok) throw new Error('API请求失败');
+        
+        const dailyResult = await dailyRes.json();
+        const monthlyResult = await monthlyRes.json();
+        
+        let dailyContent = dailyResult.choices[0].message.content;
+        let monthlyContent = monthlyResult.choices[0].message.content;
+        
+        dailyContent = dailyContent.replace(/```html\n?/gi,'').replace(/```\n?/g,'').trim();
+        monthlyContent = monthlyContent.replace(/```html\n?/gi,'').replace(/```\n?/g,'').trim();
+        
+        dailyPanel.innerHTML = dailyContent;
+        monthlyPanel.innerHTML = monthlyContent;
+        
+        STATE.currentData.aiAnalysisDaily = dailyContent;
+        STATE.currentData.aiAnalysisMonthly = monthlyContent;
+        STATE.currentData.aiAnalysisTime = new Date().toLocaleString('zh-CN');
+        document.getElementById('ai-update-time').textContent = STATE.currentData.aiAnalysisTime;
+        
+        showToast('AI分析完成', 'success');
+        
+    } catch(e) { 
+        console.error(e); 
+        const errorHtml = '<div class="text-center py-12 text-zinc-600"><i class="fa-solid fa-exclamation-circle text-2xl mb-3"></i><p class="text-xs">AI分析失败</p></div>';
+        dailyPanel.innerHTML = errorHtml;
+        monthlyPanel.innerHTML = errorHtml;
+        showToast('AI分析失败', 'error');
+    }
 }
 
 function openDeepDive(){document.getElementById('deep-modal').classList.remove('hidden');switchDeepTab('room');}
 function switchDeepTab(tab) {
-    ['room','fb','other'].forEach(t=>{const b=document.getElementById('deep-tab-'+t);b.classList.toggle('bg-zinc-700',t===tab);b.classList.toggle('text-zinc-400',t!==tab);});
+    ['room','fb','other'].forEach(t=>{const b=document.getElementById('deep-tab-'+t);if(b){b.classList.toggle('bg-zinc-700',t===tab);b.classList.toggle('text-zinc-400',t!==tab);}});
     if(!STATE.currentData)return;
     const typeMap={room:['Room'],fb:['F&B'],other:['Other']};
     let rows=STATE.currentData.rows.filter(r=>typeMap[tab].includes(r.type));
@@ -425,11 +969,36 @@ function switchDeepTab(tab) {
     STATE.charts.deep=chart;
     const totalAct=rows.reduce((s,r)=>s+r.actual,0),totalBud=rows.reduce((s,r)=>s+r.budget,0);
     const totalPct=totalBud>0?(totalAct/totalBud*100).toFixed(1):100;
-    document.getElementById('deep-summary-content').innerHTML='<p><strong>整体完成率：<span class="'+(parseFloat(totalPct)>=100?'text-green-400':'text-red-400')+'">'+totalPct+'%</span></strong> | 实际 ¥'+(totalAct/10000).toFixed(1)+'万 / 预算 ¥'+(totalBud/10000).toFixed(1)+'万</p>';
+    
+    // 分析完成好的和完成不好的项目
+    const goodItems = rows.filter(r => r.budget > 0 && (r.actual / r.budget * 100) >= 100).sort((a,b) => (b.actual/b.budget) - (a.actual/a.budget));
+    const badItems = rows.filter(r => r.budget > 0 && (r.actual / r.budget * 100) < 80).sort((a,b) => (a.actual/a.budget) - (b.actual/b.budget));
+    
+    let summaryHtml = '<p><strong>整体完成率：<span class="'+(parseFloat(totalPct)>=100?'text-green-400':'text-red-400')+'">'+totalPct+'%</span></strong> | 实际 ¥'+(totalAct/10000).toFixed(1)+'万 / 预算 ¥'+(totalBud/10000).toFixed(1)+'万</p>';
+    
+    if (goodItems.length > 0) {
+        summaryHtml += '<p class="mt-2"><span class="text-green-400">✓ 完成较好：</span>';
+        summaryHtml += goodItems.map(r => {
+            const pct = (r.actual / r.budget * 100).toFixed(0);
+            return getChineseName(r.name) + ' <span class="text-green-400">' + pct + '%</span>';
+        }).join('、');
+        summaryHtml += '</p>';
+    }
+    
+    if (badItems.length > 0) {
+        summaryHtml += '<p class="mt-1"><span class="text-red-400">✗ 需要改进：</span>';
+        summaryHtml += badItems.map(r => {
+            const pct = (r.actual / r.budget * 100).toFixed(0);
+            return getChineseName(r.name) + ' <span class="text-red-400">' + pct + '%</span>';
+        }).join('、');
+        summaryHtml += '</p>';
+    }
+    
+    document.getElementById('deep-summary-content').innerHTML = summaryHtml;
 }
 
 window.addEventListener('resize',()=>Object.values(STATE.charts).forEach(c=>c?.resize()));
-document.addEventListener('DOMContentLoaded',()=>{console.log('🚀 NEXUS v2.5 Proxy版启动');refreshData();});
+document.addEventListener('DOMContentLoaded',()=>{console.log('🚀 NEXUS v2.6 月累计版启动');refreshData();});
 </script>
 </body>
 </html>
