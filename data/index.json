@@ -67,5 +67,17 @@
     "hasAI": true,
     "hasBanquet": true,
     "updatedAt": "2025-12-15T01:35:26.421Z"
+  },
+  {
+    "date": "2025-12-13",
+    "weekday": "周六",
+    "revenue": 857709.52,
+    "variance": 0.02517687009707492,
+    "occupancy": 0.9538461538461539,
+    "adr": 2668.320806451613,
+    "revpar": 2545.1675384615387,
+    "hasAI": true,
+    "hasBanquet": false,
+    "updatedAt": "2025-12-15T01:36:07.316Z"
   }
 ]
