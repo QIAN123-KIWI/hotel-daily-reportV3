@@ -1,0 +1,399 @@
+{
+  "date": "2025-12-12",
+  "weekday": "周五",
+  "uploadedAt": "2025-12-15T01:35:26.420Z",
+  "totals": {
+    "room": {
+      "act": 565983.83,
+      "bud": 475569.75967741944
+    },
+    "fb": {
+      "act": 285697.66000000003,
+      "bud": 341026.9408123871
+    },
+    "banquet": {
+      "act": 112641.51000000001,
+      "bud": 154193.54870967742
+    },
+    "other": {
+      "act": 8623.959999999997,
+      "bud": 20048.706774193553
+    },
+    "hotel": {
+      "act": 860305.45,
+      "bud": 836645.407264
+    }
+  },
+  "rows": [
+    {
+      "name": "Best Available Rate 散客门市价收入",
+      "type": "Room",
+      "actual": 40862.91,
+      "budget": 26050,
+      "mtdActual": 198069.1,
+      "mtdBudget": 312600
+    },
+    {
+      "name": "Consortia 国外预订门市价收入",
+      "type": "Room",
+      "actual": 76995.32,
+      "budget": 47490.32258064516,
+      "mtdActual": 606428.77,
+      "mtdBudget": 569883.8709677419
+    },
+    {
+      "name": "Corporate Negotiated 公司合作客源收入",
+      "type": "Room",
+      "actual": 26188.62,
+      "budget": 13741.935483870968,
+      "mtdActual": 251094.22999999998,
+      "mtdBudget": 164903.2258064516
+    },
+    {
+      "name": "Local Negotiated 本地合作客源收入",
+      "type": "Room",
+      "actual": 9417.65,
+      "budget": 59354.83870967742,
+      "mtdActual": 250272.53,
+      "mtdBudget": 712258.064516129
+    },
+    {
+      "name": "Individual Tour/Wholesale 个人游/大规模",
+      "type": "Room",
+      "actual": 32525.65,
+      "budget": 9725.806451612903,
+      "mtdActual": 364394.18000000005,
+      "mtdBudget": 116709.67741935485
+    },
+    {
+      "name": "Corporate Marketing Programs 企业营销",
+      "type": "Room",
+      "actual": 62784.77,
+      "budget": 36064.51612903226,
+      "mtdActual": 564364.98,
+      "mtdBudget": 432774.1935483871
+    },
+    {
+      "name": "Other Discounts 其他折扣客源收入",
+      "type": "Room",
+      "actual": 246816.28,
+      "budget": 165451.61290322582,
+      "mtdActual": 2180881.8,
+      "mtdBudget": 1985419.3548387098
+    },
+    {
+      "name": "Company Meetings/Incentives公司会议客源",
+      "type": "Room",
+      "actual": 0,
+      "budget": 44032.25806451613,
+      "mtdActual": 254219.94000000003,
+      "mtdBudget": 528387.0967741936
+    },
+    {
+      "name": "Permanent 常住客收入",
+      "type": "Room",
+      "actual": 4116.62,
+      "budget": 8903.225806451614,
+      "mtdActual": 49399.44000000001,
+      "mtdBudget": 106838.70967741936
+    },
+    {
+      "name": "Net Room Revenue 净房费收入",
+      "type": "Other",
+      "actual": 499707.81999999995,
+      "budget": 419004.19354838715,
+      "mtdActual": 4719124.970000001,
+      "mtdBudget": 5028050.322580645
+    },
+    {
+      "name": "Room Surcharge 服务费",
+      "type": "Other",
+      "actual": 51076.75,
+      "budget": 41900.41935483871,
+      "mtdActual": 480397.70999999996,
+      "mtdBudget": 502805.03225806454
+    },
+    {
+      "name": "Other rooms revenue其它房费收入",
+      "type": "Other",
+      "actual": 15199.26,
+      "budget": 14665.146774193572,
+      "mtdActual": 139779.93,
+      "mtdBudget": 175981.76129032287
+    },
+    {
+      "name": "No Show Revenue",
+      "type": "Other",
+      "actual": 0,
+      "budget": 0,
+      "mtdActual": 37185.92,
+      "mtdBudget": 0
+    },
+    {
+      "name": "No.of Available Rooms 可出租房数",
+      "type": "Other",
+      "actual": 260,
+      "budget": 260,
+      "mtdActual": 3120,
+      "mtdBudget": 3120
+    },
+    {
+      "name": "No.of Occupied Rooms 已出租房数",
+      "type": "Other",
+      "actual": 232,
+      "budget": 190.51612903225808,
+      "mtdActual": 2194,
+      "mtdBudget": 2286.193548387097
+    },
+    {
+      "name": "No.of Complimentary Rooms 免费房数",
+      "type": "Other",
+      "actual": 4,
+      "budget": 0,
+      "mtdActual": 70,
+      "mtdBudget": 0
+    },
+    {
+      "name": "Vacant Rooms 未出租房数",
+      "type": "Other",
+      "actual": 21,
+      "budget": 69.48387096774192,
+      "mtdActual": 772,
+      "mtdBudget": 833.8064516129031
+    },
+    {
+      "name": "No.of Out of Order Rooms 维修房数",
+      "type": "Other",
+      "actual": 0,
+      "budget": 0,
+      "mtdActual": 33,
+      "mtdBudget": 0
+    },
+    {
+      "name": "No.of House Use Rooms 自用房数",
+      "type": "Other",
+      "actual": 3,
+      "budget": 0,
+      "mtdActual": 51,
+      "mtdBudget": 0
+    },
+    {
+      "name": "Paid Occupancy % 客房住房率",
+      "type": "Other",
+      "actual": 0.8923076923076924,
+      "budget": 0.7327543424317619,
+      "mtdActual": 0.7032051282051283,
+      "mtdBudget": 0.7327543424317619
+    },
+    {
+      "name": "Paid Average Room Rate 平均房价",
+      "type": "Room",
+      "actual": 2439.5854741379308,
+      "budget": 2496.217837792076,
+      "mtdActual": 2450.541718322698,
+      "mtdBudget": 2496.2178377920754
+    },
+    {
+      "name": "Rev Par 可出租平均房价",
+      "type": "Other",
+      "actual": 2176.8608846153843,
+      "budget": 1829.114460297767,
+      "mtdActual": 1723.2335032051283,
+      "mtdBudget": 1829.1144602977668
+    },
+    {
+      "name": "No.of Guest 房客人数",
+      "type": "Other",
+      "actual": 443,
+      "budget": 0,
+      "mtdActual": 4181,
+      "mtdBudget": 0
+    },
+    {
+      "name": "Wai King Kok  蔚景阁",
+      "type": "F&B",
+      "actual": 54377.77,
+      "budget": 39223.11967741935,
+      "mtdActual": 368879.41000000003,
+      "mtdBudget": 470677.4361290322
+    },
+    {
+      "name": "Peacock Alley 羿庭",
+      "type": "F&B",
+      "actual": 8346.14,
+      "budget": 16178.260322580643,
+      "mtdActual": 237082.45999999996,
+      "mtdBudget": 194139.1238709677
+    },
+    {
+      "name": "Grand Brasserie 百味园",
+      "type": "F&B",
+      "actual": 69468.26,
+      "budget": 68345.87984464515,
+      "mtdActual": 623152,
+      "mtdBudget": 820150.5581357419
+    },
+    {
+      "name": "Long Bar  廊吧",
+      "type": "F&B",
+      "actual": 31227.53,
+      "budget": 37072.51806451613,
+      "mtdActual": 296309.13,
+      "mtdBudget": 444870.21677419357
+    },
+    {
+      "name": "Salon de Ville 浦江汇",
+      "type": "F&B",
+      "actual": 5226.639999999999,
+      "budget": 10981.081935483871,
+      "mtdActual": 79635.91999999998,
+      "mtdBudget": 131772.98322580644
+    },
+    {
+      "name": "Room Service 客房服务",
+      "type": "F&B",
+      "actual": 3524.8899999999994,
+      "budget": 9306.083225806453,
+      "mtdActual": 52592.39,
+      "mtdBudget": 111672.99870967743
+    },
+    {
+      "name": "Mini Bar 迷你吧",
+      "type": "F&B",
+      "actual": 884.9200000000002,
+      "budget": 1251.6129032258063,
+      "mtdActual": 15305.870000000003,
+      "mtdBudget": 15019.354838709676
+    },
+    {
+      "name": "Banquet Food&Bev 宴会食品酒水收入",
+      "type": "Banquet",
+      "actual": 99433.96,
+      "budget": 104389.03258064514,
+      "mtdActual": 1396009.74,
+      "mtdBudget": 1252668.3909677416
+    },
+    {
+      "name": "Rooms Rental 会议室租金",
+      "type": "Banquet",
+      "actual": 13207.55,
+      "budget": 39781.93548387097,
+      "mtdActual": 195506.53,
+      "mtdBudget": 477383.22580645164
+    },
+    {
+      "name": "Banquet Other Revenue 宴会杂项收入",
+      "type": "Banquet",
+      "actual": 0,
+      "budget": 2312.9032258064517,
+      "mtdActual": 13660.380000000001,
+      "mtdBudget": 27754.83870967742
+    },
+    {
+      "name": "Banquet Service Charge 宴会服务费",
+      "type": "Banquet",
+      "actual": 0,
+      "budget": 7709.677419354839,
+      "mtdActual": 129657.67000000001,
+      "mtdBudget": 92516.12903225806
+    },
+    {
+      "name": "Guest Laundry/Valet 客人洗衣",
+      "type": "Other",
+      "actual": 3081.12,
+      "budget": 2286.1935483870966,
+      "mtdActual": 32242.96,
+      "mtdBudget": 27434.32258064516
+    },
+    {
+      "name": "Telephone 电话",
+      "type": "Other",
+      "actual": 17.6,
+      "budget": 3.8103225806451615,
+      "mtdActual": 116.5,
+      "mtdBudget": 45.72387096774194
+    },
+    {
+      "name": "Library 思塾",
+      "type": "Other",
+      "actual": 0,
+      "budget": 190.51612903225808,
+      "mtdActual": 5510.57,
+      "mtdBudget": 2286.193548387097
+    },
+    {
+      "name": "Transportation 运输部",
+      "type": "Other",
+      "actual": 2477.06,
+      "budget": 2857.7419354838707,
+      "mtdActual": 10825.67,
+      "mtdBudget": 34292.90322580645
+    },
+    {
+      "name": "SPA 水疗中心",
+      "type": "Other",
+      "actual": 17391.8,
+      "budget": 17026.71967741936,
+      "mtdActual": 211285.48999999996,
+      "mtdBudget": 204320.63612903235
+    },
+    {
+      "name": "Health Club 健身房",
+      "type": "Other",
+      "actual": 353.1,
+      "budget": 342.9290322580645,
+      "mtdActual": 353.1,
+      "mtdBudget": 4115.148387096774
+    },
+    {
+      "name": "T9tea Boutique Retail Shop T9tea精品零售店",
+      "type": "Other",
+      "actual": 113.27,
+      "budget": 0,
+      "mtdActual": 17.87000000000002,
+      "mtdBudget": 0
+    },
+    {
+      "name": "Sundry 其他收入",
+      "type": "Other",
+      "actual": -14809.99,
+      "budget": -4679.032258064516,
+      "mtdActual": -64085.060000000005,
+      "mtdBudget": -56148.3870967742
+    }
+  ],
+  "roomsSold": 232,
+  "roomsBud": 191,
+  "occupancy": 0.8923076923076924,
+  "occBud": 0.7327543424317619,
+  "adr": 2439.5854741379308,
+  "adrBud": 2496.217837792076,
+  "revpar": 2176.8608846153843,
+  "revparBud": 1829.114460297767,
+  "mtd": {
+    "room": {
+      "act": 5376488.53,
+      "bud": 5706837.116129032
+    },
+    "fb": {
+      "act": 3407791.5,
+      "bud": 4092323.2897486445
+    },
+    "banquet": {
+      "act": 1734834.3199999998,
+      "bud": 1850322.5845161285
+    },
+    "other": {
+      "act": 196267.09999999995,
+      "bud": 240584.48129032267
+    },
+    "hotel": {
+      "act": 8980547.13,
+      "bud": 10039744.887168
+    }
+  },
+  "aiAnalysisDaily": "<div class=\"section-title\">📊 今日预算执行总览</div>\n<p><strong>整体完成率：<span class=\"highlight-good\">102.8%</span></strong></p>\n<p>客房<span class=\"highlight-good\">119.0%</span> 餐饮<span class=\"highlight-bad\">83.8%</span> 宴会<span class=\"highlight-bad\">73.1%</span> 其他<span class=\"highlight-bad\">43.0%</span></p>\n\n<div class=\"section-title\">🏨 客房分析</div>\n<p>✓ 表现优秀：</p>\n<p>• 散客门市价收入：<span class=\"highlight-good\">157%</span>（可能由于季节性需求增加或促销活动吸引）</p>\n<p>• 国外预订门市价收入：<span class=\"highlight-good\">162%</span>（可能是国际旅游复苏迹象）</p>\n<p>✗ 需要改进：</p>\n<p>• 本地合作客源收入：<span class=\"highlight-bad\">16%</span>（需加强与当地企业的联系和合作）</p>\n<p>💡 建议：</p>\n<p>1. 加强对本地市场的营销力度，提高本地合作客源的入住率。</p>\n<p>2. 推出更多针对散客和国外游客的优惠活动，保持良好增长势头。</p>\n\n<div class=\"section-title\">🍽️ 餐饮分析</div>\n<p>✓ 表现优秀：</p>\n<p>• 蔚景阁：<span class=\"highlight-good\">139%</span></p>\n<p>✗ 需要改进：</p>\n<p>• 羿庭：<span class=\"highlight-bad\">52%</span></p>\n<p>💡 建议：考虑调整羿庭菜单或举办特别活动以吸引更多顾客。</p>\n\n<div class=\"section-title\">🎉 宴会分析</div>\n<p>完成率：<span class=\"highlight-bad\">73.1%</span></p>\n<p>💡 建议：增强宴会销售团队培训，开发新的宴会套餐吸引客户。</p>\n\n<div class=\"section-title\">⚠️ 风险预警</div>\n<div class=\"risk-item\">🔴 风险点：\n• 入住率89.2%高于预算73.3%，但需关注未来趋势\n• 今日收入缺口主要来自餐饮及宴会部分\n</div>\n\n<div class=\"section-title\">📈 今日小结</div>\n<p>重点关注：1)客房收入持续增长 2)餐饮尤其是羿庭表现不佳 3)宴会收入低于预期</p>\n<p>明日行动：1)继续优化客房服务体验 2)制定针对低效餐厅的具体改进计划 3)加大宴会市场推广力度</p>",
+  "aiAnalysisMonthly": "<div class=\"section-title\">📊 月度预算执行总览</div>\n<p><strong>月累计完成率：<span class=\"highlight-xxx\">89.4%</span></strong>（时间进度38.7%）</p>\n<p>客房<span class=\"highlight-good\">94.2%</span> 餐饮<span class=\"highlight-bad\">83.3%</span> 宴会<span class=\"highlight-good\">93.8%</span> 其他<span class=\"highlight-bad\">81.6%</span></p>\n<p>收入进度 vs 时间进度：<span class=\"highlight-bad\">落后50.7个百分点</span></p>\n\n<div class=\"section-title\">🏨 客房月度分析</div>\n<p>✓ 表现优秀：</p>\n<p>• 个人游：<span class=\"highlight-good\">312%</span></p>\n<p>• 公司合作客源收入：<span class=\"highlight-good\">152%</span></p>\n<p>• 企业营销：<span class=\"highlight-good\">130%</span></p>\n<p>✗ 需要改进：</p>\n<p>• 本地合作客源收入：<span class=\"highlight-bad\">35%</span></p>\n<p>• 公司会议客源：<span class=\"highlight-bad\">48%</span></p>\n<p>💡 月度策略：增加本地合作客源的推广力度，优化公司会议客源的价格和服务。</p>\n\n<div class=\"section-title\">🍽️ 餐饮月度分析</div>\n<p>✓ 表现优秀：</p>\n<p>• 羿庭：<span class=\"highlight-good\">122%</span></p>\n<p>• 迷你吧：<span class=\"highlight-good\">102%</span></p>\n<p>✗ 需要改进：</p>\n<p>• 浦江汇：<span class=\"highlight-bad\">60%</span></p>\n<p>• 房间服务：<span class=\"highlight-bad\">47%</span></p>\n<p>💡 月度策略：加强浦江汇和房间服务的促销活动，提升顾客体验。</p>\n\n<div class=\"section-title\">🎉 宴会月度分析</div>\n<p>月累计完成率：<span class=\"highlight-good\">93.8%</span></p>\n<p>💡 月度策略：加大宴会销售力度，特别是会议室租金部分。</p>\n\n<div class=\"section-title\">⚠️ 月度风险预警</div>\n<div class=\"risk-item\">🔴 关键风险：\n• 收入进度89.4% vs 时间进度38.7%\n• 按当前趋势预计月底完成率\n• 主要拖累板块为餐饮和其他收入\n</div>\n\n<div class=\"section-title\">📈 月度进展与预测</div>\n<p>本月第12天，剩余19天</p>\n<p>🎯 要完成月度目标，剩余每日需达成目标</p>\n<p>💡 重点行动：</p>\n<p>1. 立即行动：针对餐饮和宴会部门进行专项促销活动。</p>\n<p>2. 本周重点：加强本地合作客源和公司会议客源的市场推广。</p>\n<p>3. 月底冲刺：全面检查各项收入来源，确保所有渠道都能达到预期目标。</p>",
+  "aiAnalysisTime": "2025/12/15 09:34:36",
+  "savedAt": "2025-12-15T01:35:25.450Z"
+}
